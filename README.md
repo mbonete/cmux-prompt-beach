@@ -53,3 +53,7 @@ Each card also shows the project folder, git branch, model, context size, permis
 ## Tested
 
 Checked against cmux 0.65.2 and Claude Code 2.1.322 with a throwaway Haiku session: allowing a Bash permission, replying, and answering an AskUserQuestion prompt all worked from the dashboard. Approving a plan uses the same Feed mechanism but has not been tried.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
