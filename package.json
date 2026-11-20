@@ -14,7 +14,7 @@
     "build": "node tools/clean-build.mjs && vite build",
     "watch": "vite build --watch",
     "typecheck": "tsc -p .",
-    "test": "node --test test/",
+    "test": "node --test test/*.test.mjs",
     "assets:fetch": "node tools/assets/fetch.mjs"
   },
   "license": "MIT",
