@@ -1,0 +1,13 @@
+{
+  "name": "cmux-switchboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A live local dashboard for the agents running in cmux: who is working, who needs you, who went stale.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

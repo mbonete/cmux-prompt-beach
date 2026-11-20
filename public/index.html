@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="sb-token" content="__SWITCHBOARD_TOKEN__">
+  <meta name="color-scheme" content="dark">
+  <title>Switchboard</title>
+  <link rel="icon" id="favicon" href="/favicon.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>Switchboard</h1>
+      <span class="live" id="live" data-state="connecting"><i aria-hidden="true"></i><span>Connecting</span></span>
+    </div>
+
+    <nav class="tally" id="tally" aria-label="Summary">
+      <a class="tally-item" href="#lane-needs" data-lane="needs"><b>–</b><span>Need you</span></a>
+      <a class="tally-item" href="#lane-working" data-lane="working"><b>–</b><span>Working</span></a>
+      <a class="tally-item" href="#lane-move" data-lane="move"><b>–</b><span>Your move</span></a>
+      <a class="tally-item" href="#lane-stale" data-lane="stale"><b>–</b><span>Stale</span></a>
+    </nav>
+
+    <figure class="pulse" id="pulse">
+      <svg viewBox="0 0 216 40" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <figcaption><span id="pulse-total">0</span> tool calls in the last 3 hours</figcaption>
+    </figure>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <main id="board">
+    <section class="lane" id="lane-needs" data-lane="needs">
+      <h2>Needs you <span class="lane-count"></span></h2>
+      <p class="lane-hint">Decisions, questions and fresh results, longest wait first.</p>
+      <div class="cards"></div>
+      <p class="empty">Nothing is waiting on you.</p>
+    </section>
+
+    <section class="lane" id="lane-working" data-lane="working">
+      <h2>Working <span class="lane-count"></span></h2>
+      <div class="cards"></div>
+      <p class="empty">No agent is working right now.</p>
+    </section>
+
+    <section class="lane" id="lane-move" data-lane="move">
+      <h2>Your move <span class="lane-count"></span></h2>
+      <p class="lane-hint">Finished and waiting for your next step.</p>
+      <div class="cards"></div>
+      <p class="empty">Nothing here.</p>
+    </section>
+
+    <section class="lane" id="lane-stale" data-lane="stale">
+      <h2>Stale <span class="lane-count"></span></h2>
+      <p class="lane-hint">No activity for a while. Close them or pick them back up.</p>
+      <div class="cards rows"></div>
+      <p class="empty">No stale sessions.</p>
+    </section>
+
+    <section class="lane" id="lane-shells" data-lane="shells">
+      <h2>No agent <span class="lane-count"></span></h2>
+      <div class="cards chips"></div>
+      <p class="empty">Every terminal has an agent.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <label>Stale after
+      <select id="stale-after">
+        <option value="43200000">12 hours</option>
+        <option value="86400000">1 day</option>
+        <option value="172800000">2 days</option>
+        <option value="604800000">1 week</option>
+      </select>
+    </label>
+    <span>Reads cmux and your Claude Code transcripts. Nothing leaves this machine.</span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
