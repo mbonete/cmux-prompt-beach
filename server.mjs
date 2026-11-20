@@ -34,6 +34,9 @@ const PERIODIC_REFRESH_MS = 5000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ALLOWED_HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
 const ALLOWED_ORIGINS = new Set([...ALLOWED_HOSTS].map((h) => `http://${h}`));
+// Demo mode serves made-up sessions (see demo.mjs) and never touches cmux.
+const DEMO = process.argv.includes('--demo') || process.env.SWITCHBOARD_DEMO === '1';
+const demo = DEMO ? (await import('./demo.mjs')).createDemo() : null;
 
 // ---------------------------------------------------------------------------
 // cmux bridge
@@ -407,6 +410,27 @@ function describeDecision(feedItem, tx) {
   return { ...base, tool: fromTx || describeTool(toolName, parseLooseJSON(feedItem.tool_input) || {}) };
 }
 
+// A project is a git repository: worktrees and subfolders join their repo through the
+// shared git dir. Sessions outside any repo get null and share one "hangout" lot.
+const REPO_TTL_MS = 60 * 1000;
+const repoCache = new Map(); // cwd -> { at, promise }
+
+function repoOf(cwd) {
+  if (!cwd) return Promise.resolve(null);
+  const hit = repoCache.get(cwd);
+  if (hit && Date.now() - hit.at < REPO_TTL_MS) return hit.promise;
+  const promise = new Promise((resolve) => {
+    execFile('git', ['-C', cwd, 'rev-parse', '--git-common-dir'], { timeout: 3000 }, (err, stdout) => {
+      if (err) return resolve(null);
+      const dir = path.resolve(cwd, String(stdout).trim());
+      const top = path.basename(dir) === '.git' ? path.dirname(dir) : dir.replace(/\.git$/, '');
+      resolve({ key: dir, name: path.basename(top) });
+    });
+  });
+  repoCache.set(cwd, { at: Date.now(), promise });
+  return promise;
+}
+
 async function buildSnapshot() {
   const now = Date.now();
   const [current, wsList, feed, notes] = await Promise.all([
@@ -505,6 +529,7 @@ async function buildSnapshot() {
         here: Boolean(ws.selected),
         cwd,
         project: cwd ? path.basename(cwd) : null,
+        repo: await repoOf(cwd),
         branch: tx?.branch && tx.branch !== 'HEAD' ? tx.branch : null,
         ports: normalizePorts(ws.listening_ports),
         agent: agent ? { kind: agent.kind, sessionId: agent.session_id, state: agent.state } : null,
@@ -571,7 +596,7 @@ async function refresh() {
   }
   refreshing = true;
   try {
-    snapshot = await buildSnapshot();
+    snapshot = DEMO ? demo.snapshot() : await buildSnapshot();
   } catch (err) {
     snapshot = {
       ...(snapshot || { items: [], pulse: null }),
@@ -662,6 +687,7 @@ function requireUuid(value, label) {
 }
 
 async function handleAction(body) {
+  if (DEMO) return demo.act(body);
   switch (body.action) {
     case 'jump': {
       const ws = requireUuid(body.workspaceId, 'workspace');
@@ -729,15 +755,21 @@ async function handleAction(body) {
 
 const STATIC = {
   '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
+  '/world.js': ['world.js', 'text/javascript; charset=utf-8'],
+  '/icons.js': ['icons.js', 'text/javascript; charset=utf-8'],
   '/styles.css': ['styles.css', 'text/css; charset=utf-8'],
   '/favicon.svg': ['favicon.svg', 'image/svg+xml'],
+  '/vendor/three.module.js': ['vendor/three.module.js', 'text/javascript; charset=utf-8', true],
+  '/vendor/three.core.js': ['vendor/three.core.js', 'text/javascript; charset=utf-8', true],
+  '/fonts/anton.woff2': ['fonts/anton.woff2', 'font/woff2', true],
+  '/fonts/yellowtail.woff2': ['fonts/yellowtail.woff2', 'font/woff2', true],
 };
 
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
   'Content-Security-Policy':
-    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'",
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'",
 };
 
 function send(res, status, type, body, extra = {}) {
@@ -777,8 +809,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === 'GET' && STATIC[url.pathname]) {
-      const [file, type] = STATIC[url.pathname];
-      return send(res, 200, type, await readFile(path.join(PUBLIC_DIR, file)));
+      const [file, type, cacheable] = STATIC[url.pathname];
+      return send(res, 200, type, await readFile(path.join(PUBLIC_DIR, file)), cacheable ? { 'Cache-Control': 'max-age=3600' } : {});
     }
 
     if (req.method === 'GET' && url.pathname === '/api/stream') {
@@ -826,7 +858,14 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Switchboard is running at http://localhost:${PORT}`);
+  console.log(`Switchboard is running at http://localhost:${PORT}${DEMO ? ' (demo mode: made-up sessions)' : ''}`);
+  if (DEMO) {
+    eventsLive = true;
+    demo.start({ changed: () => scheduleRefresh(0), tick: (surfaceId) => broadcast('tick', { surfaceId }) });
+    refresh();
+    setInterval(() => scheduleRefresh(0), PERIODIC_REFRESH_MS);
+    return;
+  }
   if (!process.env.CMUX_SOCKET && !process.env.CMUX_SOCKET_PATH && !process.env.CMUX_PANEL_ID) {
     console.log('Note: this shell does not look like a cmux terminal. If cmux refuses the connection, start Switchboard from a cmux terminal.');
   }
