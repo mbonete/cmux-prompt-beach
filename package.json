@@ -9,7 +9,24 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "demo": "node server.mjs --demo"
+    "demo": "node server.mjs --demo",
+    "dev": "vite",
+    "build": "node tools/clean-build.mjs && vite build",
+    "watch": "vite build --watch",
+    "typecheck": "tsc -p .",
+    "test": "node --test test/",
+    "assets:fetch": "node tools/assets/fetch.mjs"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@gltf-transform/cli": "4.5.1",
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "@types/three": "0.187.0",
+    "sharp": "0.35.5",
+    "three": "0.187.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8"
+  }
 }

@@ -1,0 +1,69 @@
+{
+  "_comment": "Raw third-party sources for the 3D world. tools/assets/fetch.mjs downloads them into assets-src/ (git-ignored). Rocketbox comes from a sparse git clone, see rocketbox-sparse.txt and fetch.mjs. Licences: see CREDITS.md.",
+  "polyhaven": {
+    "licence": "CC0 1.0 (https://polyhaven.com/license)",
+    "hdri": [
+      { "id": "qwantani_dusk_2_puresky", "res": "4k" },
+      { "id": "qwantani_sunset_puresky", "res": "4k" },
+      { "id": "qwantani_night_puresky", "res": "4k" },
+      { "id": "kloofendal_48d_partly_cloudy_puresky", "res": "4k" }
+    ],
+    "textures": [
+      { "id": "coast_sand_01", "res": "2k" },
+      { "id": "damp_beach_sand_02", "res": "2k" },
+      { "id": "asphalt_02", "res": "2k" },
+      { "id": "painted_plaster_wall", "res": "2k" },
+      { "id": "beige_wall_001", "res": "2k" },
+      { "id": "concrete_pavement", "res": "2k" },
+      { "id": "interlocking_concrete_pavers", "res": "2k" }
+    ],
+    "models": [
+      { "id": "street_lamp_02", "res": "1k" },
+      { "id": "CoffeeCart_01", "res": "1k" },
+      { "id": "modular_wooden_pier", "res": "1k" },
+      { "id": "classic_laptop", "res": "1k" },
+      { "id": "mid_century_lounge_chair", "res": "1k" },
+      { "id": "outdoor_table_chair_set_01", "res": "1k" },
+      { "id": "painted_wooden_bench", "res": "1k" },
+      { "id": "exterior_aircon_unit", "res": "1k" },
+      { "id": "ocean_buoy", "res": "1k" },
+      { "id": "utility_box_01", "res": "1k" },
+      { "id": "anthurium_botany_01", "res": "1k" },
+      { "id": "calathea_orbifolia_01", "res": "1k" },
+      { "id": "vintage_day_bed", "res": "1k" }
+    ]
+  },
+  "ambientcg": {
+    "licence": "CC0 1.0 (https://docs.ambientcg.com/license/)",
+    "materials": [
+      { "id": "Road007", "res": "2K-JPG" },
+      { "id": "PavingStones136", "res": "2K-JPG" },
+      { "id": "PaintedPlaster017", "res": "2K-JPG" },
+      { "id": "Ground093C", "res": "2K-JPG" }
+    ]
+  },
+  "mesh2motion": {
+    "licence": "CC0 1.0 for art assets (https://github.com/Mesh2Motion/mesh2motion-app/blob/main/LICENSE-CC0.MD)",
+    "base": "https://raw.githubusercontent.com/Mesh2Motion/mesh2motion-app/main/",
+    "files": [
+      "LICENSE-CC0.MD",
+      "static/assets/human/skeleton.glb",
+      "static/assets/human/model.glb",
+      "static/assets/human/animations/sleeping.glb",
+      "static/assets/human/animations/laytoidle.glb",
+      "static/assets/human/animations/victory-fist-pump.glb",
+      "static/assets/human/animations/sitting-writing.glb"
+    ]
+  },
+  "rocketbox": {
+    "licence": "MIT (https://github.com/microsoft/Microsoft-Rocketbox/blob/master/LICENSE.md)",
+    "repo": "https://github.com/microsoft/Microsoft-Rocketbox",
+    "sparse": "tools/assets/rocketbox-sparse.txt"
+  },
+  "quaternius": {
+    "licence": "CC0 1.0 (https://quaternius.com/packs/downtowncitymegakit.html)",
+    "packs": [
+      { "id": "downtown-city-megakit", "page": "https://quaternius.itch.io/downtown-city-megakit", "note": "Standard (free) tier; itch.io download, fetched manually into assets-src/quaternius/" }
+    ]
+  }
+}
