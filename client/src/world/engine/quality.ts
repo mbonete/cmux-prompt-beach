@@ -13,7 +13,7 @@ export interface QualityPreset {
 }
 
 // Tuned on a MacBook Air M3 at full window size (2 × 1710 × 896 CSS px): Balanced
-// is the level Auto starts at; temporal AA keeps 1.1× crisp enough on a Retina screen.
+// is the level Auto starts at; SMAA keeps 1.1× crisp enough on a Retina screen.
 export const PRESETS: Record<QualityLevel, QualityPreset> = {
   cinematic: { pixelRatio: 1.5, shadowMap: 3072, life: 1 },
   balanced: { pixelRatio: 1.1, shadowMap: 1536, life: 0.55 },

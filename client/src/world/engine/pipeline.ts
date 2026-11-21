@@ -36,6 +36,13 @@ import type { QualityLevel } from './quality';
 // appear and vanish from frame to frame, which reads as flicker everywhere.
 // Every frame is now computed the same way, so a still view is perfectly still.
 
+/** Leaving a pass out, for measuring what it costs (World.perfPipeline, with ?perf). */
+export interface PipelineParts {
+  ao?: boolean;
+  bloom?: boolean;
+  aa?: 'smaa' | 'fxaa' | 'none';
+}
+
 export class Pipeline {
   readonly pipeline: RenderPipeline;
   private readonly grade = {
@@ -48,14 +55,16 @@ export class Pipeline {
   };
   private bloomPass: ReturnType<typeof bloom> | null = null;
 
-  constructor(renderer: WebGPURenderer, scene: Scene, camera: Camera, level: QualityLevel) {
+  constructor(renderer: WebGPURenderer, scene: Scene, camera: Camera, level: QualityLevel, parts: PipelineParts = {}) {
     const g = this.grade;
     this.pipeline = new RenderPipeline(renderer);
     const scenePass = pass(scene, camera);
     const full = level !== 'light';
+    const useAo = parts.ao ?? full;
+    const aa = parts.aa ?? (full ? 'smaa' : 'fxaa');
 
     let beauty;
-    if (full) {
+    if (useAo) {
       scenePass.setMRT(mrt({ output, normal: packNormalToRGB(normalView) }));
       const color = scenePass.getTextureNode('output');
       const depth = scenePass.getTextureNode('depth');
@@ -73,11 +82,11 @@ export class Pipeline {
       beauty = scenePass.getTextureNode('output');
     }
 
-    const glow = bloom(beauty, 0.2, 0.55, 1.15);
+    const glow = parts.bloom === false ? null : bloom(beauty, 0.2, 0.55, 1.15);
     this.bloomPass = glow;
 
     const graded = Fn(() => {
-      const c = beauty.add(glow).rgb.toVar();
+      const c = (glow ? beauty.add(glow) : beauty).rgb.toVar();
       c.mulAssign(vec3(float(1).add(g.warmth.mul(0.09)), float(1).add(g.warmth.mul(0.012)), float(1).sub(g.warmth.mul(0.1))));
       const tone = smoothstep(0.03, 1.4, luminance(c));
       c.mulAssign(mix(g.shadowTint, g.highlightTint, tone));
@@ -89,7 +98,8 @@ export class Pipeline {
 
     // Anti-aliasing on the tone-mapped image, within the frame.
     this.pipeline.outputColorTransform = false;
-    this.pipeline.outputNode = full ? smaa(renderOutput(graded)) : fxaa(renderOutput(graded));
+    const out = renderOutput(graded);
+    this.pipeline.outputNode = aa === 'smaa' ? smaa(out) : aa === 'fxaa' ? fxaa(out) : out;
   }
 
   apply(look: Look) {

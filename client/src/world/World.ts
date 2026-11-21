@@ -16,7 +16,7 @@ import {
 } from 'three/webgpu';
 import { float, sin, time, uniform } from 'three/tsl';
 import { CameraRig } from './camera/rig';
-import { Pipeline } from './engine/pipeline';
+import { Pipeline, type PipelineParts } from './engine/pipeline';
 import { AutoQuality, PRESETS, type QualityLevel, type QualitySetting } from './engine/quality';
 import { Lighting } from './env/lighting';
 import { LOOKS, cloneLook, lookForHour, mixLook, type Look, type TimeOfDay } from './env/looks';
@@ -238,6 +238,15 @@ export class World {
     wind.value = on ? 0 : 1;
     this.people?.setReducedMotion(on);
     this.life?.setReducedMotion(on);
+  }
+
+  /** With ?perf: rebuild the post-processing without some of its passes, to measure them. */
+  perfPipeline(parts: PipelineParts) {
+    if (!this.perf) return;
+    this.pipeline.dispose();
+    this.pipeline = new Pipeline(this.renderer, this.scene, this.rig.camera, this.level, parts);
+    this.pipeline.apply(this.look);
+    this.resize();
   }
 
   private rebuildPipeline(level: QualityLevel) {
