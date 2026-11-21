@@ -50,7 +50,10 @@ export interface Rect {
 export const PROMENADE: Rect = { x0: -126, x1: 128, z0: -22, z1: -12 };
 export const BEACH_ROAD: Rect = { x0: -121.5, x1: 121.5, z0: -11, z1: -2 };
 /** The sand runs from the seawall down below the waterline. */
-export const BEACH = { x0: -700, x1: 128, zTop: -22, zShore: -66, zDeep: -150 } as const;
+/** The sand runs past both ends of the island, sloping away under the water there. */
+export const BEACH = { x0: -420, x1: 260, zTop: -22, zShore: -66, zDeep: -150 } as const;
+/** A seabed under all the water, so bays and open sea shade by depth instead of looking bottomless. */
+export const SEABED_Y = -6.5;
 
 /** Streets: east–west between plot rows, north–south avenues. Width in metres. */
 export const STREETS_EW = [21, 47, 73, 99].map((z) => ({ z, width: 9 }));

@@ -13,6 +13,7 @@ import {
   CITY_Y,
   PROMENADE,
   SEA_Y,
+  SEABED_Y,
   SKYLINE,
   STREETS_EW,
   STREETS_NS,
@@ -47,8 +48,14 @@ export function beachHeight(z: number, x = 0) {
     h = wetEnd - 3.2 * Math.pow(u, 0.8);
     t = 1;
   }
-  // Past the island's west end the sand slopes away under the water.
-  if (x < CITY.x0 + 4) h -= (CITY.x0 + 4 - x) * 0.07;
+  // Past the island's ends the sand slopes away under the water, down to the seabed.
+  const beyond = Math.max(0, CITY.x0 + 4 - x, x - (BAY_EDGE_X - 4));
+  if (beyond > 0) {
+    h -= beyond * 0.07;
+    // ...and toward the bay behind it, so the sand never meets the bay floor at a cliff.
+    h -= Math.min(1, beyond / 12) * Math.max(0, z - (top - 24)) * 0.18;
+  }
+  h = Math.max(h, SEABED_Y + 0.2);
   // Soft dunes on the dry sand only, fading out well before the wet slope.
   const dunes = 1 - Math.min(1, Math.max(0, (t - 0.35) / 0.25));
   if (dunes > 0) h += dunes * 0.12 * Math.sin(x * 0.07 + z * 0.11) * Math.sin(x * 0.031 - z * 0.05);
@@ -60,7 +67,7 @@ function beachGeometry() {
   const x1 = BEACH.x1;
   const z0 = BEACH.zDeep;
   const z1 = BEACH.zTop;
-  const nx = 220;
+  const nx = 230;
   const nz = 90;
   const g = new PlaneGeometry(x1 - x0, z1 - z0, nx, nz);
   g.rotateX(-Math.PI / 2);
@@ -168,6 +175,14 @@ export function buildGround(): Group {
   const inlandShore = new Mesh(inland, grassMaterial());
   inlandShore.receiveShadow = true;
   group.add(inlandShore);
+
+  // The seabed: everywhere under the water, a few metres down.
+  const bed = new PlaneGeometry(9000, 9000, 1, 1);
+  bed.rotateX(-Math.PI / 2);
+  bed.translate(0, SEABED_Y, 0);
+  const seabed = new Mesh(bed, concreteMaterial(0x6f6a58));
+  seabed.name = 'seabed';
+  group.add(seabed);
 
   // Far shore for the skyline.
   const far = new PlaneGeometry(SKYLINE.x1 - SKYLINE.x0 + 400, SKYLINE.z1 - SKYLINE.z0 + 400, 1, 1);

@@ -10,20 +10,25 @@ import {
   RepeatWrapping,
 } from 'three/webgpu';
 import {
-  Fn,
+  abs,
   cameraFar,
   cameraNear,
   cameraPosition,
   distance,
   float,
+  Fn,
+  length,
   linearDepth,
+  max,
+  min,
   mix,
   mx_noise_float,
-  normalMap,
   normalize,
+  normalMap,
   positionLocal,
   positionWorld,
   saturate,
+  screenUV,
   sin,
   smoothstep,
   texture,
@@ -31,10 +36,9 @@ import {
   uniform,
   vec2,
   vec3,
-  screenUV,
   viewportDepthTexture,
 } from 'three/tsl';
-import { BEACH, SEA_Y } from '../city/layout';
+import { BAY_EDGE_X, BEACH, CITY, SEA_Y } from '../city/layout';
 import { loading } from '../engine/assets';
 import type { Look } from './looks';
 
@@ -99,7 +103,17 @@ export class Ocean {
     const sceneDepth = linearDepth(depthCopy);
     const thickness = sceneDepth.sub(linearDepth()).mul(cameraFar.sub(cameraNear)).max(0).toVar();
 
-    const shallowness = smoothstep(7, 0.2, thickness);
+    // Colour by distance from the island (beach included), not by the depth below:
+    // the seabed changes shape where the beach ends and the bays begin, and
+    // depth-based colour drew those edges as hard lines on the water. Depth only
+    // adds the pale surf right at the waterline, where the sand is continuous.
+    const islandCentre = vec2((CITY.x0 + BAY_EDGE_X) / 2, (BEACH.zShore + CITY.z1 + 6) / 2);
+    const islandHalf = vec2((BAY_EDGE_X - CITY.x0) / 2, (CITY.z1 + 6 - BEACH.zShore) / 2);
+    const q = abs(positionWorld.xz.sub(islandCentre)).sub(islandHalf);
+    const coast = length(max(q, vec2(0))).add(min(max(q.x, q.y), float(0)));
+    const nearCoast = smoothstep(85, 0, coast).mul(0.9);
+    const surf = smoothstep(1.6, 0.1, thickness);
+    const shallowness = max(nearCoast, surf);
     const base = mix(u.deep, u.shallow, shallowness).toVar();
 
     // Shore foam: a soft band at the waterline plus lines running up the sand.
