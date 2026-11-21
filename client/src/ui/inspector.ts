@@ -16,7 +16,13 @@ interface ConvoCache {
   data: Conversation | null;
   error: string | null;
   loading: boolean;
+  /** The newest version seen while a fetch was running. */
+  latest?: string;
+  failedAt?: number;
 }
+
+const CONVO_RETRY_MS = 5000;
+const CONVO_CACHE_MAX = 12;
 
 export class Inspector {
   readonly el: HTMLElement;
@@ -128,21 +134,39 @@ export class Inspector {
     this.convo.hidden = false;
     const version = `${it.lastPromptAt}|${it.reply?.at}|${it.recap?.at}|${it.phase}`;
     let c = this.cache.get(it.surfaceId);
-    if (!c || (c.version !== version && !c.loading)) {
+    if (c?.loading) c.latest = version; // fetch again when this one lands
+    // Refetch when the session moved on, or a few seconds after a failure (it used to
+    // stay on the error, or miss a reply that arrived while a fetch was running).
+    const retry = Boolean(c?.error && Date.now() - (c.failedAt ?? 0) > CONVO_RETRY_MS);
+    if (!c || ((c.version !== version || retry) && !c.loading)) {
       const prev = c?.data ?? null;
       c = { version, data: prev, error: null, loading: true };
       this.cache.set(it.surfaceId, c);
+      // Only the last few sessions opened keep their conversation in memory.
+      while (this.cache.size > CONVO_CACHE_MAX) this.cache.delete(this.cache.keys().next().value!);
       const entry = c;
+      const settled = () => {
+        entry.loading = false;
+        if (entry.latest && entry.latest !== entry.version) {
+          entry.version = ''; // stale: the next render fetches again
+          entry.latest = undefined;
+          if (this.id === it.surfaceId) this.state.emit();
+        }
+      };
       this.actions.conversation(it.surfaceId).then(
         (data) => {
           entry.data = data;
-          entry.loading = false;
+          settled();
           if (this.id === it.surfaceId) this.paintConvo(true);
         },
         (err: Error) => {
           entry.error = err.message || 'Could not load the conversation.';
-          entry.loading = false;
+          entry.failedAt = Date.now();
+          settled();
           if (this.id === it.surfaceId) this.paintConvo(false);
+          setTimeout(() => {
+            if (this.id === it.surfaceId) this.state.emit();
+          }, CONVO_RETRY_MS + 50);
         },
       );
     }

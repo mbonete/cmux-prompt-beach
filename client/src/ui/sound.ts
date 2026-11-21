@@ -8,17 +8,26 @@ export class Sound {
   private master: GainNode | null = null;
   private ambience: GainNode | null = null;
   private chimeOn = false;
+  private ambienceOn = false;
   private lastChime = 0;
 
   /** Applies the two settings; starting audio is only possible inside a user gesture. */
   set(ambience: boolean, chime: boolean) {
     this.chimeOn = chime;
+    this.ambienceOn = ambience;
     if ((ambience || chime) && !this.ctx) this.start();
     if (!this.ctx || !this.ambience) return;
     const now = this.ctx.currentTime;
     this.ambience.gain.cancelScheduledValues(now);
     this.ambience.gain.setTargetAtTime(ambience ? 1 : 0, now, 0.8);
     if (ambience || chime) void this.ctx.resume();
+    else {
+      // All off: once the waves have faded, stop the audio engine (the noise
+      // sources and filters otherwise kept running silently, costing CPU).
+      setTimeout(() => {
+        if (!this.ambienceOn && !this.chimeOn) void this.ctx?.suspend();
+      }, 4000);
+    }
   }
 
   /** A gentle "someone needs you" chime, at most every few seconds. */

@@ -119,8 +119,16 @@ export class CameraRig {
     // Start from where the camera visibly is: fold the collision corrections into
     // the view before dropping them, or the camera would jump as the flight begins.
     if (this.steering) {
-      this.current.pitch = Math.min(RISE_MAX_PITCH, this.current.pitch + this.raiseShown);
-      this.current.distance *= this.keep;
+      // The corrections only move the camera within its vertical plane, so the
+      // visible camera is fully described by its distance and pitch from `look`.
+      const dx = this.camera.position.x - this.look.x;
+      const dy = this.camera.position.y - this.look.y;
+      const dz = this.camera.position.z - this.look.z;
+      const len = Math.hypot(dx, dy, dz);
+      if (len > 1e-3) {
+        this.current.distance = len;
+        this.current.pitch = Math.min(RISE_MAX_PITCH, Math.asin(MathUtils.clamp(dy / len, -1, 1)));
+      }
     }
     this.keep = 1;
     this.lift = 0;
@@ -141,6 +149,11 @@ export class CameraRig {
   /** Keep the target on a moving point (e.g. a selected agent) until the user pans. */
   setFollow(fn: (() => Vector3 | null) | null) {
     this.follow = fn;
+  }
+
+  /** What the camera currently follows (the idle tour sets it aside and puts it back). */
+  get following() {
+    return this.follow;
   }
 
   update(dt: number) {
@@ -344,6 +357,10 @@ export class CameraRig {
 
   private touched() {
     this.lastInput = performance.now();
+    // Taking over mid-flight: carry on from where the camera is. (`desired` still
+    // held the view from before the flight, so a scroll or a drag sent the camera
+    // back there, and could close the card that had just opened.)
+    if (this.flight) copyView(this.desired, this.current);
     this.flight = null;
     this.steering = true;
     this.onInput?.();
@@ -354,6 +371,8 @@ export class CameraRig {
     el.addEventListener('contextmenu', (e) => e.preventDefault());
 
     el.addEventListener('pointerdown', (e) => {
+      // Two pointers at most: a third finger made pinch-zoom jump and panning run triple speed.
+      if (this.pointers.size >= 2) return;
       // Clicking the map puts away any text selection (the canvas doesn't by itself).
       if (!document.getSelection()?.isCollapsed) document.getSelection()?.removeAllRanges();
       el.setPointerCapture(e.pointerId);

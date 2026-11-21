@@ -21,6 +21,8 @@ export class Director {
   enabled = true;
   private active = false;
   private saved: View | null = null;
+  /** Whoever the camera followed before the tour: the shots must not drift toward them. */
+  private savedFollow: (() => Vector3 | null) | null = null;
   private shot: Shot | null = null;
   private t = 0;
   private turn = 0;
@@ -82,6 +84,8 @@ export class Director {
     this.onCut?.('in');
     if (this.saved) this.rig.flyTo(this.saved, 1.1);
     this.saved = null;
+    this.rig.setFollow(this.savedFollow);
+    this.savedFollow = null;
   }
 
   private begin() {
@@ -89,6 +93,8 @@ export class Director {
     this.turn = 0;
     const d = this.rig.desired;
     this.saved = { target: d.target.clone(), distance: d.distance, yaw: d.yaw, pitch: d.pitch };
+    this.savedFollow = this.rig.following;
+    this.rig.setFollow(null);
     this.onChange?.(true);
     this.cut();
   }

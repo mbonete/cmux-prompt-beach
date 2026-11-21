@@ -28,6 +28,9 @@ export class AutoQuality {
   /** No judgement in the first seconds (shaders compile, assets stream in). */
   private lastChange = performance.now() + 5000;
 
+  /** Running on battery (where Chrome may cap the frame rate). */
+  onBattery = false;
+
   constructor(public level: QualityLevel = 'balanced') {}
 
   /**
@@ -45,7 +48,16 @@ export class AutoQuality {
     this.samples.push(ms);
     if (this.samples.length < 180) return null;
     const slow = this.samples.filter((x) => x > 20).length / this.samples.length;
+    // On battery, a steady 30 fps (or 20) is the browser capping the frame rate
+    // (Chrome's Energy Saver), not the city being too heavy: a lower quality
+    // wouldn't draw any faster, so don't step down. (Plugged in, the same steady
+    // 30 fps is a GPU that can't make 60, and stepping down is right.)
+    const sorted = [...this.samples].sort((a, b) => a - b);
+    const p10 = sorted[Math.floor(sorted.length * 0.1)];
+    const p90 = sorted[Math.floor(sorted.length * 0.9)];
+    const capped = this.onBattery && p90 - p10 < 4 && [33.3, 50].some((cap) => Math.abs(sorted[sorted.length >> 1] - cap) < 2.5);
     this.samples.length = 0;
+    if (capped) return null;
     const i = ORDER.indexOf(this.level);
     if (slow > 0.15 && i > 0) {
       this.level = ORDER[i - 1];

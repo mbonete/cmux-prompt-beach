@@ -27,6 +27,7 @@ export class App {
   private readonly root: HTMLElement;
   /** Events arriving together become one toast ("6 agents need you"), not a stream of them. */
   private pendingEvents: WorldEvent[] = [];
+  private worldFailed = false;
   private eventsTimer = 0;
   private readonly toasts: Toasts;
   private readonly actions: Actions;
@@ -182,6 +183,12 @@ export class App {
     if (inWorld) this.world?.focusAgent(id);
   }
 
+  /** The 3D city failed to load after startup: agents open in the side panel, from the lists. */
+  openLists() {
+    this.worldFailed = true;
+    this.state.openPanel('agents');
+  }
+
   private deselect() {
     this.state.select(null);
   }
@@ -200,7 +207,7 @@ export class App {
   }
 
   private inWorld(it: Item) {
-    return Boolean(this.world && it.agent && it.phase !== 'shell' && !it.archived && it.plot !== null && it.spot !== null);
+    return Boolean(this.world && !this.worldFailed && it.agent && it.phase !== 'shell' && !it.archived && it.plot !== null && it.spot !== null);
   }
 
   private rail(id: PanelId | null) {
@@ -258,7 +265,8 @@ export class App {
       // ...and keeps the person and the card centred as a pair. The gap is the one the
       // card will have once the camera lands (not the current one): computed from
       // the gap at take-off, the framing re-centred a second or two after landing.
-      const card = this.card.open ? Math.round((this.card.el.offsetWidth + cardGap(this.world.pxPerMAt(FOCUS_DISTANCE))) / 2) : 0;
+      // (No room while the tour runs: the card is hidden and the shots are framed alone.)
+      const card = this.card.open && !this.world.director.running ? Math.round((this.card.el.offsetWidth + cardGap(this.world.pxPerMAt(FOCUS_DISTANCE))) / 2) : 0;
       this.world.rig.shiftPx = (right - PANEL_GAP - (left - base)) / 2;
       this.world.rig.cardPx = card;
     }
@@ -304,6 +312,7 @@ export class App {
     w.director.onChange = (on) => {
       this.root.classList.toggle('app--idle', on);
       this.hud.setTour(on);
+      this.measure();
     };
     w.director.onCut = (phase) => this.cut.classList.toggle('cut--dark', phase === 'out');
     // Any input anywhere (the city, a panel, a button) is activity for the idle

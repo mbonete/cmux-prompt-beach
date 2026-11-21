@@ -86,6 +86,16 @@ export async function crewSize(sessionId, now = Date.now()) {
   return n;
 }
 
+/**
+ * Forget the caches of sessions that are gone (the server runs for days; every
+ * session ever seen used to stay in memory with its transcript summary).
+ */
+export function forgetSessionsExcept(keep) {
+  for (const map of [transcriptPaths, transcriptCache, promptMemory, conversationCache, crewCache]) {
+    for (const id of map.keys()) if (!keep.has(id)) map.delete(id);
+  }
+}
+
 export async function readTranscript(sessionId) {
   if (!UUID_RE.test(sessionId || '')) return null;
   const file = await locateTranscript(sessionId);

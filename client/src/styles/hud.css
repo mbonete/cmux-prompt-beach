@@ -2385,6 +2385,19 @@ button.toast:hover {
   .minimap {
     width: 112px;
   }
+
+  /* The top bar fills the row on a phone: toasts drop below it instead of covering the counts. */
+  .toasts {
+    top: calc(var(--hud-top) + 54px);
+    width: calc(100% - 24px);
+  }
+}
+
+/* Too narrow for the wordmark beside the top bar (it slid underneath it). */
+@container app (max-width: 560px) {
+  .brand {
+    display: none;
+  }
 }
 
 .reduce-motion *,
@@ -2401,4 +2414,20 @@ button.toast:hover {
   .app *::after {
     animation-iteration-count: 1 !important;
   }
+}
+
+/* ?perf readout: real frame numbers on the actual screen. */
+.perf-readout {
+  position: absolute;
+  bottom: 64px;
+  right: 14px;
+  z-index: 60;
+  margin: 0;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: rgb(10 6 20 / 0.78);
+  color: #c9f5ff;
+  font: 500 11px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: none;
+  white-space: pre;
 }

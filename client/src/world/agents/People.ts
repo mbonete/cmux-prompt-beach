@@ -7,6 +7,7 @@ import type { Overlay, Pin } from '../../ui/overlay';
 import type { District, PlotKey } from '../city/District';
 import type { Cast } from './cast';
 import { type Mood, Person, SHADOW_DISTANCE } from './Person';
+import { behindCamera } from '../engine/behind';
 
 // Keeps one Person per live agent, at its plot and spot, with a badge saying
 // how they need you and small pop-ups for each tool call.
@@ -84,12 +85,16 @@ export class People {
       const ask = askOf(item, lane);
 
       let e = this.entries.get(item.surfaceId);
+      // Moving to another seat or plot rebuilds the person: they keep their look
+      // (picking again counted their own avatar as taken and gave them another).
+      let keepAvatar: string | null = null;
       if (e && (e.plot !== item.plot || e.spot !== item.spot)) {
+        keepAvatar = e.person.avatarId;
         this.remove(item.surfaceId);
         e = undefined;
       }
       if (!e) {
-        const avatarId = this.cast.pick(item.agent.sessionId, taken);
+        const avatarId = keepAvatar ?? this.cast.pick(item.agent.sessionId, taken);
         taken.add(avatarId);
         const person = new Person(item.surfaceId, avatarId, spot, this.cast);
         person.reducedMotion = this.reducedMotion;
@@ -117,10 +122,12 @@ export class People {
         b.className = `badge${ask ? ` badge--${ask}` : ''}`;
         b.innerHTML = ask ? `${icon(ASK_ICON[ask], 'i badge__icon')}<span class="sr">${ASK_LABEL[ask]}</span>` : '';
         e.badge.el.classList.toggle('agent--asking', ask !== null);
+        e.badge.size = null; // re-measure for label spacing
       }
       if (e.title !== item.title) {
         e.title = item.title;
         e.badge.el.querySelector('.agent__name')!.textContent = item.title;
+        e.badge.size = null;
       }
       const crew = item.crew ?? 0;
       if (e.crew !== crew) {
@@ -129,6 +136,7 @@ export class People {
         c.hidden = crew === 0;
         c.textContent = crew ? crewText(crew) : '';
         c.title = crew ? crewTitle(crew) : '';
+        e.badge.size = null;
       }
       this.paintPin(e);
     }
@@ -182,6 +190,7 @@ export class People {
   private paintPin(e: Entry) {
     const id = e.person.id;
     const name = e.named || id === this.hovered || id === this.selected;
+    if (e.badge.el.classList.contains('agent--named') !== name) e.badge.size = null;
     e.badge.el.classList.toggle('agent--named', name);
     e.badge.el.classList.toggle('agent--selected', id === this.selected);
     e.badge.visible = e.ask !== null || name || e.crew > 0;
@@ -216,7 +225,7 @@ export class People {
       tmp.y += 0.95;
       const dist = camera.position.distanceTo(tmp);
       ndcV.copy(tmp).project(camera);
-      if (ndcV.z > 1) continue;
+      if (behindCamera(camera, tmp)) continue;
       const dx = ((ndcV.x - ndc.x) * w) / 2;
       const dy = ((ndcV.y - ndc.y) * h) / 2;
       const px = Math.hypot(dx, dy);

@@ -1,4 +1,5 @@
 import { type PerspectiveCamera, Vector3 } from 'three/webgpu';
+import { behindCamera } from '../world/engine/behind';
 
 // HTML pinned to points in the 3D world: plot name tags, agent badges and the
 // small tool-call pop-ups. Positions are written through CSSOM each frame
@@ -59,7 +60,7 @@ export class Overlay {
     for (const p of this.pins) {
       v.copy(p.world).project(camera);
       const dist = camera.position.distanceTo(p.world);
-      const onScreen = v.z < 1 && v.x > -1.15 && v.x < 1.15 && v.y > -1.15 && v.y < 1.15;
+      const onScreen = !behindCamera(camera, p.world) && v.x > -1.15 && v.x < 1.15 && v.y > -1.15 && v.y < 1.15;
       const show = p.visible && onScreen && dist < p.maxDistance;
       p.el.classList.toggle('pin--hidden', !show);
       if (!show) continue;

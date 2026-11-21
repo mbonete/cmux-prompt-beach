@@ -178,7 +178,9 @@ export function askBlock(row: Row, state: AppState, full: boolean): string {
         }
         h += '</div>';
       });
-      if (live) {
+      // Nothing to pick (the options aren't known here): it can only be answered in the terminal.
+      const answerable = b.questions.some((q) => q.options.length);
+      if (live && answerable) {
         const ready = b.questions.every((q, qi) => !q.options.length || sel[qi]?.length);
         h += `<div class="ask__btns">${btn('qsend', 'Send answer', { cls: 'btn--primary', icon: 'send', disabled: !ready })}</div>${deadlineLine(b)}`;
       } else h += heldLine('Answer it');
@@ -269,7 +271,11 @@ export function bindAgentActions(root: HTMLElement, state: AppState, actions: Ac
         void actions.run({ action: 'markRead', workspaceId: it.workspaceId }, 'Marked as read', el);
         break;
       case 'archive':
-        if (it.agent) void actions.run({ action: 'archive', sessionId: it.agent.sessionId }, `Archived “${it.title}”`, el);
+        if (it.agent)
+          void actions.run({ action: 'archive', sessionId: it.agent.sessionId }, `Archived “${it.title}”`, el).then((ok) => {
+            // The card closes with it (it stayed docked, showing the archived session); the side panel stays, it offers Unarchive.
+            if (ok && state.selected === it.surfaceId && !state.expanded) state.select(null);
+          });
         break;
       case 'unarchive':
         if (it.agent) void actions.run({ action: 'unarchive', sessionId: it.agent.sessionId }, `“${it.title}” is back`, el);
@@ -308,7 +314,9 @@ export function bindAgentActions(root: HTMLElement, state: AppState, actions: Ac
       case 'qsend': {
         if (b?.kind !== 'question' || !b.requestId) break;
         const sel = state.selections.get(selKey(it)) ?? [];
-        const selections = b.questions.map((_q, qi) => (sel[qi] ?? []).join(', ')).filter(Boolean);
+        // One entry per question, in order (filtering out the empty ones shifted the
+        // answers onto the wrong questions).
+        const selections = b.questions.map((_q, qi) => (sel[qi] ?? []).join(', '));
         void actions.run({ action: 'question', requestId: b.requestId, selections }, 'Answer sent', el);
         break;
       }
@@ -341,16 +349,28 @@ export function bindAgentActions(root: HTMLElement, state: AppState, actions: Ac
   });
 }
 
+/** Replies on their way, by session: a second Send (or Cmd+Enter) while one is in flight is ignored. */
+const sending = new Set<string>();
+
 async function sendReply(root: HTMLElement, row: Row, state: AppState, actions: Actions, el: HTMLButtonElement | null) {
-  const ta = root.querySelector<HTMLTextAreaElement>(`[data-id="${CSS.escape(row.item.surfaceId)}"] .composer__input`);
+  const id = row.item.surfaceId;
+  if (sending.has(id)) return;
+  const ta = root.querySelector<HTMLTextAreaElement>(`[data-id="${CSS.escape(id)}"] .composer__input`);
   const text = ta?.value.trim() ?? '';
   if (!text) {
     ta?.focus();
     return;
   }
-  const ok = await actions.run({ action: 'reply', workspaceId: row.item.workspaceId, surfaceId: row.item.surfaceId, text }, `Sent to “${row.item.title}”`, el);
-  if (ok) {
-    state.drafts.delete(row.item.surfaceId);
-    if (ta) ta.value = '';
+  // The server takes a moment (it re-reads the session before typing into it);
+  // pressing again meanwhile pasted the text twice.
+  sending.add(id);
+  try {
+    const ok = await actions.run({ action: 'reply', workspaceId: row.item.workspaceId, surfaceId: id, text }, `Sent to “${row.item.title}”`, el);
+    if (ok) {
+      state.drafts.delete(id);
+      if (ta) ta.value = '';
+    }
+  } finally {
+    sending.delete(id);
   }
 }

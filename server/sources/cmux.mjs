@@ -20,6 +20,7 @@ import {
   prettyToolName,
   readConversation,
   crewSize,
+  forgetSessionsExcept,
   readTranscript,
   trailingQuestion,
 } from './claude-transcripts.mjs';
@@ -33,6 +34,7 @@ import { mapLimit } from '../budget.mjs';
 export const REPO_SWITCH_MS = 60_000;
 export function createRepoStickiness() {
   const bySession = new Map(); // sessionId -> { repo, candidate, since, seen }
+  let calls = 0;
   return function sticky(sessionId, repo, now = Date.now()) {
     if (!sessionId) return repo;
     let s = bySession.get(sessionId);
@@ -43,6 +45,7 @@ export function createRepoStickiness() {
       return repo;
     }
     s.seen = now;
+    if (++calls % 500 === 0) for (const [k, v] of bySession) if (now - v.seen > 86_400_000) bySession.delete(k);
     if (!repo || repo.key === s.repo.key) {
       s.candidate = null;
       if (repo) s.repo = repo; // fresher name/kind
@@ -56,7 +59,6 @@ export function createRepoStickiness() {
       s.repo = repo;
       s.candidate = null;
     }
-    if (bySession.size > 2000) for (const [k, v] of bySession) if (now - v.seen > 86_400_000) bySession.delete(k);
     return s.repo;
   };
 }
@@ -326,6 +328,10 @@ async function buildSnapshot() {
     };
   });
 
+  // Caches only for sessions still here; repo lookups refreshed now and then.
+  forgetSessionsExcept(new Set(items.map((it) => it.agent?.sessionId).filter(Boolean)));
+  for (const [cwd, hit] of repoCache) if (now - hit.at > 10 * 60_000) repoCache.delete(cwd);
+
   return {
     generatedAt: new Date(now).toISOString(),
     cmux: { ok: true },
@@ -391,12 +397,18 @@ export function createCmuxSource() {
         // Ignore malformed frames.
       }
     });
-    child.on('error', () => {});
-    child.on('exit', () => {
+    // Restart once, whichever comes first: a failed spawn (cmux.app mid-update)
+    // emits only 'error', never 'exit', and used to stop the stream for good.
+    let restarted = false;
+    const restart = () => {
+      if (restarted) return;
+      restarted = true;
       eventsLive = false;
       live(false);
       setTimeout(startEvents, 3000);
-    });
+    };
+    child.on('error', restart);
+    child.on('exit', restart);
   }
 
   // -------------------------------------------------------------------------
@@ -449,7 +461,7 @@ export function createCmuxSource() {
       case 'question': {
         const requestId = requireUuid(body.requestId, 'request');
         const selections = Array.isArray(body.selections) ? body.selections.map((s) => String(s).slice(0, 500)).slice(0, 16) : [];
-        if (!selections.length) throw fail(400, 'Pick an answer first.');
+        if (!selections.some(Boolean)) throw fail(400, 'Pick an answer first.');
         await rpc('feed.question.reply', { request_id: requestId, selections });
         changed(100);
         return { ok: true };

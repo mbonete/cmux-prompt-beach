@@ -38,12 +38,15 @@ import type { Snapshot, Tick } from '../data/types';
 import { Overlay, type Pin } from '../ui/overlay';
 import { KIND_ICON, icon } from '../ui/icons';
 import { Sightlines } from './camera/sightlines';
+import { behindCamera } from './engine/behind';
 
 export interface WorldOptions {
   reducedMotion: boolean;
   timeOfDay: TimeOfDay;
   quality: QualitySetting;
   onStatus?: (s: WorldStatus) => void;
+  /** The graphics device was lost (GPU crash or reset): the city can't draw any more. */
+  onLost?: (message: string) => void;
 }
 
 export type Pick = { kind: 'agent'; id: string } | { kind: 'plot'; key: PlotKey } | { kind: 'ground'; x: number; z: number };
@@ -69,12 +72,12 @@ export const FOCUS_DISTANCE = 17;
 const OCCLUDERS = new Set(['stucco', 'trim', 'roof', 'awning', 'wood', 'concrete', 'planter', 'glass_block', 'glass', 'interior']);
 /**
  * Close-up angles to try, [yaw offset°, pitch°], nearest the default first:
- * cost = turn / 35° + pitch change / 8°. Looking lower sees under a parasol.
+ * cost = turn / 35° + pitch change / 8°.
  */
 const VIEW_CANDIDATES: [number, number][] = (() => {
   const out: [number, number][] = [];
   for (const d of [0, 20, -20, 40, -40, 60, -60, 85, -85, 110, -110, 140, -140, 180])
-    for (const p of [27, 21, 15, 34, 41]) out.push([d, p]);
+    for (const p of [27, 34, 41, 48]) out.push([d, p]); // within the rig's 25-65 deg (lower ones were clamped back)
   return out.sort((x, y) => Math.abs(x[0]) / 35 + Math.abs(x[1] - 27) / 8 - (Math.abs(y[0]) / 35 + Math.abs(y[1] - 27) / 8));
 })();
 /** Closer than this (metres from what the camera looks at), only the focused plot keeps its label. */
@@ -207,6 +210,22 @@ export class World {
     this.resize();
 
     new ResizeObserver(() => this.resize()).observe(canvas);
+    this.watchPixelRatio();
+    // Auto quality tells a battery frame-rate cap apart from a city that's too heavy.
+    const battery = (navigator as Navigator & { getBattery?: () => Promise<{ charging: boolean; addEventListener(t: string, f: () => void): void }> }).getBattery;
+    void battery
+      ?.call(navigator)
+      .then((b) => {
+        const update = () => (this.auto.onBattery = !b.charging);
+        update();
+        b.addEventListener('chargingchange', update);
+      })
+      .catch(() => {});
+    // A lost device (the GPU process crashed or reset) used to freeze the city with no word.
+    renderer.onDeviceLost = (info) => {
+      this.stop();
+      this.opts.onLost?.(info?.message || 'the graphics device was lost');
+    };
     document.addEventListener('visibilitychange', () => (document.hidden ? this.stop() : this.start()));
     // Default framing: the district from the land side, the sea and sunset beyond.
     this.rig.flyTo({ target: new Vector3(0, 0, 30), distance: 165 }, 0.01);
@@ -266,6 +285,34 @@ export class World {
     this.life?.setReducedMotion(on);
   }
 
+  private perfEl: HTMLElement | null = null;
+  private perfAcc = { n: 0, frame: 0, cpu: 0, at: 0 };
+
+  /**
+   * With ?perf: real numbers on your own screen (a headless browser paces its
+   * frames and can't measure the GPU): frame rate, frame and CPU time per frame,
+   * draw calls, triangles and quality, every half second.
+   */
+  private perfReadout(frameMs: number, cpuMs: number, now: number) {
+    const a = this.perfAcc;
+    a.n++;
+    a.frame += frameMs;
+    a.cpu += cpuMs;
+    if (now - a.at < 500) return;
+    if (!this.perfEl) {
+      this.perfEl = document.createElement('pre');
+      this.perfEl.className = 'perf-readout';
+      this.perfEl.setAttribute('aria-hidden', 'true');
+      this.canvas.parentElement?.appendChild(this.perfEl);
+    }
+    const info = this.renderer.info.render;
+    const frame = a.frame / a.n;
+    this.perfEl.textContent =
+      `${(1000 / frame).toFixed(0)} fps · frame ${frame.toFixed(1)} ms · cpu ${(a.cpu / a.n).toFixed(1)} ms\n` +
+      `${info.drawCalls} draws · ${(info.triangles / 1e6).toFixed(2)}M tris · ${this.level}`;
+    this.perfAcc = { n: 0, frame: 0, cpu: 0, at: now };
+  }
+
   /** With ?perf: rebuild the post-processing without some of its passes, to measure them. */
   perfPipeline(parts: PipelineParts) {
     if (!this.perf) return;
@@ -289,6 +336,24 @@ export class World {
     this.lighting.setShadowMapSize(p.shadowMap);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, p.pixelRatio));
     this.life?.setLevel(level);
+  }
+
+  /**
+   * Moving the window to a screen with another pixel density (a Retina laptop to
+   * an external display) doesn't resize the canvas, so the ResizeObserver never
+   * fired: re-apply the render resolution when the density changes.
+   */
+  private watchPixelRatio() {
+    const mq = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    mq.addEventListener(
+      'change',
+      () => {
+        this.applyQuality(this.level);
+        this.resize();
+        this.watchPixelRatio();
+      },
+      { once: true },
+    );
   }
 
   private resize() {
@@ -319,6 +384,7 @@ export class World {
   }
 
   private frame(now: number) {
+    const cpuStart = this.perf ? performance.now() : 0;
     this.timer.update(now);
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
 
@@ -365,6 +431,7 @@ export class World {
     const h = this.canvas.clientHeight;
     this.overlay.update(cam, w, h);
     this.onFrame?.(cam, w, h, now);
+    if (this.perf) this.perfReadout(frameMs, performance.now() - cpuStart, now);
 
     if (this.qualitySetting === 'auto' && !document.hidden) {
       const next = this.auto.sample(frameMs, now);
@@ -624,7 +691,7 @@ export class World {
   /**
    * The close-up angle nearest the preferred one (27° down, facing `baseYaw`)
    * from which the person's chest and head are both in sight. Tries turning a
-   * little, then looking lower (under a parasol), then further round.
+   * little, then from higher up, then further round.
    */
   private clearView(p: Vector3, baseYaw: number): { yaw: number; pitch: number } {
     const base = { yaw: baseYaw, pitch: MathUtils.degToRad(27) };
@@ -690,8 +757,8 @@ export class World {
     const h = this.canvas.clientHeight;
     const dist = cam.position.distanceTo(at);
     out.pxPerM = h / (2 * Math.tan(MathUtils.degToRad(cam.fov / 2)) * Math.max(1, dist));
+    out.behind = behindCamera(cam, at); // before project(), which overwrites `at`
     const v = at.project(cam);
-    out.behind = v.z > 1;
     out.x = (v.x * 0.5 + 0.5) * this.canvas.clientWidth;
     out.y = (-v.y * 0.5 + 0.5) * h;
     return true;
