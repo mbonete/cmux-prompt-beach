@@ -1,24 +1,27 @@
 import {
   Color,
-  DepthTexture,
-  FloatType,
-  TextureLoader,
+  HalfFloatType,
+  LinearFilter,
   Mesh,
+  MeshBasicNodeMaterial,
   MeshStandardNodeMaterial,
   NoColorSpace,
+  type Object3D,
+  OrthographicCamera,
   PlaneGeometry,
+  RenderTarget,
   RepeatWrapping,
+  Scene,
+  TextureLoader,
+  type WebGPURenderer,
 } from 'three/webgpu';
 import {
   abs,
-  cameraFar,
-  cameraNear,
   cameraPosition,
   distance,
   float,
   Fn,
   length,
-  linearDepth,
   max,
   min,
   mix,
@@ -28,27 +31,43 @@ import {
   positionLocal,
   positionWorld,
   saturate,
-  screenUV,
   sin,
   smoothstep,
+  step,
   texture,
   time,
   uniform,
   vec2,
   vec3,
-  viewportDepthTexture,
 } from 'three/tsl';
-import { BAY_EDGE_X, BEACH, CITY, SEA_Y } from '../city/layout';
+import { BAY_EDGE_X, BEACH, CAUSEWAY_END, CITY, SEABED_Y, SEA_Y } from '../city/layout';
 import { loading } from '../engine/assets';
 import type { Look } from './looks';
 
 // The sea: a PBR surface (so the sun's glitter path and the sky reflection come
 // from the real lights), two layers of scrolling FFT wave normals, a gentle swell
 // in the vertices, shallow turquoise over the sand, and foam where it meets the
-// beach. Depth behind the surface comes from the opaque scene's depth buffer.
+// beach. How deep the water is comes from a height map of everything under it
+// (beach, walls, causeways, seabed), drawn once from above at startup: none of it
+// moves, so the water never copies the scene's depth mid-frame (which split every
+// frame in two), and the foam keeps its width whatever the camera angle.
+
+/** The area the height map covers, and its resolution (metres per texel). */
+const SEABED_MAP = { x0: BEACH.x0 - 10, x1: BEACH.x1 + 10, z0: BEACH.zDeep - 10, z1: CAUSEWAY_END + 15, texel: 0.5 };
+/** Heights are stored as 0..1 over this range: negative values come out of the bake clamped to 0. */
+const HEIGHT_MIN = SEABED_Y - 1;
+const HEIGHT_RANGE = 20;
+/**
+ * The foam and see-through thresholds below were tuned on the depth along the
+ * view ray, which from the usual 25-40° camera is about twice the depth straight
+ * down; this keeps their look.
+ */
+const SLANT = 2;
 
 export class Ocean {
   readonly mesh: Mesh;
+  /** Height (world y) of whatever is under the water, seen from above. Filled by bakeSeabed(). */
+  private readonly seabed: RenderTarget;
   private readonly u = {
     deep: uniform(new Color(0x18557a)),
     shallow: uniform(new Color(0x3db8b4)),
@@ -57,6 +76,10 @@ export class Ocean {
 
   constructor() {
     const u = this.u;
+    const M = SEABED_MAP;
+    this.seabed = new RenderTarget(Math.round((M.x1 - M.x0) / M.texel), Math.round((M.z1 - M.z0) / M.texel), { type: HalfFloatType, depthBuffer: true });
+    this.seabed.texture.minFilter = this.seabed.texture.magFilter = LinearFilter;
+    this.seabed.texture.generateMipmaps = false;
     // Our FFT wave normals (8 m per repeat), made by tools/assets/env.
     const normals = new TextureLoader(loading).load('/assets/env/textures/water/ocean_normal.webp');
     normals.wrapS = normals.wrapT = RepeatWrapping;
@@ -92,16 +115,11 @@ export class Ocean {
     const fade = smoothstep(600, 40, dist).mul(0.55).add(0.08);
     m.normalNode = normalMap(blended.mul(0.5).add(0.5), vec2(fade));
 
-    // Water thickness in metres along the view ray, from the opaque scene's depth.
-    // The renderer uses a reversed float depth buffer, so the copy must be float too.
-    // (The third argument, a depth texture, is in three's source but not its types.)
-    const depthCopy = (viewportDepthTexture as unknown as (uv: unknown, level: null, tex: DepthTexture) => ReturnType<typeof viewportDepthTexture>)(
-      screenUV,
-      null,
-      new DepthTexture(1, 1, FloatType),
-    );
-    const sceneDepth = linearDepth(depthCopy);
-    const thickness = sceneDepth.sub(linearDepth()).mul(cameraFar.sub(cameraNear)).max(0).toVar();
+    // How deep the water is here, from the baked height map (plain seabed outside it).
+    const mapUv = vec2(positionWorld.x.sub(M.x0).div(M.x1 - M.x0), positionWorld.z.sub(M.z0).div(M.z1 - M.z0));
+    const inMap = step(0, mapUv.x).mul(step(mapUv.x, 1)).mul(step(0, mapUv.y)).mul(step(mapUv.y, 1));
+    const floorY = mix(float(SEABED_Y), texture(this.seabed.texture, mapUv).r.mul(HEIGHT_RANGE).add(HEIGHT_MIN), inMap);
+    const thickness = positionWorld.y.sub(floorY).max(0).mul(SLANT).toVar();
 
     // Colour by distance from the island (beach included), not by the depth below:
     // the seabed changes shape where the beach ends and the bays begin, and
@@ -136,6 +154,37 @@ export class Ocean {
     // frame) on top of filling the whole map with a sea-sized plane.
     this.mesh.receiveShadow = false;
     this.mesh.renderOrder = 1;
+  }
+
+  /**
+   * Draws the height of everything in `ground` (seen straight down) into the
+   * height map. Once, after the ground is built; nothing under the water moves.
+   */
+  bakeSeabed(renderer: WebGPURenderer, ground: Object3D) {
+    const M = SEABED_MAP;
+    const w = M.x1 - M.x0;
+    const d = M.z1 - M.z0;
+    const cam = new OrthographicCamera(-w / 2, w / 2, d / 2, -d / 2, 1, 600);
+    cam.position.set((M.x0 + M.x1) / 2, 300, (M.z0 + M.z1) / 2);
+    // Looking down with -z up: x runs left to right, z0 lands on the first row, which
+    // three samples at v = 0 for render targets (checked against the shoreline).
+    cam.up.set(0, 0, -1);
+    cam.lookAt((M.x0 + M.x1) / 2, 0, (M.z0 + M.z1) / 2);
+    cam.updateMatrixWorld();
+
+    const height = new MeshBasicNodeMaterial();
+    height.colorNode = vec3(saturate(positionWorld.y.sub(HEIGHT_MIN).div(HEIGHT_RANGE)));
+    height.fog = false;
+    const scene = new Scene();
+    scene.overrideMaterial = height;
+    const parent = ground.parent;
+    scene.add(ground); // the seabed plane in it covers every texel
+    const prevTarget = renderer.getRenderTarget();
+    renderer.setRenderTarget(this.seabed);
+    renderer.render(scene, cam);
+    renderer.setRenderTarget(prevTarget);
+    parent?.add(ground);
+    height.dispose();
   }
 
   apply(look: Look) {

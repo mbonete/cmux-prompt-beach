@@ -2,6 +2,7 @@ import {
   ACESFilmicToneMapping,
   AdditiveBlending,
   Color,
+  type Group,
   MathUtils,
   Mesh,
   MeshBasicNodeMaterial,
@@ -69,6 +70,7 @@ export class World {
   readonly rig: CameraRig;
   private readonly sky = new Sky();
   private readonly ocean = new Ocean();
+  private readonly ground: Group;
   private readonly lighting: Lighting;
   private pipeline: Pipeline;
   private readonly timer = new Timer();
@@ -143,7 +145,8 @@ export class World {
     // Keep the camera clear of the buildings (a height map read from their geometry).
     this.rig.obstacle = (x, z) => this.district.heightAt(x, z);
 
-    this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), plantPalms().group);
+    this.ground = buildGround();
+    this.scene.add(this.sky.mesh, this.ocean.mesh, this.ground, plantPalms().group);
     this.lighting = new Lighting(renderer, this.scene, this.sky);
     // The sun also sees shadow-only stand-ins (palm fronds without their alpha test).
     this.lighting.sun.shadow.camera.layers.enable(SHADOW_ONLY_LAYER);
@@ -386,6 +389,7 @@ export class World {
     if (this.lastSnapshot) this.sync(this.lastSnapshot);
     this.mark('people placed');
     this.lighting.updateEnvironment(true);
+    this.ocean.bakeSeabed(this.renderer, this.ground);
     this.mark('city built');
     // Build every GPU pipeline now, in parallel and off the main thread, instead of
     // one by one inside the first frames (which froze the page for seconds).
