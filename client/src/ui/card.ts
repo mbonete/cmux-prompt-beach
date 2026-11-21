@@ -9,7 +9,10 @@ import { icon } from './icons';
 // person on screen, flips sides near an edge, and docks to the right edge when
 // they are off screen. Expand hands over to the side panel.
 
-const GAP = 40;
+/** Clear space between the person and the card: about a metre (a waving arm) on screen, plus a margin. */
+const REACH_M = 1.1;
+const GAP_MIN = 56;
+const GAP_MAX = 170;
 const MARGIN = 14;
 
 export interface Insets {
@@ -78,8 +81,13 @@ export class AgentCard {
    * Places the card beside a screen point (the person's head), or docks it when
    * the point is off screen. Called every frame while a card is open.
    */
-  place(anchor: { x: number; y: number } | null, view: { w: number; h: number }, insets: Insets) {
+  /** The gap used at the last placement (the camera framing makes room for it). */
+  gap = 72;
+
+  place(anchor: { x: number; y: number; pxPerM?: number } | null, view: { w: number; h: number }, insets: Insets) {
     if (this.el.hidden) return;
+    const GAP = anchor?.pxPerM ? Math.round(Math.min(GAP_MAX, Math.max(GAP_MIN, anchor.pxPerM * REACH_M + 18))) : this.gap;
+    this.gap = GAP;
     const w = this.el.offsetWidth;
     const h = this.el.offsetHeight;
     const minX = insets.left + MARGIN;

@@ -599,13 +599,18 @@ export class World {
   private readonly anchorTmp = new Vector3();
 
   /** Screen position (CSS px) of a steady point above someone, and whether it's in front of the camera. */
-  screenOf(id: string, out: { x: number; y: number; behind: boolean }): boolean {
+  screenOf(id: string, out: { x: number; y: number; behind: boolean; pxPerM?: number }): boolean {
     const at = this.people?.anchorOf(id, this.anchorTmp);
     if (!at) return false;
-    const v = at.project(this.rig.camera);
+    const cam = this.rig.camera;
+    // How many pixels one metre spans at the person, for spacing HTML around them.
+    const h = this.canvas.clientHeight;
+    const dist = cam.position.distanceTo(at);
+    out.pxPerM = h / (2 * Math.tan(MathUtils.degToRad(cam.fov / 2)) * Math.max(1, dist));
+    const v = at.project(cam);
     out.behind = v.z > 1;
     out.x = (v.x * 0.5 + 0.5) * this.canvas.clientWidth;
-    out.y = (-v.y * 0.5 + 0.5) * this.canvas.clientHeight;
+    out.y = (-v.y * 0.5 + 0.5) * h;
     return true;
   }
 

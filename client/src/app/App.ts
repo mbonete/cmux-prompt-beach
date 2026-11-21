@@ -38,9 +38,9 @@ export class App {
   private readonly reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   private applied: Partial<Settings> = {};
   private insets: Insets = { left: 96, top: 72, right: 16, bottom: 16 };
-  private readonly scratch = { x: 0, y: 0, behind: false };
+  private readonly scratch: { x: number; y: number; behind: boolean; pxPerM?: number } = { x: 0, y: 0, behind: false };
   /** Where the card is anchored on screen, eased so it never trembles. */
-  private cardAnchor: { x: number; y: number; id: string; at: number } | null = null;
+  private cardAnchor: { x: number; y: number; id: string; at: number; pxPerM?: number } | null = null;
   private needsIds: string[] = [];
   /** Screen areas edge arrows keep off: the minimap and the controls hint. */
   private avoid: DOMRect[] = [];
@@ -229,7 +229,8 @@ export class App {
       // Keep what the camera looks at centred in the space the panels leave free.
       const base = (rail?.right ?? 80) + PANEL_GAP;
       // With the card open, the person sits a little left of centre so the card fits beside them.
-      const card = this.card.open ? 150 : 0;
+      // ...and keeps the person and the card centred as a pair.
+      const card = this.card.open ? Math.round((this.card.el.offsetWidth + this.card.gap) / 2) : 0;
       this.world.rig.shiftPx = (right - PANEL_GAP - (left - base)) / 2 + card;
     }
   }
@@ -294,8 +295,9 @@ export class App {
         else {
           const a = this.cardAnchor;
           const dt = a ? Math.min(0.1, (now - a.at) / 1000) : 0;
-          if (!a || a.id !== sel) this.cardAnchor = { x: this.scratch.x, y: this.scratch.y, id: sel, at: now };
+          if (!a || a.id !== sel) this.cardAnchor = { x: this.scratch.x, y: this.scratch.y, id: sel, at: now, pxPerM: this.scratch.pxPerM };
           else {
+            a.pxPerM = this.scratch.pxPerM;
             // Follow the camera's moves smoothly; ignore sub-pixel wobble.
             const dx = this.scratch.x - a.x;
             const dy = this.scratch.y - a.y;
