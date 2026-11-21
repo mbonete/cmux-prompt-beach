@@ -26,6 +26,16 @@ const COLORS = [
   [0x9fd8c2, 1], [0xef8a70, 1], [0xf0d58a, 1], [0x9cc2e6, 1], [0xf2a7b4, 1], [0xd8c8a8, 1],
 ] as const;
 const PASTELS = [0xf2a7b4, 0x9fd8c2, 0xf0d58a, 0x9cc2e6, 0xf6f3ee, 0xef8a70].map((h) => new Color(h));
+/** The headlight lenses sit this far in from the body side on every kit car. */
+const LAMP_INSET = 0.42;
+/**
+ * One ground beam per headlight: width, length and strength of each. The pair
+ * starts as two pools and merges further out; together they carry about the
+ * light of the old single centred beam (3.4 wide at 0.55).
+ */
+const BEAM_W = 2.8;
+const BEAM_L = 13;
+const BEAM_K = 0.34;
 
 class Path {
   readonly x: number[] = [];
@@ -103,6 +113,8 @@ class Car {
     readonly type: number,
     readonly tint: Color,
     readonly len: number,
+    /** Half the distance between the two headlights. */
+    readonly lamp: number,
     readonly vmax: number,
   ) {}
 }
@@ -145,8 +157,9 @@ export class Traffic {
       while (type < TYPES.length - 1 && u > TYPE_WEIGHT[type]) u -= TYPE_WEIGHT[type++];
       const info = models[type].info;
       const len = info.bounds.max[2] - info.bounds.min[2];
+      const lamp = (info.bounds.max[0] - info.bounds.min[0]) / 2 - LAMP_INSET;
       const tint = type === 2 ? pick(r, PASTELS) : this.color(r);
-      this.cars.push(new Car(type, tint, len, (type === 3 ? 7.6 : 8.6) + (r() - 0.5) * 2.4));
+      this.cars.push(new Car(type, tint, len, lamp, (type === 3 ? 7.6 : 8.6) + (r() - 0.5) * 2.4));
     }
     this.parkedSites(models.map((m) => m.info.bounds.max[2] - m.info.bounds.min[2]));
     this.fleets = models.map((m, type) => {
@@ -155,7 +168,7 @@ export class Traffic {
       f.addTo(this.group);
       return f;
     });
-    this.beams = new Pools(maxCars, 'beam', new Color(1.0, 0.8, 0.58).multiplyScalar(0.32));
+    this.beams = new Pools(maxCars * 2, 'beam', new Color(1.0, 0.8, 0.58).multiplyScalar(0.32));
     this.group.add(this.beams.mesh);
     for (const c of this.cars) this.place(c, true);
     this.setDensity(this.density);
@@ -435,7 +448,13 @@ export class Traffic {
       const yaw = Math.atan2(c.hx, c.hz);
       q.setFromAxisAngle(up, yaw);
       f.setMatrix(c.slot, mtx.compose(pos.set(c.x, ROAD_Y, c.z), q, one));
-      this.beams.set(beam++, c.x + c.hx * c.len * 0.48, ROAD_Y + 0.04, c.z + c.hz * c.len * 0.48, 3.4, 13, yaw, 0.55);
+      // Two beams, one from each headlight at the front corners.
+      const fx = c.x + c.hx * c.len * 0.48;
+      const fz = c.z + c.hz * c.len * 0.48;
+      const sx = c.hz * c.lamp;
+      const sz = -c.hx * c.lamp;
+      this.beams.set(beam++, fx + sx, ROAD_Y + 0.04, fz + sz, BEAM_W, BEAM_L, yaw, BEAM_K);
+      this.beams.set(beam++, fx - sx, ROAD_Y + 0.04, fz - sz, BEAM_W, BEAM_L, yaw, BEAM_K);
     }
     this.beams.count = beam;
     for (const f of this.fleets) f.commit();
