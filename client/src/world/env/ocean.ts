@@ -34,7 +34,7 @@ import {
   screenUV,
   viewportDepthTexture,
 } from 'three/tsl';
-import { SEA_Y } from '../city/layout';
+import { BEACH, SEA_Y } from '../city/layout';
 import { loading } from '../engine/assets';
 import type { Look } from './looks';
 
@@ -66,14 +66,16 @@ export class Ocean {
 
     const m = new MeshStandardNodeMaterial({ transparent: true, roughness: 0.05, metalness: 0, depthWrite: true });
 
-    // A soft swell: a few long sines, strongest near the camera's area.
+    // A soft swell: a few long sines, calming toward the beach (in shallow water a
+    // big swell would push the waterline back and forth across the sand).
     m.positionNode = Fn(() => {
       const p = positionLocal.toVar();
       const swell = sin(p.x.mul(0.045).add(p.z.mul(0.11)).add(t.mul(0.9)))
         .mul(0.09)
         .add(sin(p.x.mul(-0.09).add(p.z.mul(0.07)).add(t.mul(1.3))).mul(0.05))
         .add(sin(p.z.mul(0.2).add(t.mul(1.7))).mul(0.03));
-      p.y.addAssign(swell);
+      const nearShore = smoothstep(float(BEACH.zShore - 70), float(BEACH.zShore + 2), p.z);
+      p.y.addAssign(swell.mul(mix(float(1), float(0.4), nearShore)));
       return p;
     })();
 
@@ -103,8 +105,8 @@ export class Ocean {
     // Shore foam: a soft band at the waterline plus lines running up the sand.
     const n1 = mx_noise_float(vec3(positionWorld.x.mul(0.35), positionWorld.z.mul(0.9), t.mul(0.25))).mul(0.5).add(0.5);
     const n2 = mx_noise_float(vec3(positionWorld.x.mul(1.8), positionWorld.z.mul(2.4), t.mul(0.6))).mul(0.5).add(0.5);
-    const edge = smoothstep(0.55, 0.0, thickness).mul(n1.mul(0.6).add(0.55));
-    const lines = smoothstep(0.86, 0.98, sin(thickness.mul(3.2).sub(t.mul(1.4))).mul(0.5).add(0.5)).mul(smoothstep(2.2, 0.3, thickness));
+    const edge = smoothstep(0.32, 0.0, thickness).mul(n1.mul(0.5).add(0.6));
+    const lines = smoothstep(0.88, 0.98, sin(thickness.mul(3.2).sub(t.mul(1.4))).mul(0.5).add(0.5)).mul(smoothstep(1.3, 0.25, thickness)).mul(0.75);
     const foam = saturate(edge.add(lines.mul(n2))).toVar();
 
     m.colorNode = mix(base, vec3(0.93, 0.95, 0.94), foam);

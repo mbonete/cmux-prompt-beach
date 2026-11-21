@@ -146,8 +146,8 @@ export class Walkers {
     };
     const promA = PROMENADE.z1 - 1.3;
     const promB = PROMENADE.z0 + 2.6;
-    const beachA = -57.6;
-    const beachB = -60.8;
+    const beachA = -54.2;
+    const beachB = -57.2;
     const groundProm = () => PROM_Y;
     const groundBeach = (x: number, z: number) => beachHeight(z, x);
     for (let i = 0; i < maxWalkers; i++) {

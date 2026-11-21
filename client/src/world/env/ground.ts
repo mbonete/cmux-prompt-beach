@@ -30,19 +30,28 @@ const LAND_FAR = CITY.z1 + 6;
 export function beachHeight(z: number, x = 0) {
   const top = BEACH.zTop;
   const shore = BEACH.zShore;
+  // A gentle dry beach, then a steeper wet slope into the water, so the waterline
+  // (the swell moves the sea about ±0.1 m there) only travels a metre or two and
+  // the foam stays a clean band instead of spreading over a flat beach in patches.
+  const dryEnd = CITY_Y - 0.72;
+  const wetEnd = SEA_Y - 0.28;
   let h: number;
+  let t = 0;
   if (z >= top) h = CITY_Y - 0.55;
   else if (z >= shore) {
-    const t = (top - z) / (top - shore);
-    h = CITY_Y - 0.55 + (SEA_Y + 0.02 - (CITY_Y - 0.55)) * Math.pow(t, 1.35);
+    t = (top - z) / (top - shore);
+    if (t <= 0.7) h = CITY_Y - 0.55 + (dryEnd - (CITY_Y - 0.55)) * (t / 0.7);
+    else h = dryEnd + (wetEnd - dryEnd) * Math.pow((t - 0.7) / 0.3, 1.15);
   } else {
-    const t = Math.min(1, (shore - z) / (shore - BEACH.zDeep));
-    h = SEA_Y + 0.02 - 3.5 * Math.pow(t, 0.8);
+    const u = Math.min(1, (shore - z) / (shore - BEACH.zDeep));
+    h = wetEnd - 3.2 * Math.pow(u, 0.8);
+    t = 1;
   }
   // Past the island's west end the sand slopes away under the water.
   if (x < CITY.x0 + 4) h -= (CITY.x0 + 4 - x) * 0.07;
-  // Soft dunes on the dry sand.
-  if (z > shore + 6) h += 0.12 * Math.sin(x * 0.07 + z * 0.11) * Math.sin(x * 0.031 - z * 0.05);
+  // Soft dunes on the dry sand only, fading out well before the wet slope.
+  const dunes = 1 - Math.min(1, Math.max(0, (t - 0.35) / 0.25));
+  if (dunes > 0) h += dunes * 0.12 * Math.sin(x * 0.07 + z * 0.11) * Math.sin(x * 0.031 - z * 0.05);
   return h;
 }
 

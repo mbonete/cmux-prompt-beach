@@ -29,7 +29,7 @@ export class CameraRig {
   readonly desired: View;
   reducedMotion = false;
   /** Set while a flight is running; cleared by any manual input. */
-  private flight: { from: View; to: View; t: number; dur: number } | null = null;
+  private flight: { from: View; to: View; t: number; dur: number; shiftFrom: number } | null = null;
   private follow: (() => Vector3 | null) | null = null;
   private readonly ray = new Raycaster();
   private readonly ground = new Plane(new Vector3(0, 1, 0), 0);
@@ -57,6 +57,11 @@ export class CameraRig {
   /** Eased camera collision: how much of the distance is kept, and how far it is lifted. */
   private keep = 1;
   private lift = 0;
+  /**
+   * Collision corrections run only while the user steers the camera; a flight
+   * lands on a destination already checked clear, so nothing moves after it.
+   */
+  private steering = false;
   private dt = 1 / 60;
 
   constructor(
@@ -83,13 +88,20 @@ export class CameraRig {
     if (view.yaw !== undefined) to.yaw = view.yaw;
     if (view.pitch !== undefined) to.pitch = view.pitch;
     clampView(to);
+    // Land somewhere clear: work out now how close the camera may come to what
+    // it looks at, so nothing has to correct it after it arrives.
+    this.clearDestination(to);
+    this.keep = 1;
+    this.lift = 0;
+    this.steering = false;
     if (this.reducedMotion) {
       copyView(this.desired, to);
       copyView(this.current, to);
+      this.shiftCur = this.shiftPx;
       this.flight = null;
       return;
     }
-    this.flight = { from: cloneView(this.current), to, t: 0, dur: seconds };
+    this.flight = { from: cloneView(this.current), to, t: 0, dur: seconds, shiftFrom: this.shiftCur };
   }
 
   /** Keep the target on a moving point (e.g. a selected agent) until the user pans. */
@@ -99,15 +111,16 @@ export class CameraRig {
 
   update(dt: number) {
     this.dt = dt;
-    this.shiftCur += (this.shiftPx - this.shiftCur) * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 7));
     if (this.flight) {
+      // One smooth move: target, distance, angles and the card's framing shift all
+      // ride the same curve and arrive together; nothing settles afterwards.
       const f = this.flight;
       f.t = Math.min(1, f.t + dt / f.dur);
       const k = easeInOut(f.t);
+      this.shiftCur = MathUtils.lerp(f.shiftFrom, this.shiftPx, k);
       this.current.target.lerpVectors(f.from.target, f.to.target, k);
-      this.current.distance = MathUtils.lerp(f.from.distance, f.to.distance, k);
-      // A flight arcs out a little in the middle, like a camera crane.
-      this.current.distance *= 1 + Math.sin(k * Math.PI) * 0.12;
+      // Distance moves in log space, so zooming in from far feels even, not a rush at the end.
+      this.current.distance = Math.exp(MathUtils.lerp(Math.log(f.from.distance), Math.log(f.to.distance), k));
       this.current.yaw = lerpAngle(f.from.yaw, f.to.yaw, k);
       this.current.pitch = MathUtils.lerp(f.from.pitch, f.to.pitch, k);
       if (f.t >= 1) {
@@ -115,6 +128,7 @@ export class CameraRig {
         this.flight = null;
       }
     } else {
+      this.shiftCur += (this.shiftPx - this.shiftCur) * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 7));
       if (this.follow) {
         const p = this.follow();
         if (p) this.desired.target.lerp(p, 1 - Math.exp(-dt * 4));
@@ -165,9 +179,47 @@ export class CameraRig {
       this.look.y + Math.sin(v.pitch) * v.distance,
       this.look.z + Math.cos(v.yaw) * cp * v.distance,
     );
-    if (this.obstacle) this.avoidObstacles();
+    // In flight the destination is already clear; correcting on the way made the camera bob.
+    if (this.obstacle && !this.flight && this.steering) this.avoidObstacles();
     if (this.camera.position.y < 1.5) this.camera.position.y = 1.5;
     this.camera.lookAt(this.look);
+  }
+
+  /**
+   * Makes a destination view clear of buildings before flying there: shorter if
+   * a building stands between the target and the camera, steeper if the camera
+   * would end up too low over one.
+   */
+  private clearDestination(v: View) {
+    if (!this.obstacle) return;
+    const solid = (x: number, z: number) => {
+      const h = this.obstacle!(x, z);
+      return h > SOLID ? h : 0;
+    };
+    const from = v.target;
+    if (v.distance <= 28) {
+      const cp = Math.cos(v.pitch);
+      const dx = Math.sin(v.yaw) * cp;
+      const dy = Math.sin(v.pitch);
+      const dz = Math.cos(v.yaw) * cp;
+      for (let i = 1; i <= 40; i++) {
+        const d = (i / 40) * v.distance;
+        if (d < 4.5) continue;
+        if (from.y + dy * d < solid(from.x + dx * d, from.z + dz * d) + 0.6) {
+          v.distance = Math.max(MIN_DIST, d - 1.5);
+          break;
+        }
+      }
+    }
+    for (let i = 0; i < 12; i++) {
+      const cp = Math.cos(v.pitch);
+      const x = from.x + Math.sin(v.yaw) * cp * v.distance;
+      const z = from.z + Math.cos(v.yaw) * cp * v.distance;
+      const y = from.y + Math.sin(v.pitch) * v.distance;
+      const floor = solid(x, z) + (v.distance > 28 ? 2.5 : 1.2);
+      if (y >= floor || v.pitch >= MAX_PITCH) break;
+      v.pitch = Math.min(MAX_PITCH, v.pitch + MathUtils.degToRad(3));
+    }
   }
 
   /**
@@ -219,6 +271,7 @@ export class CameraRig {
   private touched() {
     this.lastInput = performance.now();
     this.flight = null;
+    this.steering = true;
     this.onInput?.();
   }
 
@@ -383,7 +436,8 @@ function copyView(out: View, v: View) {
 function clampView(v: View) {
   v.target.x = MathUtils.clamp(v.target.x, BOUNDS.x0, BOUNDS.x1);
   v.target.z = MathUtils.clamp(v.target.z, BOUNDS.z0, BOUNDS.z1);
-  v.target.y = 0;
+  // Aim at the ground or a little above it (a person is framed at the waist).
+  v.target.y = MathUtils.clamp(v.target.y, 0, 3);
   v.distance = MathUtils.clamp(v.distance, MIN_DIST, MAX_DIST);
   v.pitch = MathUtils.clamp(v.pitch, MIN_PITCH, MAX_PITCH);
 }
