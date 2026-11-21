@@ -256,17 +256,18 @@ export class Person {
       this.body.position.set(0, 0, 0.45);
       return;
     }
+    const yaw = MathUtils.degToRad(ge.yawDeg ?? 0);
     this.body.position.set(ge.pos[0], 0, ge.pos[2]);
-    this.baseYaw = ge.yaw;
-    this.yaw = ge.yaw;
-    this.body.rotation.y = ge.yaw;
+    this.baseYaw = yaw;
+    this.yaw = yaw;
+    this.body.rotation.y = yaw;
   }
 
   /** Start the sit-down where it will end on the seat. */
   private prepareSitDown(clip: string) {
     const ge = this.cast.clipInfo(this.skeleton, clip)?.groundEnd;
     if (!ge) return;
-    const yaw = -ge.yaw;
+    const yaw = -MathUtils.degToRad(ge.yawDeg ?? 0);
     tmpV.set(-ge.pos[0], 0, -ge.pos[2]).applyAxisAngle(up, yaw);
     this.body.position.set(tmpV.x, this.spot.seatH - this.seatClip, tmpV.z);
     this.baseYaw = yaw;

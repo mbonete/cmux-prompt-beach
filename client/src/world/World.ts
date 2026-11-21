@@ -2,14 +2,16 @@ import { AgXToneMapping, PCFShadowMap, Scene, Timer, Vector3, WebGPURenderer } f
 import { CameraRig } from './camera/rig';
 import { Pipeline } from './engine/pipeline';
 import { AutoQuality, PRESETS, type QualityLevel, type QualitySetting } from './engine/quality';
-import { buildGround } from './env/ground';
 import { Lighting } from './env/lighting';
 import { LOOKS, cloneLook, lookForHour, mixLook, type Look, type TimeOfDay } from './env/looks';
 import { wetness } from './env/materials';
 import { Ocean } from './env/ocean';
 import { Sky } from './env/sky';
+import { Palms } from './env/palms';
+import { beachHeight, buildGround } from './env/ground';
 import { buildBackgroundBlocks, buildSkyline, windowsLevel } from './city/blockout';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
+import { HANGOUT, PLOTS, PLOT_D, PLOT_W, PLOT_X, STREETS_EW, STREETS_NS } from './city/layout';
 import { Cast } from './agents/cast';
 import { People } from './agents/People';
 import { DEFAULT_STALE_MS, laneOf } from '../data/derive';
@@ -84,8 +86,11 @@ export class World {
 
     this.rig = new CameraRig(canvas, canvas.clientWidth / Math.max(1, canvas.clientHeight));
     this.rig.reducedMotion = this.reducedMotion;
+    // Plot buildings rise to about 18 m; keep the camera above them when it's over a plot.
+    this.rig.clearance = (x, z) =>
+      PLOTS.some((p) => Math.abs(x - p.x) < PLOT_W / 2 + 3 && Math.abs(z - p.z) < PLOT_D / 2 + 3) ? 21 : 1.5;
 
-    this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), buildBackgroundBlocks(), buildSkyline());
+    this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), buildBackgroundBlocks(), buildSkyline(), plantPalms().group);
     this.lighting = new Lighting(renderer, this.scene, this.sky);
     this.district = new District(this.scene);
     this.overlay = new Overlay(canvas.parentElement ?? document.body);
@@ -318,6 +323,34 @@ export class World {
       el.querySelector('.tag__name')!.textContent = w.name;
     }
   }
+}
+
+/** Palms along the promenade, the street sidewalks and scattered on the beach. */
+function plantPalms(): Palms {
+  const palms = new Palms();
+  const pts: Vector3[] = [];
+  let s = 29;
+  const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  const avenue = (x: number) => STREETS_NS.some((a) => Math.abs(x - a.x) < a.width / 2 + 3);
+  // Never on a plot: the terraces belong to the people.
+  const onPlot = (x: number) => PLOT_X.some((px) => Math.abs(x - px) < PLOT_W / 2 + 1.5);
+  for (let x = -300; x < 120; x += 9) pts.push(new Vector3(x + (r() - 0.5) * 2, 0.16, -15.5 + (r() - 0.5)));
+  for (const st of STREETS_EW) {
+    for (let x = -150; x < 120; x += 7) {
+      const px = x + (r() - 0.5) * 3;
+      if (avenue(px) || onPlot(px)) continue;
+      pts.push(new Vector3(px, 0.14, st.z - st.width / 2 - 1.1));
+      if (!onPlot(px + 8) && !avenue(px + 8)) pts.push(new Vector3(px + 8, 0.14, st.z + st.width / 2 + 1.1));
+    }
+  }
+  for (let i = 0; i < 36; i++) {
+    const x = -220 + r() * 330;
+    const z = -26 - r() * 22;
+    if (Math.abs(x - HANGOUT.x) < 14 && Math.abs(z - HANGOUT.z) < 12) continue;
+    pts.push(new Vector3(x, beachHeight(z, x), z));
+  }
+  palms.plant(pts);
+  return palms;
 }
 
 function localHour() {

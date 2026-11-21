@@ -143,6 +143,8 @@ export class Beam {
     ring.position.y = 0.12;
     ring.renderOrder = 3;
 
+    // The outline's pulse already marks the plot on the ground; the ring stays off.
+    ring.visible = false;
     this.group.add(beam, ring);
     this.group.visible = false;
   }

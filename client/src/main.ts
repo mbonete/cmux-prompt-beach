@@ -48,7 +48,8 @@ async function boot() {
     bar?.setAttribute('aria-valuenow', String(pct));
     fill?.classList.add('loading__fill--real');
     fill?.style.setProperty('--progress', `${pct}%`);
-    $('loading-note').textContent = `Building the city… ${pct}%`;
+    const note = document.getElementById('loading-note');
+    if (note) note.textContent = `Building the city… ${pct}%`;
   };
   $('loading-note').textContent = 'Building the city…';
   await world.loadCity();
@@ -86,6 +87,8 @@ async function boot() {
     pick($('quality'), 'q', v);
   });
 
+  // People load lazily after this; their progress no longer belongs on the title screen.
+  loading.onProgress = () => {};
   $('loading').classList.add('loading--done');
   setTimeout(() => $('loading').remove(), 900);
   (window as unknown as { world: World }).world = world;

@@ -35,6 +35,8 @@ export class CameraRig {
   private pinchStart = 0;
   private lastInput = performance.now();
   onInput: (() => void) | null = null;
+  /** Lowest camera height allowed above a ground point (keeps it out of buildings). */
+  clearance: ((x: number, z: number) => number) | null = null;
   onDoubleClick: ((ndc: Vector2) => void) | null = null;
   onClick: ((ndc: Vector2) => void) | null = null;
   private downAt = { x: 0, y: 0, t: 0 };
@@ -138,6 +140,10 @@ export class CameraRig {
       v.target.y + Math.sin(v.pitch) * v.distance,
       v.target.z + Math.cos(v.yaw) * cp * v.distance,
     );
+    if (this.clearance) {
+      const min = this.clearance(this.camera.position.x, this.camera.position.z);
+      if (this.camera.position.y < min) this.camera.position.y = min;
+    }
     this.camera.lookAt(v.target);
   }
 

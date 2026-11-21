@@ -13,7 +13,8 @@ export interface ClipInfo {
   /** "root" clips move the character; apply groundEnd when they finish. */
   mode: string;
   speed?: number;
-  groundEnd?: { pos: [number, number, number]; yaw: number };
+  /** Where a root-motion clip leaves the character, in its start frame (metres, degrees about +Y). */
+  groundEnd?: { pos: [number, number, number]; yawDeg: number };
 }
 
 export interface CastManifest {
