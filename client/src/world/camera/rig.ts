@@ -63,7 +63,7 @@ export class CameraRig {
     private readonly dom: HTMLElement,
     aspect: number,
   ) {
-    this.camera = new PerspectiveCamera(32, aspect, 0.5, 6000);
+    this.camera = new PerspectiveCamera(32, aspect, 1, 6000);
     const start: View = { target: new Vector3(0, 0, 20), distance: 150, yaw: 0, pitch: MathUtils.degToRad(40) };
     this.current = cloneView(start);
     this.desired = cloneView(start);

@@ -110,7 +110,11 @@ export class World {
 
   static async create(canvas: HTMLCanvasElement, opts: WorldOptions): Promise<World> {
     const perf = new URLSearchParams(location.search).has('perf');
-    const renderer = new WebGPURenderer({ canvas, antialias: false, powerPreference: 'high-performance', trackTimestamp: perf });
+    // Reversed depth (float): surfaces a few millimetres apart (a door's glass
+    // in front of its leaf, a lit window behind its frame) stay resolved even a
+    // few hundred metres away, where a standard depth buffer let them take turns
+    // winning, and the AA jitter turned that into flicker.
+    const renderer = new WebGPURenderer({ canvas, antialias: false, powerPreference: 'high-performance', trackTimestamp: perf, reversedDepthBuffer: true });
     await renderer.init();
     return new World(renderer, canvas, opts);
   }

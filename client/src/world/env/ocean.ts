@@ -1,5 +1,7 @@
 import {
   Color,
+  DepthTexture,
+  FloatType,
   TextureLoader,
   Mesh,
   MeshStandardNodeMaterial,
@@ -29,7 +31,8 @@ import {
   uniform,
   vec2,
   vec3,
-  viewportLinearDepth,
+  screenUV,
+  viewportDepthTexture,
 } from 'three/tsl';
 import { SEA_Y } from '../city/layout';
 import { loading } from '../engine/assets';
@@ -84,7 +87,15 @@ export class Ocean {
     m.normalNode = normalMap(blended.mul(0.5).add(0.5), vec2(fade));
 
     // Water thickness in metres along the view ray, from the opaque scene's depth.
-    const thickness = viewportLinearDepth.sub(linearDepth()).mul(cameraFar.sub(cameraNear)).max(0).toVar();
+    // The renderer uses a reversed float depth buffer, so the copy must be float too.
+    // (The third argument, a depth texture, is in three's source but not its types.)
+    const depthCopy = (viewportDepthTexture as unknown as (uv: unknown, level: null, tex: DepthTexture) => ReturnType<typeof viewportDepthTexture>)(
+      screenUV,
+      null,
+      new DepthTexture(1, 1, FloatType),
+    );
+    const sceneDepth = linearDepth(depthCopy);
+    const thickness = sceneDepth.sub(linearDepth()).mul(cameraFar.sub(cameraNear)).max(0).toVar();
 
     const shallowness = smoothstep(7, 0.2, thickness);
     const base = mix(u.deep, u.shallow, shallowness).toVar();
