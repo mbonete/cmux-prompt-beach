@@ -23,7 +23,7 @@ import { LOOKS, cloneLook, lookForHour, mixLook, type Look, type TimeOfDay } fro
 import { wetness } from './env/materials';
 import { Ocean } from './env/ocean';
 import { Sky } from './env/sky';
-import { Palms } from './env/palms';
+import { Palms, wind } from './env/palms';
 import { beachHeight, buildGround } from './env/ground';
 import { Background } from './city/Background';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
@@ -128,7 +128,7 @@ export class World {
     this.rig = new CameraRig(canvas, canvas.clientWidth / Math.max(1, canvas.clientHeight));
     this.rig.reducedMotion = this.reducedMotion;
     // Keep the camera clear of the buildings (a height map read from their geometry).
-    this.rig.clearance = (x, z) => Math.max(1.5, this.district.heightAt(x, z) + 2.5);
+    this.rig.obstacle = (x, z) => this.district.heightAt(x, z);
 
     this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), plantPalms().group);
     this.lighting = new Lighting(renderer, this.scene, this.sky);
@@ -220,6 +220,7 @@ export class World {
     if (on) this.director.stop();
     this.sky.setMotion(!on);
     this.ocean.setMotion(!on);
+    wind.value = on ? 0 : 1;
     this.people?.setReducedMotion(on);
     this.life?.setReducedMotion(on);
   }
@@ -263,6 +264,7 @@ export class World {
     this.background.neonLevel.value = 0.2 + l.neon * 1.1;
     this.district.setNeonLevel(0.55 + l.neon * 0.6);
     this.district.lampsLevel.value = 0.12 + l.lamps * 1.5;
+    this.district.screensLevel.value = 0.35 + l.lamps * 0.9;
     this.life?.setLamps(l.lamps);
   }
 
@@ -416,7 +418,7 @@ export class World {
         const el = document.createElement('div');
         el.className = 'tag';
         el.dataset.plot = String(plot);
-        t = { pin: this.overlay.add(el, anchor, { lift: 6, maxDistance: 520 }), key: w.key };
+        t = { pin: this.overlay.add(el, anchor, { lift: 6, maxDistance: 520, kind: 'tag' }), key: w.key };
         this.plotTags.set(plot, t);
       }
       const el = t.pin.el;
@@ -429,6 +431,7 @@ export class World {
         el.innerHTML = html;
         el.dataset.kind = iconName;
       }
+      if (el.querySelector('.tag__name')!.textContent !== w.name) t.pin.size = null;
       el.querySelector('.tag__name')!.textContent = w.name;
       const more = extra.get(plot) ?? 0;
       let moreEl = el.querySelector<HTMLElement>('.tag__more');
@@ -438,6 +441,7 @@ export class World {
         el.appendChild(moreEl);
       }
       if (moreEl) {
+        if (moreEl.hidden !== !more) t.pin.size = null;
         moreEl.hidden = !more;
         moreEl.textContent = `+${more}`;
         moreEl.title = `${more} more here without a seat`;

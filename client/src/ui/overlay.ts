@@ -13,6 +13,21 @@ export interface Pin {
   visible: boolean;
   /** Elements further than this (metres) fade out. */
   maxDistance: number;
+  /** Tags give way (dim) when they collide with a nearer tag or any badge. */
+  kind?: 'tag' | 'badge';
+  /** Cached element size; set to null when the content changes. */
+  size?: { w: number; h: number } | null;
+  /** Last screen position (CSS px), for decluttering. */
+  sx?: number;
+  sy?: number;
+  dist?: number;
+}
+
+interface Box {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
 }
 
 const v = new Vector3();
@@ -27,9 +42,9 @@ export class Overlay {
     parent.appendChild(this.root);
   }
 
-  add(el: HTMLElement, world: Vector3, opts: { lift?: number; maxDistance?: number } = {}): Pin {
+  add(el: HTMLElement, world: Vector3, opts: { lift?: number; maxDistance?: number; kind?: 'tag' | 'badge' } = {}): Pin {
     this.root.appendChild(el);
-    const pin: Pin = { el, world, lift: opts.lift ?? 0, visible: true, maxDistance: opts.maxDistance ?? 400 };
+    const pin: Pin = { el, world, lift: opts.lift ?? 0, visible: true, maxDistance: opts.maxDistance ?? 400, kind: opts.kind, size: null };
     this.pins.add(pin);
     return pin;
   }
@@ -40,6 +55,7 @@ export class Overlay {
   }
 
   update(camera: PerspectiveCamera, width: number, height: number) {
+    const shown: Pin[] = [];
     for (const p of this.pins) {
       v.copy(p.world).project(camera);
       const dist = camera.position.distanceTo(p.world);
@@ -52,6 +68,32 @@ export class Overlay {
       p.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -100%)`;
       // Nearer pins stack above farther ones.
       p.el.style.zIndex = String(10000 - Math.round(dist));
+      if (p.kind) {
+        p.sx = x;
+        p.sy = y;
+        p.dist = dist;
+        shown.push(p);
+      }
+    }
+    this.declutter(shown);
+  }
+
+  /** Tags that collide with a badge or a nearer tag dim, so the nearest and the urgent stay readable. */
+  private declutter(pins: Pin[]) {
+    const boxes: Box[] = [];
+    const box = (p: Pin): Box => {
+      if (!p.size) p.size = { w: p.el.offsetWidth, h: p.el.offsetHeight };
+      const { w, h } = p.size;
+      return { x0: p.sx! - w / 2, y0: p.sy! - h, x1: p.sx! + w / 2, y1: p.sy! };
+    };
+    const hit = (a: Box, b: Box) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+    for (const p of pins) if (p.kind === 'badge' && p.el.classList.contains('agent--asking')) boxes.push(box(p));
+    const tags = pins.filter((p) => p.kind === 'tag').sort((a, b) => a.dist! - b.dist!);
+    for (const t of tags) {
+      const b = box(t);
+      const crowded = boxes.some((o) => hit(b, o));
+      t.el.classList.toggle('pin--crowded', crowded);
+      if (!crowded) boxes.push(b);
     }
   }
 }

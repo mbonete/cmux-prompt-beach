@@ -65,6 +65,7 @@ export class AgentCard {
     }
     if (entering) {
       this.id = it.surfaceId;
+      this.side = 'right';
       this.el.hidden = false;
       this.el.classList.remove('card--in');
       void this.el.offsetWidth;

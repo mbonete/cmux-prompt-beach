@@ -106,6 +106,9 @@ export class District {
   /** Where the plots want palms (from `palm_N` empties), with their heights. */
   readonly palmSpots: { position: Vector3; height: number }[] = [];
   private pools: { mesh: InstancedMesh; lit: InstancedBufferAttribute; owner: PlotKey[] } | null = null;
+  /** Laptop screens: glowing where someone lives, more so after dark. */
+  readonly screensLevel = uniform(0.6);
+  private readonly screens: { attr: InstancedBufferAttribute; owner: PlotKey[] }[] = [];
   private readonly heights = new Map<string, HeightGrid>();
   readonly windowsLevel = uniform(1);
   readonly neonLevel = uniform(1);
@@ -135,7 +138,7 @@ export class District {
 
     for (const t of types) this.heights.set(t, heightGrid(templates.get(t)!));
 
-    const propPlacements = new Map<string, Matrix4[]>();
+    const propPlacements = new Map<string, { m: Matrix4; key: PlotKey }[]>();
     const poolSpots: { m: Matrix4; radius: number; color: Color; key: PlotKey }[] = [];
     const floors = new Map<string, Map<string, number>>();
     for (const t of types) floors.set(t, lightFloors(templates.get(t)!));
@@ -187,7 +190,7 @@ export class District {
         else if (o.name.startsWith('prop:')) {
           const id = (o.userData as { prop_id?: string }).prop_id ?? o.name.slice(5).replace(/\.\d+$/, '');
           if (!propPlacements.has(id)) propPlacements.set(id, []);
-          propPlacements.get(id)!.push(m);
+          propPlacements.get(id)!.push({ m, key: s.key });
         }
       });
 
@@ -231,7 +234,7 @@ export class District {
     this.pools = { mesh, lit, owner: spots.map((sp) => sp.key) };
   }
 
-  private async placeProps(placements: Map<string, Matrix4[]>) {
+  private async placeProps(placements: Map<string, { m: Matrix4; key: PlotKey }[]>) {
     const env = await loadJSON<{ assets?: Record<string, { files?: string[] }> }>('/assets/env/manifest.json').catch(() => ({ assets: {} as Record<string, { files?: string[] }> }));
     await Promise.all(
       [...placements].map(async ([id, mats]) => {
@@ -241,7 +244,16 @@ export class District {
         try {
           const gltf = await loadGLTF(`/assets/env/${file}`);
           const model = new InstancedModel(meshOnly(gltf.scene, true), mats.length);
-          for (const m of mats) model.add(m);
+          for (const { m } of mats) model.add(m);
+          for (const mesh of model.meshes) {
+            const mat = mesh.material as unknown as { name?: string; emissive?: Color };
+            if (mat.name !== 'screen') continue;
+            mat.emissive = new Color(0x8fb8ff);
+            const attr = perInstanceEmission(mesh, this.screensLevel);
+            attr.array.fill(0);
+            attr.needsUpdate = true;
+            this.screens.push({ attr, owner: mats.map((x) => x.key) });
+          }
           model.addTo(this.group);
         } catch (err) {
           console.warn(`Prop ${id} failed to load`, err);
@@ -260,6 +272,12 @@ export class District {
       if (l.type !== p.type) continue;
       l.attr.setX(p.instance, l.kind === 'bulb' ? bulb : value);
       l.attr.needsUpdate = true;
+    }
+    for (const sc of this.screens) {
+      sc.owner.forEach((k, i) => {
+        if (k === key) sc.attr.setX(i, value >= 1 ? 1 : 0);
+      });
+      sc.attr.needsUpdate = true;
     }
     if (this.pools) {
       this.pools.owner.forEach((k, i) => {
@@ -301,6 +319,8 @@ export class District {
     let h = 0;
     const v = new Vector3();
     for (const p of this.plots.values()) {
+      const e = p.world.elements;
+      if (Math.abs(x - e[12]) > 15 || Math.abs(z - e[14]) > 15) continue;
       v.set(x, 0, z).applyMatrix4(p.inverse);
       const gx = Math.floor((v.x + GRID_W) / CELL);
       const gz = Math.floor((v.z + GRID_D) / CELL);

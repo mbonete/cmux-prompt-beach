@@ -18,6 +18,8 @@ export interface View {
 const MIN_PITCH = MathUtils.degToRad(25);
 const MAX_PITCH = MathUtils.degToRad(65);
 const MIN_DIST = 7;
+/** Anything taller than this (metres) is building mass the camera must not pass through. */
+const SOLID = 5;
 const MAX_DIST = 420;
 const BOUNDS = { x0: -170, x1: 175, z0: -110, z1: 230 };
 
@@ -35,8 +37,8 @@ export class CameraRig {
   private pinchStart = 0;
   private lastInput = performance.now();
   onInput: (() => void) | null = null;
-  /** Lowest camera height allowed above a ground point (keeps it out of buildings). */
-  clearance: ((x: number, z: number) => number) | null = null;
+  /** Height of whatever stands at a ground point (buildings, terraces), in metres. */
+  obstacle: ((x: number, z: number) => number) | null = null;
   onDoubleClick: ((ndc: Vector2) => void) | null = null;
   onClick: ((ndc: Vector2) => void) | null = null;
   /** Which control was just used (for the controls hint). */
@@ -158,11 +160,47 @@ export class CameraRig {
       this.look.y + Math.sin(v.pitch) * v.distance,
       this.look.z + Math.cos(v.yaw) * cp * v.distance,
     );
-    if (this.clearance) {
-      const min = this.clearance(this.camera.position.x, this.camera.position.z);
-      if (this.camera.position.y < min) this.camera.position.y = min;
-    }
+    if (this.obstacle) this.avoidObstacles();
+    if (this.camera.position.y < 1.5) this.camera.position.y = 1.5;
     this.camera.lookAt(this.look);
+  }
+
+  /**
+   * Camera collision: walk the line from what we look at out to the camera; if a
+   * building is in the way, bring the camera in front of it (same angle, closer).
+   */
+  private avoidObstacles() {
+    const cam = this.camera.position;
+    const from = this.look;
+    const dx = cam.x - from.x;
+    const dy = cam.y - from.y;
+    const dz = cam.z - from.z;
+    const len = Math.hypot(dx, dy, dz);
+    if (len > 28) {
+      // Beyond a close-up the distance you zoomed to is kept: rise over roofs instead.
+      const min = this.obstacle!(cam.x, cam.z) + 2.5;
+      if (cam.y < min) cam.y = min;
+      return;
+    }
+    // Terrace clutter (umbrellas, string lights) is seen through; only building mass blocks.
+    const solid = (x: number, z: number) => {
+      const h = this.obstacle!(x, z);
+      return h > SOLID ? h : 0;
+    };
+    const steps = Math.min(48, Math.ceil(len / 1.25));
+    let keep = 1;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const d = t * len;
+      if (d < 4.5) continue;
+      if (from.y + dy * t < solid(from.x + dx * t, from.z + dz * t) + 0.6) {
+        keep = Math.max((d - 1.5) / len, 7 / len);
+        break;
+      }
+    }
+    if (keep < 1) cam.set(from.x + dx * keep, from.y + dy * keep, from.z + dz * keep);
+    const min = solid(cam.x, cam.z) + 1.2;
+    if (cam.y < min) cam.y = min;
   }
 
   private ndc(e: { clientX: number; clientY: number }) {

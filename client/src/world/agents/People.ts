@@ -78,7 +78,7 @@ export class People {
         el.className = 'agent';
         el.innerHTML = '<span class="badge"></span><span class="agent__name"></span>';
         el.dataset.id = item.surfaceId;
-        const badge = this.overlay.add(el, new Vector3(), { lift: 4, maxDistance: 320 });
+        const badge = this.overlay.add(el, new Vector3(), { lift: 4, maxDistance: 320, kind: 'badge' });
         e = { person, plot: item.plot, spot: item.spot, badge, ask: null, lane, title: '', named: false };
         this.entries.set(item.surfaceId, e);
         person.setMood(moodFor(lane, ask, null), true);

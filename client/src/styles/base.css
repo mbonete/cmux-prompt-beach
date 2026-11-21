@@ -196,6 +196,10 @@ body {
   visibility: hidden;
 }
 
+.pin--crowded {
+  opacity: 0.22;
+}
+
 .i {
   width: 16px;
   height: 16px;
