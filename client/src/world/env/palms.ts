@@ -14,6 +14,11 @@ import {
   Fn,
   abs,
   attribute,
+  cameraPosition,
+  dot,
+  positionWorld,
+  screenCoordinate,
+  vec2,
   color,
   float,
   fract,
@@ -170,8 +175,22 @@ const swayNode = Fn(() => {
   return p;
 });
 
+/**
+ * Foliage right in front of the camera dissolves (a fine dither that temporal AA
+ * smooths into a fade), so a close-up is never a wall of fronds. The shadow pass
+ * sees the sun's camera, far away, so shadows stay whole.
+ */
+const nearFade = Fn(() => {
+  const d = positionWorld.distance(cameraPosition);
+  const fade = smoothstep(5, 11, d);
+  const p = screenCoordinate.xy;
+  const ign = fract(float(52.9829189).mul(fract(dot(p, vec2(0.06711056, 0.00583715)))));
+  return step(ign, fade);
+});
+
 function trunkMaterial() {
-  const m = new MeshStandardNodeMaterial({ roughness: 0.95 });
+  const m = new MeshStandardNodeMaterial({ roughness: 0.95, alphaTest: 0.5 });
+  m.opacityNode = nearFade();
   const v = uv().y;
   const rings = smoothstep(0.35, 0.5, abs(fract(v.mul(2.6)).sub(0.5)));
   const n = mx_noise_float(vec3(uv().x.mul(6), v.mul(3), 0)).mul(0.5).add(0.5);
@@ -191,7 +210,7 @@ function frondMaterial() {
   const rachis = step(abs(v), float(0.06));
   const ragged = mx_noise_float(vec3(u.mul(40), v.mul(3), 1)).mul(0.5).add(0.5);
   const edge = step(abs(v), float(0.78).add(ragged.mul(0.22)).mul(float(1).sub(pow(u, float(4)).mul(0.6))));
-  m.opacityNode = leaflet.mul(edge).max(rachis);
+  m.opacityNode = leaflet.mul(edge).max(rachis).mul(nearFade());
   const green = mix(color(0x2f6b22), color(0x7ea83a), u.mul(0.7).add(abs(v).mul(0.25)));
   const dry = mix(green, vec3(0.62, 0.55, 0.27), smoothstep(0.85, 1, u).mul(0.6));
   m.colorNode = dry.mul(ragged.mul(0.2).add(0.88));
