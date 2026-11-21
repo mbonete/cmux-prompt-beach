@@ -71,7 +71,7 @@ export class Dressing {
 
     // Promenade: midway between promenade palms, every other gap.
     const promZ = -15.5;
-    const promPalms = this.palms.filter((pt) => Math.abs(pt.z - promZ) < 1.5 && pt.x > CITY.x0 - 40 && pt.x < BAY_EDGE_X - 4).sort((a, b) => a.x - b.x);
+    const promPalms = this.palms.filter((pt) => Math.abs(pt.z - promZ) < 1.5 && pt.x > CITY.x0 + 2 && pt.x < BAY_EDGE_X - 4).sort((a, b) => a.x - b.x);
     for (let i = 0; i + 1 < promPalms.length; i += 2) {
       const a = promPalms[i];
       const b = promPalms[i + 1];
@@ -85,7 +85,7 @@ export class Dressing {
     const ok = (x: number, z: number) => !onPlot(x, z, 1.5) && !palmSpots.near(x, z, 2.2);
 
     // Beach road, city side, at the kerb.
-    for (let x = -235; x < BAY_EDGE_X - 6; x += 26) {
+    for (let x = CITY.x0 + 6; x < BAY_EDGE_X - 6; x += 26) {
       const lx = x + (r() - 0.5) * 2;
       const z = BEACH_ROAD.z1 + 0.45;
       if (!avenueCut(lx) && ok(lx, z)) street.push({ x: lx, y: 0.14, z, yaw: 0 });
@@ -95,7 +95,7 @@ export class Dressing {
       if (s.z > 140) continue;
       for (const side of [-1, 1]) {
         const z = s.z + side * (s.width / 2 + 0.45);
-        for (let x = -230 + (side > 0 ? 13 : 0); x < BAY_EDGE_X - 6; x += 26) {
+        for (let x = CITY.x0 + 9 + (side > 0 ? 13 : 0); x < BAY_EDGE_X - 6; x += 26) {
           const lx = x + (r() - 0.5) * 2;
           if (avenueCut(lx) || !ok(lx, z)) continue;
           street.push({ x: lx, y: 0.14, z, yaw: 0 });
@@ -148,7 +148,7 @@ export class Dressing {
     const clear = (x: number, z: number, rad: number) => !inHangout(x, z, 2) && !this.obstacles.near(x, z, rad) && !taken.near(x, z, rad);
 
     // Lifeguard towers facing the sea, spaced along the beach.
-    for (const x of [-196, -118, -52, 58, 112]) {
+    for (const x of [-104, -52, 58, 108]) {
       const z = -41;
       if (!clear(x, z, 4)) continue;
       towers.push({ x, y: beachHeight(z, x), z, yaw: Math.PI, tint: PASTEL[towers.length % PASTEL.length] });
@@ -160,7 +160,7 @@ export class Dressing {
       const spread = r() < 0.65 ? 150 : 260;
       const x = -40 + (r() - 0.5) * 2 * spread;
       const z = -26.5 - r() * 20;
-      if (x > BAY_EDGE_X - 20 || x < CITY.x0 - 30) continue;
+      if (x > BAY_EDGE_X - 20 || x < CITY.x0 + 8) continue;
       if (!clear(x, z, 4.2)) continue;
       const canvas = pick(r, CANVAS);
       const yaw = Math.PI + (r() - 0.5) * 0.5;

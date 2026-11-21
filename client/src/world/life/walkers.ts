@@ -14,6 +14,8 @@ import {
 } from 'three/webgpu';
 import type { Cast, Skeleton } from '../agents/cast';
 import { BAY_EDGE_X, PROMENADE } from '../city/layout';
+import { CITY } from '../city/layout';
+const CITY_X0 = CITY.x0;
 import { beachHeight } from '../env/ground';
 import type { Towel } from './dressing';
 import { angleDiff, inHangout, rng, shuffle, type Spots } from './util';
@@ -154,7 +156,7 @@ export class Walkers {
       let x1 = 0;
       for (let tries = 0; tries < 40; tries++) {
         const len = 40 + r() * 80;
-        x0 = -170 + r() * (BAY_EDGE_X - 50 + 170 - len);
+        x0 = CITY_X0 + 10 + r() * (BAY_EDGE_X - 50 - CITY_X0 - 10 - len);
         x1 = x0 + len;
         const za = beach ? beachA : promA;
         const zb = beach ? beachB : promB;

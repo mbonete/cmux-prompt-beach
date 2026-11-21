@@ -21,7 +21,7 @@ const MIN_DIST = 7;
 /** Anything taller than this (metres) is building mass the camera must not pass through. */
 const SOLID = 5;
 const MAX_DIST = 270;
-const BOUNDS = { x0: -150, x1: 165, z0: -100, z1: 160 };
+const BOUNDS = { x0: -130, x1: 135, z0: -90, z1: 140 };
 
 export class CameraRig {
   readonly camera: PerspectiveCamera;
@@ -54,6 +54,10 @@ export class CameraRig {
   viewHeight = 1;
   private readonly right = new Vector3();
   private readonly look = new Vector3();
+  /** Eased camera collision: how much of the distance is kept, and how far it is lifted. */
+  private keep = 1;
+  private lift = 0;
+  private dt = 1 / 60;
 
   constructor(
     private readonly dom: HTMLElement,
@@ -94,6 +98,7 @@ export class CameraRig {
   }
 
   update(dt: number) {
+    this.dt = dt;
     this.shiftCur += (this.shiftPx - this.shiftCur) * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 7));
     if (this.flight) {
       const f = this.flight;
@@ -176,31 +181,34 @@ export class CameraRig {
     const dy = cam.y - from.y;
     const dz = cam.z - from.z;
     const len = Math.hypot(dx, dy, dz);
-    if (len > 28) {
-      // Beyond a close-up the distance you zoomed to is kept: rise over roofs instead.
-      const min = this.obstacle!(cam.x, cam.z) + 2.5;
-      if (cam.y < min) cam.y = min;
-      return;
-    }
     // Terrace clutter (umbrellas, string lights) is seen through; only building mass blocks.
     const solid = (x: number, z: number) => {
       const h = this.obstacle!(x, z);
       return h > SOLID ? h : 0;
     };
-    const steps = Math.min(48, Math.ceil(len / 1.25));
-    let keep = 1;
-    for (let i = 1; i <= steps; i++) {
-      const t = i / steps;
-      const d = t * len;
-      if (d < 4.5) continue;
-      if (from.y + dy * t < solid(from.x + dx * t, from.z + dz * t) + 0.6) {
-        keep = Math.max((d - 1.5) / len, 7 / len);
-        break;
+    let keepTarget = 1;
+    if (len <= 28) {
+      const steps = Math.min(48, Math.ceil(len / 1.25));
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const d = t * len;
+        if (d < 4.5) continue;
+        if (from.y + dy * t < solid(from.x + dx * t, from.z + dz * t) + 0.6) {
+          keepTarget = Math.max((d - 1.5) / len, 7 / len);
+          break;
+        }
       }
     }
-    if (keep < 1) cam.set(from.x + dx * keep, from.y + dy * keep, from.z + dz * keep);
-    const min = solid(cam.x, cam.z) + 1.2;
-    if (cam.y < min) cam.y = min;
+    // Ease both corrections (in quickly, out slowly) so the camera glides
+    // around a building instead of snapping to a new distance in one frame.
+    const ease = (cur: number, target: number, fast: boolean) =>
+      this.reducedMotion ? target : cur + (target - cur) * (1 - Math.exp(-this.dt * (fast ? 12 : 3)));
+    this.keep = ease(this.keep, keepTarget, keepTarget < this.keep);
+    if (this.keep < 0.999) cam.set(from.x + dx * this.keep, from.y + dy * this.keep, from.z + dz * this.keep);
+    const floor = solid(cam.x, cam.z) + (len > 28 ? 2.5 : 1.2);
+    const liftTarget = Math.max(0, floor - cam.y);
+    this.lift = ease(this.lift, liftTarget, liftTarget > this.lift);
+    cam.y += this.lift;
   }
 
   private ndc(e: { clientX: number; clientY: number }) {

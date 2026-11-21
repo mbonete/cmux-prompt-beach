@@ -1,5 +1,5 @@
 import { Color, Group, Matrix4, Quaternion, Vector3 } from 'three/webgpu';
-import { BAY_EDGE_X, BEACH_ROAD, STREETS_EW, STREETS_NS, CAUSEWAY_END, STREET_WEST } from '../city/layout';
+import { BAY_EDGE_X, BEACH_ROAD, STREETS_EW, STREETS_NS, CAUSEWAY_END } from '../city/layout';
 import { Fleet, type StreetKit } from './kit';
 import { Pools } from './pools';
 import { pick, rng, shuffle, type Rand } from './util';
@@ -13,9 +13,8 @@ import { pick, rng, shuffle, type Rand } from './util';
 // avenue. The dead-end stubs toward the bay hold parked cars instead.
 
 const ROAD_Y = 0.02;
-// Cars come and go out of sight: at the far west end of the streets, and across
-// the causeways at the far end of each avenue.
-const WEST = STREET_WEST + 6;
+// Cars come and go across the causeways at the far end of the middle avenues;
+// the streets end at the frame avenues on the island's edges, where they turn.
 const NORTH = CAUSEWAY_END - 8;
 const DX = [1, 0, -1, 0];
 const DZ = [0, 1, 0, -1];
@@ -193,7 +192,7 @@ export class Traffic {
       if (from.portal) this.spawnLanes.push(l);
     };
     for (const rd of roads) {
-      const stops = [node(WEST, rd.z, 0, 0, true), ...STREETS_NS.map((a) => node(a.x, rd.z, a.width / 2, rd.width / 2))];
+      const stops = STREETS_NS.map((a) => node(a.x, rd.z, a.width / 2, rd.width / 2));
       const o = off(rd.width);
       for (let i = 0; i + 1 < stops.length; i++) {
         const A = stops[i];
@@ -203,7 +202,7 @@ export class Traffic {
       }
     }
     for (const a of STREETS_NS) {
-      const stops = [...roads.map((rd) => node(a.x, rd.z, a.width / 2, rd.width / 2)), node(a.x, NORTH, 0, 0, true)];
+      const stops = [...roads.map((rd) => node(a.x, rd.z, a.width / 2, rd.width / 2)), ...(a.frame ? [] : [node(a.x, NORTH, 0, 0, true)])];
       const o = off(a.width);
       for (let i = 0; i + 1 < stops.length; i++) {
         const A = stops[i];

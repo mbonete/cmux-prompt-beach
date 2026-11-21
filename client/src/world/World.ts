@@ -27,7 +27,7 @@ import { Palms, SHADOW_ONLY_LAYER, wind } from './env/palms';
 import { beachHeight, buildGround } from './env/ground';
 import { Background } from './city/Background';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
-import { CITY, HANGOUT, OVERFLOW, OVERFLOW_HALF, PLOTS, PLOT_COLUMNS, PLOT_D, PLOT_W, STREETS_EW, STREETS_NS } from './city/layout';
+import { BAY_EDGE_X, CITY, HANGOUT, OVERFLOW, OVERFLOW_HALF, PLOTS, PLOT_COLUMNS, PLOT_D, PLOT_W, STREETS_EW, STREETS_NS } from './city/layout';
 import { Cast } from './agents/cast';
 import { People } from './agents/People';
 import { Life } from './life/Life';
@@ -279,14 +279,8 @@ export class World {
     this.timer.update(now);
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
 
-    // Throttle while nothing moves and the user is idle: ~30 fps, and ~20 fps when
-    // the window isn't focused (glanced at beside a terminal, it needs no more, and
-    // the GPU and battery are someone else's then).
-    const busy = this.rig.moving || this.blend !== null || this.rig.idleMs < 2500;
-    if (!busy) {
-      const interval = this.reducedMotion ? 95 : !document.hasFocus() && !this.director.running ? 48 : 31;
-      if (now - this.lastFrame < interval) return;
-    }
+    // Every frame while the page is visible (people, water and traffic always
+    // move, and a throttled frame rate reads as lag); the loop stops when hidden.
     const frameMs = now - this.lastFrame;
     this.lastFrame = now;
 
@@ -328,7 +322,7 @@ export class World {
     this.overlay.update(cam, w, h);
     this.onFrame?.(cam, w, h, now);
 
-    if (busy && this.qualitySetting === 'auto') {
+    if (this.qualitySetting === 'auto' && !document.hidden) {
       const next = this.auto.sample(frameMs, now);
       if (next) this.rebuildPipeline(next);
     }
@@ -609,7 +603,7 @@ function plantPalms(): Palms {
   const avenue = (x: number) => STREETS_NS.some((a) => Math.abs(x - a.x) < a.width / 2 + 3);
   // Never on a plot: the terraces belong to the people.
   const onPlot = (x: number) => PLOT_COLUMNS.some((px) => Math.abs(x - px) < PLOT_W / 2 + 1.5);
-  for (let x = CITY.x0 - 35; x < 120; x += 9) pts.push(new Vector3(x + (r() - 0.5) * 2, 0.16, -15.5 + (r() - 0.5)));
+  for (let x = CITY.x0 + 4; x < 120; x += 9) pts.push(new Vector3(x + (r() - 0.5) * 2, 0.16, -15.5 + (r() - 0.5)));
   for (const st of STREETS_EW) {
     for (let x = CITY.x0; x < 120; x += 7) {
       const px = x + (r() - 0.5) * 3;
@@ -619,7 +613,7 @@ function plantPalms(): Palms {
     }
   }
   for (let i = 0; i < 30; i++) {
-    const x = CITY.x0 - 20 + r() * 290;
+    const x = CITY.x0 + 6 + r() * (BAY_EDGE_X - 16 - CITY.x0);
     const z = -26 - r() * 22;
     if (Math.abs(x - HANGOUT.x) < 14 && Math.abs(z - HANGOUT.z) < 12) continue;
     pts.push(new Vector3(x, beachHeight(z, x), z));

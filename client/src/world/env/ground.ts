@@ -8,6 +8,8 @@ import {
   CITY,
   INLAND_SKYLINE,
   STREET_WEST,
+  STREET_EAST,
+  FRAME_END,
   CITY_Y,
   PROMENADE,
   SEA_Y,
@@ -37,6 +39,8 @@ export function beachHeight(z: number, x = 0) {
     const t = Math.min(1, (shore - z) / (shore - BEACH.zDeep));
     h = SEA_Y + 0.02 - 3.5 * Math.pow(t, 0.8);
   }
+  // Past the island's west end the sand slopes away under the water.
+  if (x < CITY.x0 + 4) h -= (CITY.x0 + 4 - x) * 0.07;
   // Soft dunes on the dry sand.
   if (z > shore + 6) h += 0.12 * Math.sin(x * 0.07 + z * 0.11) * Math.sin(x * 0.031 - z * 0.05);
   return h;
@@ -110,9 +114,9 @@ export function buildGround(): Group {
   // City land (lawns under everything), up to the bay edge.
   // From under the promenade (so no gap ever shows the sea through) to far inland.
   const landZ0 = PROMENADE.z0;
-  const land = new PlaneGeometry(BAY_EDGE_X + 700, LAND_FAR - landZ0, 1, 1);
+  const land = new PlaneGeometry(BAY_EDGE_X - CITY.x0, LAND_FAR - landZ0, 1, 1);
   land.rotateX(-Math.PI / 2);
-  land.translate((BAY_EDGE_X - 700) / 2, CITY_Y - 0.005, (LAND_FAR + landZ0) / 2);
+  land.translate((BAY_EDGE_X + CITY.x0) / 2, CITY_Y - 0.005, (LAND_FAR + landZ0) / 2);
   const lawn = new Mesh(land, grassMaterial());
   lawn.receiveShadow = true;
   lawn.name = 'lawns';
@@ -124,15 +128,20 @@ export function buildGround(): Group {
   group.add(bayWall);
 
   // Inland seawall: the island ends at the bay.
-  const inlandWall = new Mesh(box(BAY_EDGE_X + 702, CITY_Y - SEA_Y + 1.5, 2, (BAY_EDGE_X - 700) / 2, SEA_Y - 1.5, LAND_FAR + 1), concreteMaterial(0xcfc6b8));
+  const inlandWall = new Mesh(box(BAY_EDGE_X - CITY.x0 + 2, CITY_Y - SEA_Y + 1.5, 2, (BAY_EDGE_X + CITY.x0) / 2, SEA_Y - 1.5, LAND_FAR + 1), concreteMaterial(0xcfc6b8));
   inlandWall.receiveShadow = true;
   group.add(inlandWall);
+  // West seawall: the island ends just past the last plots.
+  const westWall = new Mesh(box(2, CITY_Y - SEA_Y + 1.5, LAND_FAR - PROMENADE.z0 + 2, CITY.x0 - 1, SEA_Y - 1.5, (LAND_FAR + PROMENADE.z0) / 2), concreteMaterial(0xcfc6b8));
+  westWall.receiveShadow = true;
+  group.add(westWall);
 
   // Causeways: the avenues carry on over the bay to the far shore.
   const decks: BufferGeometry[] = [];
   const deckLen = CAUSEWAY_END - LAND_FAR + 10;
   const deckZ = LAND_FAR + deckLen / 2 - 2;
   for (const a of STREETS_NS) {
+    if (a.frame) continue;
     decks.push(box(a.width + 1.6, 0.7, deckLen, a.x, CITY_Y - 0.69, deckZ));
     for (const side of [-1, 1]) decks.push(box(0.35, 0.9, deckLen, a.x + side * (a.width / 2 + 0.6), CITY_Y, deckZ));
     for (let z = LAND_FAR + 14; z < CAUSEWAY_END; z += 24) decks.push(box(a.width * 0.6, CITY_Y - SEA_Y + 2, 1.4, a.x, SEA_Y - 2, z));
@@ -193,13 +202,13 @@ export function buildGround(): Group {
   // Roads.
   const roads: BufferGeometry[] = [];
   roads.push(roadStrip((BEACH_ROAD.x0 + BEACH_ROAD.x1) / 2, (BEACH_ROAD.z0 + BEACH_ROAD.z1) / 2, BEACH_ROAD.x1 - BEACH_ROAD.x0, BEACH_ROAD.z1 - BEACH_ROAD.z0, true));
-  for (const s of STREETS_EW) roads.push(roadStrip((STREET_WEST + BAY_EDGE_X) / 2, s.z, BAY_EDGE_X - STREET_WEST, s.width, true));
+  for (const s of STREETS_EW) roads.push(roadStrip((STREET_WEST + STREET_EAST) / 2, s.z, STREET_EAST - STREET_WEST, s.width, true));
   // Avenues stop at each cross street (which carries the crossing), so no two road
   // surfaces overlap and their lane markings never fight; north of the island they
   // carry on as causeways.
   const crossings = STREETS_EW.map((e) => [e.z - e.width / 2, e.z + e.width / 2] as const);
   for (const s of STREETS_NS) {
-    for (const [a, b] of spans(BEACH_ROAD.z1, CAUSEWAY_END, crossings)) roads.push(roadStrip(s.x, (a + b) / 2, b - a, s.width, false));
+    for (const [a, b] of spans(BEACH_ROAD.z1, s.frame ? FRAME_END : CAUSEWAY_END, crossings)) roads.push(roadStrip(s.x, (a + b) / 2, b - a, s.width, false));
   }
   const roadMesh = new Mesh(mergeGeometries(roads), asphaltTextured(textureSet('asphalt', 3, '2k')));
   roadMesh.receiveShadow = true;
@@ -210,7 +219,8 @@ export function buildGround(): Group {
   const walks: BufferGeometry[] = [];
   const walkW = 2.2;
   const curbH = 0.14;
-  const xMin = CITY.x0;
+  const xMin = STREET_WEST;
+  const xMax = STREET_EAST;
   const zMax = CITY.z1;
   const nsCuts = STREETS_NS.map((s) => [s.x - s.width / 2 - walkW, s.x + s.width / 2 + walkW] as const);
   const ewCuts = [
@@ -218,10 +228,10 @@ export function buildGround(): Group {
     ...STREETS_EW.map((s) => [s.z - s.width / 2 - walkW, s.z + s.width / 2 + walkW] as const),
   ];
   const ewLine = (z: number) => {
-    for (const [a, b] of spans(xMin, BAY_EDGE_X, nsCuts)) walks.push(box(b - a, curbH, walkW, (a + b) / 2, CITY_Y, z));
+    for (const [a, b] of spans(xMin, xMax, nsCuts)) walks.push(box(b - a, curbH, walkW, (a + b) / 2, CITY_Y, z));
   };
-  const nsLine = (x: number) => {
-    for (const [a, b] of spans(BEACH_ROAD.z1, zMax, ewCuts)) walks.push(box(walkW, curbH, b - a, x, CITY_Y, (a + b) / 2));
+  const nsLine = (x: number, end: number = zMax) => {
+    for (const [a, b] of spans(BEACH_ROAD.z1, end, ewCuts)) walks.push(box(walkW, curbH, b - a, x, CITY_Y, (a + b) / 2));
   };
   ewLine(BEACH_ROAD.z1 + walkW / 2);
   for (const s of STREETS_EW) {
@@ -229,8 +239,8 @@ export function buildGround(): Group {
     ewLine(s.z + s.width / 2 + walkW / 2);
   }
   for (const s of STREETS_NS) {
-    nsLine(s.x - s.width / 2 - walkW / 2);
-    nsLine(s.x + s.width / 2 + walkW / 2);
+    nsLine(s.x - s.width / 2 - walkW / 2, s.frame ? FRAME_END + walkW : zMax);
+    nsLine(s.x + s.width / 2 + walkW / 2, s.frame ? FRAME_END + walkW : zMax);
   }
   const walkMesh = new Mesh(mergeGeometries(walks), groundMaterial(textureSet('concrete', 1.8), new Color(0xf0ebe4)));
   walkMesh.receiveShadow = true;

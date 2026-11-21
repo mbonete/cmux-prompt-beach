@@ -116,18 +116,18 @@ export class Minimap {
     };
     // Water, sand, land, the bay and the skyline across it.
     rect(-900, BEACH.zShore - 30, BAY_EDGE_X, BEACH.zShore, C.sea);
-    rect(-900, BEACH.zShore, BAY_EDGE_X, PROMENADE.z0, C.sand);
+    rect(CITY.x0 - 8, BEACH.zShore, BAY_EDGE_X, PROMENADE.z0, C.sand);
     rect(-900, BEACH.zShore - 400, 1200, 1200, C.sea);
-    rect(-900, BEACH.zShore, BAY_EDGE_X, PROMENADE.z0, C.sand);
-    rect(-900, PROMENADE.z0, BAY_EDGE_X, CITY.z1 + 6, C.land);
+    rect(CITY.x0 - 8, BEACH.zShore, BAY_EDGE_X, PROMENADE.z0, C.sand);
+    rect(CITY.x0, PROMENADE.z0, BAY_EDGE_X, CITY.z1 + 6, C.land);
     rect(INLAND_SKYLINE.x0 - 150, INLAND_SKYLINE.z0, INLAND_SKYLINE.x1 + 150, INLAND_SKYLINE.z1 + 300, C.land);
-    rect(-900, PROMENADE.z0, BAY_EDGE_X, PROMENADE.z1, C.promenade);
+    rect(CITY.x0, PROMENADE.z0, BAY_EDGE_X, PROMENADE.z1, C.promenade);
     rect(BAY_EDGE_X, -400, SKYLINE.x0 - 20, 700, C.sea);
     rect(SKYLINE.x0 - 20, SKYLINE.z0, SKYLINE.x1, SKYLINE.z1, C.land);
     // Streets.
-    rect(-900, BEACH_ROAD.z0, BAY_EDGE_X, BEACH_ROAD.z1, C.road);
-    for (const s of STREETS_EW) rect(STREET_WEST, s.z - s.width / 2, BAY_EDGE_X, s.z + s.width / 2, C.road);
-    for (const s of STREETS_NS) rect(s.x - s.width / 2, BEACH_ROAD.z0, s.x + s.width / 2, CAUSEWAY_END, C.road);
+    rect(BEACH_ROAD.x0, BEACH_ROAD.z0, BEACH_ROAD.x1, BEACH_ROAD.z1, C.road);
+    for (const s of STREETS_EW) rect(STREET_WEST, s.z - s.width / 2, -STREET_WEST, s.z + s.width / 2, C.road);
+    for (const s of STREETS_NS) rect(s.x - s.width / 2, BEACH_ROAD.z0, s.x + s.width / 2, s.frame ? 103.5 : CAUSEWAY_END, C.road);
 
     // Plots: vacant ones faint, a repo's in its colour, pink while someone there needs you.
     const owner = new Map<number | string, { color: string; dormant: boolean }>();

@@ -47,17 +47,23 @@ export interface Rect {
 }
 
 /** Seawall / promenade / beach-road band between the city and the sand. */
-export const PROMENADE: Rect = { x0: -700, x1: 128, z0: -22, z1: -12 };
-export const BEACH_ROAD: Rect = { x0: -700, x1: 128, z0: -11, z1: -2 };
+export const PROMENADE: Rect = { x0: -126, x1: 128, z0: -22, z1: -12 };
+export const BEACH_ROAD: Rect = { x0: -121.5, x1: 121.5, z0: -11, z1: -2 };
 /** The sand runs from the seawall down below the waterline. */
 export const BEACH = { x0: -700, x1: 128, zTop: -22, zShore: -66, zDeep: -150 } as const;
 
 /** Streets: east–west between plot rows, north–south avenues. Width in metres. */
 export const STREETS_EW = [21, 47, 73, 99].map((z) => ({ z, width: 9 }));
-export const STREETS_NS = [
+/**
+ * North–south avenues. The two `frame` avenues close the grid at the island's
+ * edges (streets turn there); the three in between carry on as causeways.
+ */
+export const STREETS_NS: { x: number; width: number; frame?: boolean }[] = [
+  { x: -117, width: 9, frame: true },
   { x: -57, width: 9 },
   { x: 0, width: 11 },
   { x: 57, width: 9 },
+  { x: 117, width: 9, frame: true },
 ];
 export const DISTRICT: Rect = { x0: -110, x1: 110, z0: -2, z1: 122 };
 
@@ -70,8 +76,11 @@ export const SKYLINE: Rect = { x0: 240, x1: 900, z0: -260, z1: 520 };
  * district (x0), and inland (z1) a seawall drops to the bay, crossed by the
  * avenues as causeways to a second skyline on the far shore.
  */
-export const CITY = { x0: -125, z1: 132 } as const;
-/** Streets run a little past the last blocks so traffic can leave out of sight. */
-export const STREET_WEST = -265;
+export const CITY = { x0: -126, z1: 132 } as const;
+/** East–west streets run between the frame avenues. */
+export const STREET_WEST = -121.5;
+export const STREET_EAST = 121.5;
+/** Where the frame avenues end: the far side of the last street. */
+export const FRAME_END = 99 + 4.5;
 export const CAUSEWAY_END = 335;
 export const INLAND_SKYLINE: Rect = { x0: -620, x1: 230, z0: 345, z1: 560 };
