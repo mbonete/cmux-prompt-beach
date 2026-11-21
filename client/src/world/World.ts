@@ -61,6 +61,8 @@ export interface WorldStatus {
 }
 
 const LOOK_BLEND_S = 2.4;
+/** Closer than this (metres from what the camera looks at), only the focused plot keeps its label. */
+const CLOSE_UP_TAGS = 55;
 
 export class World {
   readonly scene = new Scene();
@@ -315,6 +317,7 @@ export class World {
     this.district.updateCamera(cam.position);
     this.updateRing();
     this.updateHover();
+    this.focusTags();
     this.pipeline.render();
     if (this.perf) {
       void this.renderer.resolveTimestampsAsync('render').then((ms) => {
@@ -516,6 +519,18 @@ export class World {
     if (Math.abs(x - HANGOUT.x) < 10 && Math.abs(z - HANGOUT.z) < 8) return 'hangout';
     if (Math.abs(x - OVERFLOW.x) < OVERFLOW_HALF.x && Math.abs(z - OVERFLOW.z) < OVERFLOW_HALF.z) return 'overflow';
     return null;
+  }
+
+  /**
+   * In a close-up only the label of the plot being looked at stays: other
+   * projects' labels hang high over their plots, and from close by they slid
+   * across the scene with every zoom. They come back as the camera pulls out.
+   */
+  private focusTags() {
+    const v = this.rig.current;
+    const closeUp = v.distance < CLOSE_UP_TAGS;
+    const here = closeUp ? this.plotAt(v.target.x, v.target.z) : null;
+    for (const [plot, t] of this.plotTags) t.pin.visible = !closeUp || plot === here;
   }
 
   private hoverAt = 0;

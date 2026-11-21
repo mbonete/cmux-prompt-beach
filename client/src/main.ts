@@ -18,7 +18,12 @@ async function boot() {
 
   let world: World | null = null;
   try {
-    world = await World.create(canvas, { reducedMotion: reduced, timeOfDay: settings.timeOfDay, quality: settings.quality });
+    // If the browser's graphics stop answering (a crashed GPU process never
+    // resolves), don't wait forever: open the lists instead.
+    const stalled = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('the browser’s graphics stopped responding; restarting the browser usually fixes it')), 15000),
+    );
+    world = await Promise.race([World.create(canvas, { reducedMotion: reduced, timeOfDay: settings.timeOfDay, quality: settings.quality }), stalled]);
     world.start();
   } catch (err) {
     // No WebGPU or WebGL 2 here: the lists, cards and actions still work.
@@ -26,7 +31,7 @@ async function boot() {
     canvas.hidden = true;
     const fatal = $('fatal');
     fatal.hidden = false;
-    fatal.textContent = `The 3D city couldn't start on this device (${err instanceof Error ? err.message : String(err)}). Everything else works from the lists.`;
+    fatal.textContent = `The 3D city couldn't start (${err instanceof Error ? err.message : String(err)}). Everything else works from the lists.`;
   }
 
   const app = new App(root, new SwitchboardClient(), world);
