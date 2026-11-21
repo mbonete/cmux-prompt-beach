@@ -1,18 +1,12 @@
 import { Color, RenderPipeline, type Camera, type Scene, type WebGPURenderer } from 'three/webgpu';
 import {
   Fn,
-  unpackRGBToNormal,
-  packNormalToRGB,
   float,
   length,
   luminance,
   mix,
-  mrt,
-  normalView,
-  output,
   pass,
   renderOutput,
-  sample,
   screenUV,
   smoothstep,
   uniform,
@@ -43,6 +37,9 @@ export interface PipelineParts {
   aa?: 'smaa' | 'fxaa' | 'none';
 }
 
+/** No normals input: GTAO and the denoiser reconstruct them from depth (three supports null; its types don't). */
+const FROM_DEPTH = null as unknown as Parameters<typeof ao>[1];
+
 export class Pipeline {
   readonly pipeline: RenderPipeline;
   private readonly grade = {
@@ -65,17 +62,20 @@ export class Pipeline {
 
     let beauty;
     if (useAo) {
-      scenePass.setMRT(mrt({ output, normal: packNormalToRGB(normalView) }));
+      // Surface directions for AO come from the depth buffer, not from a second
+      // output of the scene pass: glow layers (beacon columns, light pools, beams)
+      // write no depth, so they can't disturb AO. As a second output they did: with
+      // no blending there, even a fully faded glow overwrote the directions under
+      // it and AO drew a dark "shadow" where a pink column stood. One output less
+      // to write every frame, too.
       const color = scenePass.getTextureNode('output');
       const depth = scenePass.getTextureNode('depth');
-      const normalTex = scenePass.getTextureNode('normal');
-      const sceneNormal = sample((uv) => unpackRGBToNormal(normalTex.sample(uv)));
-      const aoPass = ao(depth, sceneNormal, camera);
+      const aoPass = ao(depth, FROM_DEPTH, camera);
       aoPass.resolutionScale = level === 'cinematic' ? 1 : 0.5;
       aoPass.radius.value = 0.6;
       aoPass.thickness.value = 1.2;
       // GTAO's noise used to be averaged away over frames; denoise it here instead.
-      const aoClean = denoise(aoPass.getTextureNode(), depth, sceneNormal, camera) as unknown as ReturnType<typeof vec4>;
+      const aoClean = denoise(aoPass.getTextureNode(), depth, FROM_DEPTH, camera) as unknown as ReturnType<typeof vec4>;
       const occlusion = mix(float(1), aoClean.r, g.aoStrength);
       beauty = vec4(color.rgb.mul(occlusion), color.a);
     } else {
