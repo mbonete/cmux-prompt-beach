@@ -37,7 +37,7 @@ import { DEFAULT_STALE_MS, laneOf, type Lane } from '../data/derive';
 import type { Snapshot, Tick } from '../data/types';
 import { Overlay, type Pin } from '../ui/overlay';
 import { KIND_ICON, icon } from '../ui/icons';
-import { updateSeeThrough } from './engine/seeThrough';
+import { Sightlines } from './camera/sightlines';
 
 export interface WorldOptions {
   reducedMotion: boolean;
@@ -65,6 +65,18 @@ export interface WorldStatus {
 const LOOK_BLEND_S = 2.4;
 /** How far the camera stands from someone whose card is open. */
 export const FOCUS_DISTANCE = 17;
+/** District materials that can stand between the close-up camera and a person. */
+const OCCLUDERS = new Set(['stucco', 'trim', 'roof', 'awning', 'wood', 'concrete', 'planter', 'glass_block', 'glass', 'interior']);
+/**
+ * Close-up angles to try, [yaw offset°, pitch°], nearest the default first:
+ * cost = turn / 35° + pitch change / 8°. Looking lower sees under a parasol.
+ */
+const VIEW_CANDIDATES: [number, number][] = (() => {
+  const out: [number, number][] = [];
+  for (const d of [0, 20, -20, 40, -40, 60, -60, 85, -85, 110, -110, 140, -140, 180])
+    for (const p of [27, 21, 15, 34, 41]) out.push([d, p]);
+  return out.sort((x, y) => Math.abs(x[0]) / 35 + Math.abs(x[1] - 27) / 8 - (Math.abs(y[0]) / 35 + Math.abs(y[1] - 27) / 8));
+})();
 /** Closer than this (metres from what the camera looks at), only the focused plot keeps its label. */
 const CLOSE_UP_TAGS = 55;
 
@@ -74,6 +86,9 @@ export class World {
   private readonly sky = new Sky();
   private readonly ocean = new Ocean();
   private readonly ground: Group;
+  private readonly palmGroups: Group[] = [];
+  /** What can block the close-up camera's view of someone (built once the city is in). */
+  private readonly sightlines = new Sightlines();
   private readonly lighting: Lighting;
   private pipeline: Pipeline;
   private readonly timer = new Timer();
@@ -152,7 +167,9 @@ export class World {
     this.rig.obstacle = (x, z) => this.district.heightAt(x, z);
 
     this.ground = buildGround();
-    this.scene.add(this.sky.mesh, this.ocean.mesh, this.ground, plantPalms().group);
+    const streetPalms = plantPalms().group;
+    this.palmGroups.push(streetPalms);
+    this.scene.add(this.sky.mesh, this.ocean.mesh, this.ground, streetPalms);
     this.lighting = new Lighting(renderer, this.scene, this.sky);
     // The sun also sees shadow-only stand-ins (palm fronds without their alpha test).
     this.lighting.sun.shadow.camera.layers.enable(SHADOW_ONLY_LAYER);
@@ -332,10 +349,6 @@ export class World {
 
     this.people?.update(dt, cam);
     this.life?.update(dt, cam);
-    // Nothing may stand between the camera and the person whose card is open.
-    const chest = this.selected ? this.people?.positionOf(this.selected, this.seeTmp) : null;
-    const feetY = chest ? chest.y : 0;
-    updateSeeThrough(cam, chest ? chest.setY(chest.y + 1.0) : null, feetY, (cam as PerspectiveCamera).fov, dt);
     this.district.updateCamera(cam.position);
     this.updateRing();
     this.updateHover();
@@ -391,6 +404,7 @@ export class World {
         this.district.palmSpots.map((p) => p.height),
       );
       this.scene.add(plotPalms.group);
+      this.palmGroups.push(plotPalms.group);
     }
     if (castOk) {
       this.people = new People(this.scene, this.cast, this.district, this.overlay);
@@ -400,6 +414,11 @@ export class World {
     this.mark('people placed');
     this.lighting.updateEnvironment(true);
     this.ocean.bakeSeabed(this.renderer, this.ground);
+    this.sightlines.build(
+      this.district.group.children.filter((o): o is Mesh => (o as Mesh).isMesh && OCCLUDERS.has(o.name.replace('merged/', ''))),
+      this.palmGroups,
+    );
+    this.mark(`sightlines: ${this.sightlines.triangles} triangles`);
     this.mark('city built');
     // Build every GPU pipeline now, in parallel and off the main thread, instead of
     // one by one inside the first frames (which froze the page for seconds).
@@ -553,7 +572,6 @@ export class World {
   }
 
   private hoverAt = 0;
-  private readonly seeTmp = new Vector3();
   private updateHover() {
     if (!this.people || !this.hoverNdc) return;
     const now = performance.now();
@@ -592,13 +610,52 @@ export class World {
     const yaw = this.rig.desired.yaw;
     // Face them from the street side when we're far off; keep the angle when already close.
     const close = this.rig.desired.target.distanceTo(p) < 40 && this.rig.desired.distance < 60;
-    this.rig.flyTo({ target: p.clone().setY(0.9), distance: FOCUS_DISTANCE, pitch: MathUtils.degToRad(27), yaw: close ? yaw : 0 }, seconds);
+    // ...unless a parasol, an awning or a palm is in the way from there: then the nearest clear angle.
+    const view = this.clearView(p, close ? yaw : 0);
+    this.rig.flyTo({ target: p.clone().setY(0.9), distance: FOCUS_DISTANCE, pitch: view.pitch, yaw: view.yaw }, seconds);
     const follow = new Vector3();
     this.rig.setFollow(() => {
       const q = this.people?.positionOf(id, follow);
       return q ? q.setY(0.9) : null;
     });
     return true;
+  }
+
+  /**
+   * The close-up angle nearest the preferred one (27° down, facing `baseYaw`)
+   * from which the person's chest and head are both in sight. Tries turning a
+   * little, then looking lower (under a parasol), then further round.
+   */
+  private clearView(p: Vector3, baseYaw: number): { yaw: number; pitch: number } {
+    const base = { yaw: baseYaw, pitch: MathUtils.degToRad(27) };
+    if (!this.sightlines.triangles) return base;
+    const target = p.clone().setY(0.9);
+    // A seated person: chest, head and the top of the head must all be in sight.
+    const points = [0.85, 1.2, 1.45].map((h) => p.clone().setY(p.y + h));
+    // Where the camera will really be: the rig shifts it sideways to make room for the card.
+    const perPx = (2 * FOCUS_DISTANCE * Math.tan(MathUtils.degToRad(this.rig.camera.fov / 2))) / Math.max(1, this.canvas.clientHeight);
+    const side = this.rig.shiftPx * perPx;
+    const pos = new Vector3();
+    let best = base;
+    let fewest = 4;
+    for (const [dYaw, pitchDeg] of VIEW_CANDIDATES) {
+      const yaw = baseYaw + MathUtils.degToRad(dYaw);
+      const pitch = MathUtils.degToRad(pitchDeg);
+      const cp = Math.cos(pitch);
+      pos.set(
+        target.x + Math.cos(yaw) * side + Math.sin(yaw) * cp * FOCUS_DISTANCE,
+        target.y + Math.sin(pitch) * FOCUS_DISTANCE,
+        target.z - Math.sin(yaw) * side + Math.cos(yaw) * cp * FOCUS_DISTANCE,
+      );
+      if (pos.y < this.district.heightAt(pos.x, pos.z) + 1) continue; // inside a building
+      const blocked = points.reduce((n, q) => n + Number(this.sightlines.blocked(pos, q)), 0);
+      if (blocked === 0) return { yaw, pitch };
+      if (blocked < fewest) {
+        fewest = blocked;
+        best = { yaw, pitch };
+      }
+    }
+    return best;
   }
 
   focusPlot(key: PlotKey) {
