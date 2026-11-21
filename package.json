@@ -16,6 +16,7 @@
     "watch": "vite build --watch",
     "typecheck": "tsc -p .",
     "test": "node --test test/*.test.mjs",
+    "test:browser": "node test/browser/run.mjs",
     "assets:fetch": "node tools/assets/fetch.mjs"
   },
   "license": "MIT",
