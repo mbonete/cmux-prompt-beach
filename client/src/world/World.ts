@@ -336,11 +336,18 @@ export class World {
   }
 
   /** Loads the buildings and props. */
+  /** With `?perf`: how long each startup stage took (ms since navigation). */
+  private mark(label: string) {
+    if (this.perf) console.log(`[switchboard] ${label}: ${Math.round(performance.now())} ms`);
+  }
+
   async loadCity() {
+    this.mark('loading the city');
+    const timed = <T,>(label: string, pr: Promise<T>) => pr.then((v) => (this.mark(label), v));
     const [, , castOk] = await Promise.all([
-      this.district.load(),
-      this.background.load(),
-      this.cast.load().then(
+      timed('district ready', this.district.load()),
+      timed('skylines ready', this.background.load()),
+      timed('cast ready', this.cast.load()).then(
         () => true,
         (err) => (console.warn('No people yet:', err), false),
       ),
@@ -359,7 +366,13 @@ export class World {
       this.people.setReducedMotion(this.reducedMotion);
     }
     if (this.lastSnapshot) this.sync(this.lastSnapshot);
+    this.mark('people placed');
     this.lighting.updateEnvironment(true);
+    this.mark('city built');
+    // Build every GPU pipeline now, in parallel and off the main thread, instead of
+    // one by one inside the first frames (which froze the page for seconds).
+    await this.renderer.compileAsync(this.scene, this.rig.camera).catch(() => {});
+    this.mark('shaders compiled');
 
     // Background life loads after the reveal; the district comes first.
     const life = new Life(this.scene, castOk ? this.cast : null);
@@ -367,7 +380,11 @@ export class World {
     life.setReducedMotion(this.reducedMotion);
     life.setLamps(this.look.lamps);
     this.life = life;
-    life.load().catch((err) => console.warn('Background life failed to load:', err));
+    life
+      .load()
+      .then(() => this.renderer.compileAsync(this.scene, this.rig.camera))
+      .then(() => this.mark('background life ready'))
+      .catch((err) => console.warn('Background life failed to load:', err));
   }
 
   setStaleAfter(ms: number) {

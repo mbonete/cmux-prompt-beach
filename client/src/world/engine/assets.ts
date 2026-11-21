@@ -1,8 +1,12 @@
-import { LoadingManager, type Object3D, type Texture } from 'three/webgpu';
+import { Cache, LoadingManager, type Object3D, type Texture } from 'three/webgpu';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 
 // One loading manager for the whole world, so the title screen can show real
 // progress. glTF files are cached by URL; callers clone what they need.
+
+// Every building file references the same shared textures (stucco, trim, roof…);
+// three's URL cache makes each image download and decode once, not once per file.
+Cache.enabled = true;
 
 export const loading = new LoadingManager();
 const gltfLoader = new GLTFLoader(loading);

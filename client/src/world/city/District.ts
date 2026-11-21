@@ -143,6 +143,7 @@ export class District {
     // Load each building type once; read its empties (spots, anchors, props).
     const types = [...new Set(slots.map((s) => s.type))];
     const templates = new Map(await Promise.all(types.map(async (t) => [t, (await loadGLTF(`${BASE}${t}.gltf`)).scene] as const)));
+    const t0 = performance.now();
 
     for (const t of types) this.heights.set(t, heightGrid(templates.get(t)!));
 
@@ -210,7 +211,9 @@ export class District {
       this.setLit(s.key, 0.08);
     });
 
+    const t1 = performance.now();
     this.buildMerged([...sources.values()]);
+    if (location.search.includes('perf')) console.log(`[switchboard] district: buildings loaded at ${Math.round(t0)} ms, read in ${Math.round(t1 - t0)} ms, merged in ${Math.round(performance.now() - t1)} ms`);
     this.buildPools(poolSpots);
     await this.placeProps(propPlacements);
   }
@@ -225,7 +228,10 @@ export class District {
       if (name === 'interior' || name === 'neon_accent' || name === 'bulb') {
         const mat = mesh.material as MeshStandardNodeMaterial;
         const map = mat.emissiveMap ? vec3(texture(mat.emissiveMap, uv()).rgb) : vec3(1, 1, 1);
-        const lit = float((name === 'bulb' ? this.bulbLit : this.windowLit).element(int(attribute('aSlot', 'float'))) as never);
+        // The slot arrives interpolated (3.0 can be 2.9999998): round, never truncate,
+        // or windows take a neighbouring plot's light and flicker with the AA jitter.
+        const slot = int(attribute('aSlot', 'float').add(0.5));
+        const lit = float((name === 'bulb' ? this.bulbLit : this.windowLit).element(slot) as never);
         const level = name === 'interior' ? this.windowsLevel : name === 'bulb' ? this.lampsLevel : this.neonLevel;
         mat.emissiveNode = vec3(materialEmissive).mul(map).mul(lit).mul(level);
       }

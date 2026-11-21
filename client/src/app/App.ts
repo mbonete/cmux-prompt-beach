@@ -81,7 +81,10 @@ export class App {
     });
     this.panels = new Panels(root, this.state, this.actions, {
       focusAgent: (id) => this.selectAgent(id),
-      focusPlot: (key) => this.world?.focusPlot(key),
+      focusPlot: (key) => {
+        this.leaveCloseUp();
+        this.world?.focusPlot(key);
+      },
       status: () => {
         if (!this.world) return 'The 3D view is off on this device; the lists work as usual.';
         const s = this.world.status;
@@ -91,7 +94,12 @@ export class App {
     this.card = new AgentCard(root, this.state, this.actions, hooks);
     this.inspector = new Inspector(root, this.state, this.actions, hooks);
     this.edges = world ? new EdgeArrows(root, (id) => this.selectAgent(id)) : null;
-    this.minimap = world ? new Minimap(root, this.state, (x, z) => world.flyToGround(x, z)) : null;
+    this.minimap = world
+      ? new Minimap(root, this.state, (x, z) => {
+          this.leaveCloseUp();
+          world.flyToGround(x, z);
+        })
+      : null;
     this.cut = document.createElement('div');
     this.cut.className = 'cut';
     root.appendChild(this.cut);
@@ -155,13 +163,25 @@ export class App {
     this.state.select(null);
   }
 
+  /**
+   * Whatever takes the camera off the person in a close-up (moving the map, the
+   * minimap, Map, flying to a plot, clicking open ground, zooming out) puts their
+   * card away. The side panel stays: it was opened on purpose.
+   */
+  private leaveCloseUp() {
+    if (this.state.selected && !this.state.expanded) this.deselect();
+  }
+
   private inWorld(it: Item) {
     return Boolean(this.world && it.agent && it.phase !== 'shell' && !it.archived && it.plot !== null && it.spot !== null);
   }
 
   private rail(id: PanelId | null) {
     if (id === null) {
-      if (this.state.panel === null) this.world?.overview();
+      if (this.state.panel === null) {
+        this.leaveCloseUp();
+        this.world?.overview();
+      }
       this.state.openPanel(null);
       return;
     }
@@ -242,14 +262,13 @@ export class App {
       this.hud.used_('pick');
       if (p.kind === 'agent') this.selectAgent(p.id);
       else if (p.kind === 'plot') {
-        if (this.state.selected) this.deselect();
+        this.leaveCloseUp();
         w.focusPlot(p.key);
-      } else if (this.state.selected && !this.state.expanded) this.deselect();
+      } else this.leaveCloseUp();
     };
     w.rig.onUse = (k) => {
       this.hud.used_(k);
-      // Zooming back out from a close-up puts the card away (the side panel stays: it was asked for).
-      if (k === 'zoom' && this.state.selected && !this.state.expanded && w.rig.desired.distance > CLOSE_UP_LIMIT) this.deselect();
+      if (k === 'pan' || (k === 'zoom' && w.rig.desired.distance > CLOSE_UP_LIMIT)) this.leaveCloseUp();
     };
     w.director.onChange = (on) => this.root.classList.toggle('app--idle', on);
     w.director.onCut = (phase) => this.cut.classList.toggle('cut--dark', phase === 'out');
@@ -328,6 +347,7 @@ export class App {
       const tag = t.closest<HTMLElement>('.tag[data-plot]');
       if (tag) {
         const k = tag.dataset.plot!;
+        this.leaveCloseUp();
         this.world?.focusPlot(k === 'hangout' || k === 'overflow' ? k : Number(k));
       }
     });
@@ -387,7 +407,7 @@ export class App {
         e.preventDefault();
         rig.setFollow(null);
         rig.nudge(mv[0], mv[1]);
-        this.hud.used_('pan');
+        rig.onUse?.('pan');
       } else if (k === 'q' || k === 'Q' || k === 'e' || k === 'E') {
         rig.turn(k.toLowerCase() === 'q' ? 0.12 : -0.12);
         this.hud.used_('rotate');

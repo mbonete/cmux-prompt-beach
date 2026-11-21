@@ -249,20 +249,22 @@ export class CameraRig {
       p.y = e.clientY;
       if (Math.abs(e.clientX - this.downAt.x) + Math.abs(e.clientY - this.downAt.y) < 4) return;
       this.touched();
-      this.follow = null;
 
       if (this.pointers.size === 2) {
         const d = this.pinchDistance();
         if (this.pinchStart > 0) this.zoomBy(this.pinchStart / d, null);
         this.pinchStart = d;
+        this.onUse?.('zoom');
         this.rotateBy(dx * 0.5, dy * 0.5);
         this.onUse?.('rotate');
         return;
       }
+      // Turning keeps whoever is followed in the middle; moving the map lets go of them.
       if (p.button === 2 || p.shift) {
         this.rotateBy(dx, dy);
         this.onUse?.('rotate');
       } else {
+        this.follow = null;
         this.panBy(e.clientX - dx, e.clientY - dy, e.clientX, e.clientY);
         this.onUse?.('pan');
       }
