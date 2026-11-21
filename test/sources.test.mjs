@@ -200,3 +200,39 @@ describe('conversation', () => {
     assert.equal(humanPromptOf({ type: 'user', message: { content: 'fix the build' } }), 'fix the build');
   });
 });
+
+describe('a session keeps its project', async () => {
+  const { createRepoStickiness, REPO_SWITCH_MS } = await import('../server/sources/cmux.mjs');
+  const { summarizeTranscript } = await import('../server/sources/claude-transcripts.mjs');
+  const A = { key: '/code/a/.git', name: 'a' };
+  const B = { key: '/code/b/.git', name: 'b' };
+
+  test('a folder outside any repo never moves it to the beach bar', () => {
+    const sticky = createRepoStickiness();
+    assert.equal(sticky('s1', A, 0), A);
+    assert.equal(sticky('s1', null, 1000), A, 'cd ~/code: still on its plot');
+    assert.equal(sticky('s1', null, 10 * 60_000), A);
+  });
+
+  test('another repo only after working there for a minute', () => {
+    const sticky = createRepoStickiness();
+    sticky('s1', A, 0);
+    assert.equal(sticky('s1', B, 1000), A, 'a quick look into another repo');
+    assert.equal(sticky('s1', A, 2000), A);
+    assert.equal(sticky('s1', B, 3000), A);
+    assert.equal(sticky('s1', B, 3000 + REPO_SWITCH_MS), B, 'settled in the other repo');
+  });
+
+  test('a session that starts outside any repo sits at the beach bar until it enters one', () => {
+    const sticky = createRepoStickiness();
+    assert.equal(sticky('s2', null, 0), null);
+    assert.equal(sticky('s2', A, 1000), A);
+  });
+
+  test('the transcript lists its recent working folders, newest first', () => {
+    const line = (cwd, i) => JSON.stringify({ type: 'assistant', cwd, timestamp: new Date(i * 1000).toISOString(), message: { model: 'claude-opus-5-5', content: [] } });
+    const s = summarizeTranscript([line('/code/a', 1), line('/code', 2), line('/code/a', 3), line('/tmp/x', 4)]);
+    assert.equal(s.cwd, '/tmp/x');
+    assert.deepEqual(s.cwds, ['/tmp/x', '/code/a', '/code']);
+  });
+});

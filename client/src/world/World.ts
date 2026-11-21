@@ -62,6 +62,8 @@ export interface WorldStatus {
 }
 
 const LOOK_BLEND_S = 2.4;
+/** How far the camera stands from someone whose card is open. */
+export const FOCUS_DISTANCE = 17;
 /** Closer than this (metres from what the camera looks at), only the focused plot keeps its label. */
 const CLOSE_UP_TAGS = 55;
 
@@ -571,6 +573,12 @@ export class World {
   }
 
   /** Flies to a framed close-up of someone and keeps them in frame until the user pans. */
+  /** Pixels one metre spans at `distance` from the camera (for spacing the card). */
+  pxPerMAt(distance: number): number {
+    const cam = this.rig.camera;
+    return this.canvas.clientHeight / (2 * Math.tan(MathUtils.degToRad(cam.fov / 2)) * distance);
+  }
+
   focusAgent(id: string, seconds = 1.2): boolean {
     const p = this.people?.positionOf(id, new Vector3());
     if (!p) return false;
@@ -578,7 +586,7 @@ export class World {
     const yaw = this.rig.desired.yaw;
     // Face them from the street side when we're far off; keep the angle when already close.
     const close = this.rig.desired.target.distanceTo(p) < 40 && this.rig.desired.distance < 60;
-    this.rig.flyTo({ target: p.clone().setY(0.9), distance: 17, pitch: MathUtils.degToRad(27), yaw: close ? yaw : 0 }, seconds);
+    this.rig.flyTo({ target: p.clone().setY(0.9), distance: FOCUS_DISTANCE, pitch: MathUtils.degToRad(27), yaw: close ? yaw : 0 }, seconds);
     const follow = new Vector3();
     this.rig.setFollow(() => {
       const q = this.people?.positionOf(id, follow);

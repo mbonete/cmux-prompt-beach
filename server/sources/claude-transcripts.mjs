@@ -188,10 +188,13 @@ export function summarizeTranscript(lines) {
     contextTokens: null,
     branch: null,
     cwd: null,
+    /** Distinct working folders in the tail, most recent first (a few). */
+    cwds: [],
     mode: null,
   };
   const openTools = new Map();
 
+  const seenCwd = new Set(); // insertion order = recency
   for (const line of lines) {
     if (!line) continue;
     let r;
@@ -241,7 +244,11 @@ export function summarizeTranscript(lines) {
           s.contextTokens = (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
         }
         if (r.gitBranch) s.branch = r.gitBranch;
-        if (r.cwd) s.cwd = r.cwd;
+        if (r.cwd) {
+          s.cwd = r.cwd;
+          seenCwd.delete(r.cwd);
+          seenCwd.add(r.cwd);
+        }
         s.lastAssistantAt = r.timestamp;
         for (const block of m.content || []) {
           if (block.type === 'text' && block.text?.trim()) {
@@ -268,6 +275,7 @@ export function summarizeTranscript(lines) {
   s.currentTool = lastTool ? describeTool(lastTool.name, lastTool.input) : null;
   s.pendingQuestion = lastTool?.name === 'AskUserQuestion' ? normalizeQuestions(lastTool.input?.questions) : null;
   s.pendingPlan = lastTool?.name === 'ExitPlanMode' ? clip(String(lastTool.input?.plan || ''), 6000) : null;
+  s.cwds = [...seenCwd].reverse().slice(0, 6);
   return s;
 }
 

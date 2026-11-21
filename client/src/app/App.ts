@@ -1,7 +1,7 @@
 import type { SwitchboardClient } from '../data/client';
 import type { Item } from '../data/types';
 import { ASK_ICON, ASK_TEXT } from '../ui/agentView';
-import { AgentCard, type Insets } from '../ui/card';
+import { AgentCard, cardGap, type Insets } from '../ui/card';
 import { EdgeArrows, type EdgeTarget } from '../ui/edges';
 import { Hud, RAIL } from '../ui/hud';
 import { Inspector } from '../ui/inspector';
@@ -9,7 +9,7 @@ import { Minimap } from '../ui/minimap';
 import { Panels } from '../ui/panels';
 import { Sound } from '../ui/sound';
 import { Toasts } from '../ui/toasts';
-import type { World } from '../world/World';
+import { FOCUS_DISTANCE, type World } from '../world/World';
 import { refreshTimes } from './format';
 import { Actions } from './actions';
 import { AppState, type PanelId, type Settings, type WorldEvent } from './state';
@@ -251,8 +251,10 @@ export class App {
       // Keep what the camera looks at centred in the space the panels leave free.
       const base = (rail?.right ?? 80) + PANEL_GAP;
       // With the card open, the person sits a little left of centre so the card fits beside them.
-      // ...and keeps the person and the card centred as a pair.
-      const card = this.card.open ? Math.round((this.card.el.offsetWidth + this.card.gap) / 2) : 0;
+      // ...and keeps the person and the card centred as a pair. The gap is the one the
+      // card will have once the camera lands (not the current one): computed from
+      // the gap at take-off, the framing re-centred a second or two after landing.
+      const card = this.card.open ? Math.round((this.card.el.offsetWidth + cardGap(this.world.pxPerMAt(FOCUS_DISTANCE))) / 2) : 0;
       this.world.rig.shiftPx = (right - PANEL_GAP - (left - base)) / 2 + card;
     }
   }

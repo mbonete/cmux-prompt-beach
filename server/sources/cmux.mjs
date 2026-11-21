@@ -25,6 +25,43 @@ import {
 } from './claude-transcripts.mjs';
 import { mapLimit } from '../budget.mjs';
 
+// A session's project is the repo it works in, not wherever its last command ran.
+// Claude Code's working folder moves as it works (a scratch folder, the folder
+// above the repo) and the person used to follow it: from the project's plot to
+// the beach bar and back. A session now keeps its repo; a folder outside any repo
+// never moves it, and a different repo only after REPO_SWITCH_MS there.
+export const REPO_SWITCH_MS = 60_000;
+export function createRepoStickiness() {
+  const bySession = new Map(); // sessionId -> { repo, candidate, since, seen }
+  return function sticky(sessionId, repo, now = Date.now()) {
+    if (!sessionId) return repo;
+    let s = bySession.get(sessionId);
+    if (!s) {
+      if (!repo) return null;
+      s = { repo, candidate: null, since: 0, seen: now };
+      bySession.set(sessionId, s);
+      return repo;
+    }
+    s.seen = now;
+    if (!repo || repo.key === s.repo.key) {
+      s.candidate = null;
+      if (repo) s.repo = repo; // fresher name/kind
+      return s.repo;
+    }
+    if (!s.candidate || s.candidate.key !== repo.key) {
+      s.candidate = repo;
+      s.since = now;
+    }
+    if (now - s.since >= REPO_SWITCH_MS) {
+      s.repo = repo;
+      s.candidate = null;
+    }
+    if (bySession.size > 2000) for (const [k, v] of bySession) if (now - v.seen > 86_400_000) bySession.delete(k);
+    return s.repo;
+  };
+}
+const stickyRepo = createRepoStickiness();
+
 // cmux lists at most this many current items; it says when it held back more.
 const CURRENT_LIMIT = 200;
 // Sessions are read a few at a time (transcripts, status), so a swarm of them
@@ -242,6 +279,13 @@ async function buildSnapshot() {
     const replyIsCurrent = reply && (!lastPromptAt || Date.parse(reply.at) >= Date.parse(lastPromptAt));
     const recapIsCurrent = tx?.recap && (!lastPromptAt || Date.parse(tx.recapAt) >= Date.parse(lastPromptAt));
     const cwd = tx?.cwd || t.cwd || ws.current_directory || null;
+    // The most recent of the session's folders that is inside a repo, kept sticky.
+    let found = null;
+    for (const c of new Set([cwd, ...(tx?.cwds || []), t.cwd, ws.current_directory].filter(Boolean))) {
+      found = await repoOf(c);
+      if (found) break;
+    }
+    const repo = agent ? stickyRepo(agent.session_id, found, now) : found;
 
     return {
       surfaceId: proj.panel_id,
@@ -253,7 +297,7 @@ async function buildSnapshot() {
       here: Boolean(ws.selected),
       cwd,
       project: cwd ? path.basename(cwd) : null,
-      repo: await repoOf(cwd),
+      repo,
       branch: tx?.branch && tx.branch !== 'HEAD' ? tx.branch : null,
       ports: normalizePorts(ws.listening_ports),
       agent: agent ? { kind: agent.kind, sessionId: agent.session_id, state: agent.state } : null,

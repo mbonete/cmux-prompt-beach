@@ -14,6 +14,11 @@ import { icon } from './icons';
 const REACH_M = 1.1;
 const GAP_MIN = 56;
 const GAP_MAX = 170;
+
+/** Space between a person and their card, from how many pixels a metre spans at them. */
+export function cardGap(pxPerM: number): number {
+  return Math.round(Math.min(GAP_MAX, Math.max(GAP_MIN, pxPerM * REACH_M + 18)));
+}
 const MARGIN = 14;
 
 export interface Insets {
@@ -90,7 +95,7 @@ export class AgentCard {
 
   place(anchor: { x: number; y: number; pxPerM?: number } | null, view: { w: number; h: number }, insets: Insets) {
     if (this.el.hidden) return;
-    const GAP = anchor?.pxPerM ? Math.round(Math.min(GAP_MAX, Math.max(GAP_MIN, anchor.pxPerM * REACH_M + 18))) : this.gap;
+    const GAP = anchor?.pxPerM ? cardGap(anchor.pxPerM) : this.gap;
     this.gap = GAP;
     const w = this.el.offsetWidth;
     const h = this.el.offsetHeight;
