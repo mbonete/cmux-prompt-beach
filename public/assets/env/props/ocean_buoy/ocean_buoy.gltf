@@ -1,0 +1,314 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 36720,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 11016,
+      "bufferView": 0,
+      "byteOffset": 73440
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 11025,
+      "max": [
+        13157,
+        32767,
+        11745
+      ],
+      "min": [
+        -13157,
+        -32767,
+        -11745
+      ],
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 11025,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 11025,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 16
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 4855,
+      "max": [
+        13113,
+        32767,
+        11745
+      ],
+      "min": [
+        -13113,
+        -32767,
+        -11745
+      ],
+      "normalized": true,
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 4855,
+      "normalized": true,
+      "bufferView": 2,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 4855,
+      "normalized": true,
+      "bufferView": 2,
+      "byteOffset": 16
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 95472,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 95472,
+      "byteLength": 220500,
+      "byteStride": 20,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 315972,
+      "byteLength": 97100,
+      "byteStride": 20,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    },
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 1,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 3
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 3
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "ocean_buoy_emission",
+      "mimeType": "image/webp",
+      "uri": "ocean_buoy_emissive.webp"
+    },
+    {
+      "name": "ocean_buoy_nor_gl",
+      "mimeType": "image/webp",
+      "uri": "ocean_buoy_normal.webp"
+    },
+    {
+      "name": "ocean_buoy_diff",
+      "mimeType": "image/webp",
+      "uri": "ocean_buoy_albedo.webp"
+    },
+    {
+      "name": "ocean_buoy_metal-ocean_buoy_rough",
+      "mimeType": "image/webp",
+      "uri": "ocean_buoy_orm.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "ocean_buoy.bin",
+      "byteLength": 413072
+    }
+  ],
+  "materials": [
+    {
+      "name": "buoy",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 4
+        }
+      },
+      "emissiveFactor": [
+        1,
+        1,
+        1
+      ],
+      "emissiveTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "occlusionTexture": {
+        "index": 3
+      },
+      "extensions": {
+        "KHR_materials_emissive_strength": {
+          "emissiveStrength": 10
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2,
+            "NORMAL": 3,
+            "TEXCOORD_0": 4
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    },
+    {
+      "name": "lod1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 1
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "ocean_buoy",
+      "children": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.518745630979538,
+        0
+      ],
+      "scale": [
+        1.328117161989212,
+        1.328117161989212,
+        1.328117161989212
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "lod1",
+      "translation": [
+        -0.0018573999404907227,
+        0.518745630979538,
+        0
+      ],
+      "scale": [
+        1.328117161989212,
+        1.328117161989212,
+        1.328117161989212
+      ],
+      "mesh": 1
+    }
+  ],
+  "scenes": [
+    {
+      "name": "ocean_buoy",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_texture_webp",
+    "KHR_materials_emissive_strength",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ]
+}

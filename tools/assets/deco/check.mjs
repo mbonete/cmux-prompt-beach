@@ -4,7 +4,9 @@
 //
 // Checks: required empties, spot kinds, material names, triangle budgets,
 // no embedded images or buffers, no forbidden extensions, textures are
-// external power-of-two WebP files. Exits non-zero on any failure.
+// external power-of-two WebP files, night lights (bulb material, light_<n>
+// and palm_<n> empties) and the district layout in manifest.json. Exits
+// non-zero on any failure.
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
@@ -13,7 +15,7 @@ import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 
 const DIR = path.join(process.cwd(), 'public/assets/buildings');
 const MATERIALS = new Set(['stucco', 'trim', 'glass', 'glass_block', 'metal', 'terrazzo', 'wood', 'awning', 'roof',
-  'concrete', 'planter', 'water', 'neon_accent', 'interior']);
+  'concrete', 'planter', 'water', 'neon_accent', 'interior', 'bulb']);
 const SPOT_KINDS = new Set(['desk', 'lounger', 'stool', 'bench', 'steps', 'standing']);
 const ALLOWED_EXT = new Set(['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_emissive_strength',
   'KHR_materials_clearcoat', 'KHR_materials_transmission', 'KHR_materials_ior',
@@ -21,6 +23,8 @@ const ALLOWED_EXT = new Set(['KHR_mesh_quantization', 'KHR_texture_transform', '
 const FORBIDDEN_EXT = new Set(['KHR_draco_mesh_compression', 'EXT_meshopt_compression', 'KHR_meshopt_compression',
   'KHR_texture_basisu']);
 const BUDGET = { plot: 25000, bg: 6000, tower: 3000 };
+const manifest = JSON.parse(fs.readFileSync(path.join(DIR, 'manifest.json'), 'utf8'));
+const TABLE_H = manifest.constants?.desk_h ?? 0.72;
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const errors = [];
@@ -108,13 +112,11 @@ for (const file of files) {
   if (!nodes.has('tag_anchor')) fail(file, 'missing tag_anchor');
   if (kind === 'plot') {
     if (!nodes.has('beam_anchor')) fail(file, 'missing beam_anchor');
-    let desks = 0;
     for (let i = 0; i < 6; i++) {
       const n = nodes.get(`spot_${i}`)?.[0];
       if (!n) { fail(file, `missing spot_${i}`); continue; }
       const k = n.getExtras().spot_kind;
       if (!SPOT_KINDS.has(k)) fail(file, `spot_${i} has spot_kind "${k}"`);
-      if (k === 'desk') desks++;
       const [x, y, z] = n.getTranslation();
       if (Math.abs(x) > 10 || Math.abs(z) > 8) fail(file, `spot_${i} outside the plot`);
       if (y < -0.01 || y > 2) fail(file, `spot_${i} height ${y}`);
@@ -135,7 +137,40 @@ for (const file of files) {
       });
       if (!ok) fail(file, `spot_${i} (${n.getExtras().spot_kind}) has no laptop in front of it; facing convention broken?`);
     }
-    if (desks < 2) fail(file, `only ${desks} desk spots`);
+    const seated = [0, 1, 2, 3, 4, 5].filter((i) => ['desk', 'stool'].includes(nodes.get(`spot_${i}`)?.[0]?.getExtras().spot_kind)).length;
+    if (seated < 4) fail(file, `only ${seated} desk/stool spots (most agents are working: at least 4 of 6)`);
+    // seated table spots must match the clips' table height
+    for (let i = 0; i < 6; i++) {
+      const e = nodes.get(`spot_${i}`)?.[0]?.getExtras();
+      if (e && ['desk', 'stool'].includes(e.spot_kind) && Math.abs((e.table_h ?? 0) - TABLE_H) > 0.005) {
+        fail(file, `spot_${i} table_h ${e.table_h}, expected ${TABLE_H}`);
+      }
+    }
+    // night life: bulb material, 2-4 light pools, palms
+    if (!root.listMaterials().some((m) => m.getName() === 'bulb')) fail(file, 'no bulb material (string lights, sconces, lanterns)');
+    let lights = 0;
+    for (let i = 0; nodes.has(`light_${i}`); i++) {
+      lights++;
+      const n = nodes.get(`light_${i}`)[0];
+      const e = n.getExtras();
+      if (!(e.light_radius >= 2 && e.light_radius <= 6)) fail(file, `light_${i} light_radius ${e.light_radius} outside 2-6 m`);
+      if (!/^#[0-9A-Fa-f]{6}$/.test(e.light_color ?? '')) fail(file, `light_${i} light_color "${e.light_color}" is not a hex colour`);
+      if (typeof e.floor_y !== 'number') fail(file, `light_${i} has no floor_y`);
+      const [x, y, z] = n.getTranslation();
+      if (Math.abs(x) > 10.5 || Math.abs(z) > 8.5 || y < 0 || y > 8) fail(file, `light_${i} at ${[x, y, z].map((v) => v.toFixed(2))} outside the plot`);
+    }
+    if (lights < 2 || lights > 4) fail(file, `${lights} light_<n> empties (want 2-4)`);
+    for (const k of nodes.keys()) {
+      if (/^light_/.test(k) && !/^light_\d+$/.test(k)) fail(file, `odd light empty name ${k}`);
+      if (/^palm_/.test(k) && !/^palm_\d+$/.test(k)) fail(file, `odd palm empty name ${k}`);
+    }
+    for (let i = 0; nodes.has(`palm_${i}`); i++) {
+      const n = nodes.get(`palm_${i}`)[0];
+      const h = n.getExtras().palm_height;
+      if (!(h >= 5 && h <= 11)) fail(file, `palm_${i} palm_height ${h} outside 5-11 m`);
+      const [x, , z] = n.getTranslation();
+      if (Math.abs(x) > 10.5 || Math.abs(z) > 8.5) fail(file, `palm_${i} outside the plot`);
+    }
     for (const [n, list] of nodes) {
       if (!n.startsWith('prop:')) continue;
       for (const node of list) if (node.getExtras().prop_id !== n.slice(5)) fail(file, `${n} extras.prop_id mismatch`);
@@ -143,6 +178,26 @@ for (const file of files) {
   }
   const props = [...nodes.keys()].filter((n) => n.startsWith('prop:')).map((n) => `${n.slice(5)}x${nodes.get(n).length}`);
   summary.push(`${name.padEnd(18)} ${String(tris).padStart(6)} tris  ${root.listMaterials().length} materials${props.length ? '  props: ' + props.join(' ') : ''}`);
+}
+// district layout: 16 plots by index, the hangout and the overflow
+const lay = manifest.layout;
+if (!lay) errors.push('manifest.json: no layout');
+else {
+  const plots = new Set(files.map((f) => f.replace(/\.gltf$/, '')).filter((n) => n.startsWith('plot_')));
+  if (!Array.isArray(lay.plots) || lay.plots.length !== 16) errors.push('layout.plots must list 16 plot types');
+  const count = {};
+  (lay.plots ?? []).forEach((t, i) => {
+    if (!plots.has(t)) errors.push(`layout.plots[${i}] = ${t} is not a plot building`);
+    count[t] = (count[t] ?? 0) + 1;
+    const r = Math.floor(i / 4);
+    const c = i % 4;
+    if (c > 0 && lay.plots[i - 1] === t) errors.push(`layout: plots ${i - 1} and ${i} are both ${t}`);
+    if (r > 0 && lay.plots[i - 4] === t) errors.push(`layout: plots ${i - 4} and ${i} are both ${t}`);
+  });
+  for (const [t, n] of Object.entries(count)) if (n > 3) errors.push(`layout: ${t} used ${n} times (max 3)`);
+  if (!['plot_deco_hotel'].includes(lay.plots?.[1]) && lay.plots?.[2] !== 'plot_deco_hotel') errors.push('layout: the hero plot_deco_hotel belongs on plot 1 or 2');
+  for (const k of ['hangout', 'overflow']) if (!plots.has(lay[k])) errors.push(`layout.${k} = ${lay[k]} is not a plot building`);
+  summary.push(`layout: ${Object.entries(count).map(([t, n]) => `${t.slice(5)}x${n}`).join(' ')}; hangout ${lay.hangout}, overflow ${lay.overflow}`);
 }
 console.log(summary.join('\n'));
 if (errors.length) {

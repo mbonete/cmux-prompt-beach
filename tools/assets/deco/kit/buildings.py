@@ -10,6 +10,7 @@ import numpy as np
 
 from . import deco as D
 from . import furniture as F
+from . import nightlife as N
 from .config import SEAT_H, DESK_H, STOOL_RAISE, TERRACE_Y
 from .geo import MB, Path, rrect, circle_path, stadium, round_edge_section
 
@@ -25,6 +26,8 @@ class Building:
         self.anchors = {}
         self.look = {}     # material overrides for materials.resolve
         self.notes = ""
+        self.lights = []   # light_<n>: fake light pools the client draws at night
+        self.palms = []    # palm_<n>: where the client plants a procedural palm
 
     def add(self, piece):
         if piece is None:
@@ -35,6 +38,18 @@ class Building:
 
     def prop(self, pid, pos, yaw=0.0):
         self.props.append({"id": pid, "pos": pos, "yaw": yaw})
+
+    def light(self, pos, radius, color="warm", floor_y=None):
+        """Main light source at pos (glTF, plot space): the client draws a
+        soft pool of `radius` metres on the floor below (floor_y, defaults to
+        the terrace height)."""
+        from .config import LIGHT
+        self.lights.append({"pos": tuple(pos), "radius": float(radius), "color": LIGHT.get(color, color),
+                            "floor_y": TERRACE_Y if floor_y is None else float(floor_y)})
+
+    def palm(self, pos, height, yaw=0.0):
+        """Base of a palm trunk (soil or ground level); the client plants it."""
+        self.palms.append({"pos": tuple(pos), "height": float(height), "yaw": float(yaw)})
 
 
 def _o(path, p0, p1, **kw):
@@ -223,8 +238,7 @@ def plot_deco_hotel():
         mb.lathe([(0, 1.86), (0.12, 1.9), (0.15, 2.02), (0.12, 2.14), (0, 2.18)], x, 6.72, "neon_accent", seg=12)
     # planters at the inside front corners and along the facade
     soils = []
-    for sgn in (-1, 1):
-        soils.append(F.round_planter(mb, sgn * 8.45, 5.75, r=0.6, h=0.66))
+    palm_soils = [F.round_planter(mb, sgn * 8.45, 5.75, r=0.6, h=0.66) for sgn in (-1, 1)]
     soils.append(F.round_planter(mb, -2.95, 0.15, r=0.36, h=0.62))
     soils.append(F.round_planter(mb, 2.95, 0.15, r=0.36, h=0.62))
     soils.append(F.planter(mb, -8.3, -6.9, -1.25, -0.75, h=0.5))
@@ -253,18 +267,18 @@ def plot_deco_hotel():
     for k, z in enumerate((-0.3, 0.75, 1.75)):
         with mb.at(bx1 + 0.3, T, z, -90):
             F.stool(mb)
-            if k == 1:
+            if k >= 1:
                 b.spots.append(F.spot(mb, "stool", (0, STOOL_RAISE, 0), 0.0, seat_h=SEAT_H, table_h=DESK_H,
                                       table_edge=F.DESK_EDGE))
-    b.prop("classic_laptop", (bx1 - 0.15, ctop, 0.75), 90.0)
-    # lounger under a striped umbrella, front right
+                b.prop("classic_laptop", (bx1 - 0.15, ctop, z), 90.0)
+    # lounger with a striped umbrella planted behind it (the camera sees under the rim)
     with mb.at(7.75, T, 3.55, 0):
         b.add(F.lounger(mb))
-    with mb.at(6.55, T, 4.65, 0):
+    with mb.at(7.2, T, 1.95, 0):
         F.umbrella(mb, r=1.35, h=2.45)
-    # bench against the left side wall, facing into the terrace
+    # bench against the left side wall, facing into the terrace (decor)
     with mb.at(-8.85, T, 4.4, 90):
-        b.add(F.bench_back(mb, 1.8))
+        F.bench_back(mb, 1.8)
     # props
     b.prop("outdoor_table_chair_set_01", (-5.6, T, 5.1), 90.0)
     b.prop("mid_century_lounge_chair", (7.05, T, 0.95), -110.0)
@@ -288,9 +302,27 @@ def plot_deco_hotel():
     for (vx, vz) in ((-7.2, -6.8), (-6.4, -6.8), (6.9, -3.6)):
         mb.cylinder(vx, vz, 0.14, y_roof, y_roof + 0.55, "metal", seg=10, bevel=0.02)
         mb.cylinder(vx, vz, 0.22, y_roof + 0.55, y_roof + 0.62, "metal", seg=10, bevel=0.02)
+    # night life: festoons from the ground-floor eyebrows to poles at the front wall,
+    # sconces by the door, bulbs under the marquee
+    ye = gf_b + 0.12
+    left = [N.pole(mb, x, 6.4, 3.3, y0=T) for x in (-7.4, -3.6)]
+    right = [N.pole(mb, x, 6.4, 3.3, y0=T) for x in (3.6, 7.4)]
+    N.string_lights(mb, [(-7.4, ye, -0.64), left[0], (-5.2, ye, -0.62), left[1], (-3.0, ye, -0.62)])
+    N.string_lights(mb, [(3.0, ye, -0.62), right[0], (5.2, ye, -0.62), right[1], (7.4, ye, -0.64)])
+    N.string_lights(mb, [left[1], (-2.15, 1.76, 6.72)])
+    N.string_lights(mb, [(2.15, 1.76, 6.72), right[0]])
+    for x in (-1.85, 1.85):
+        N.sconce(mb, x, 2.35, BZ1)
+    N.downlight_row(mb, -1.3, 1.3, 3.3, BZ1 + 0.95, 5)
+    b.light((-5.4, 3.3, 2.8), 5.0, "warm")
+    b.light((5.6, 3.3, 2.2), 4.5, "warm")
+    b.light((0.0, 3.25, 1.4), 3.5, "candle")
+    b.palm(palm_soils[0], 8.5, 35)
+    b.palm(palm_soils[1], 7.0, 160)
     b.anchors = {"tag_anchor": (0.0, 19.4, -1.4), "beam_anchor": (0.0, 0.0, 0.0)}
     b.notes = ("Hero plot: 3-storey Deco hotel turned studio, centre bay with glass-block spine, fins and a stepped "
-               "crown; terrace with two desks, bar with stools, lounger, bench and a seating stoop.")
+               "crown; terrace with two desks, bar with two working stools, lounger, a seating stoop, palms in the "
+               "front planters and festoon lights from the eyebrows to the front wall.")
     return b
 
 
@@ -366,50 +398,66 @@ def plot_beach_cafe():
     top = rrect(-5.35, -0.35, Z1 - 0.1, cz1, (0, 0, 0.08, 0.08), seg=2)
     mb.slab(top, ctop - 0.05, ctop, "wood", bevel=0.015, segs=2)
     mb.tube([(-5.15, T + 0.2, cz1 + 0.02), (-0.55, T + 0.2, cz1 + 0.02)], 0.018, "metal", seg=6)
+    # stools under the awning are decor: a person there is hidden from the camera
     for k, x in enumerate((-4.3, -2.85, -1.4)):
         with mb.at(x, T, cz1 + F.DESK_EDGE, 180):
             F.stool(mb, cushion=F.SWATCH_COLOUR)
-            if k == 1:
-                b.spots.append(F.spot(mb, "stool", (0, STOOL_RAISE, 0), 0.0, seat_h=SEAT_H, table_h=DESK_H,
-                                      table_edge=F.DESK_EDGE))
-    b.prop("classic_laptop", (-2.85, ctop, cz1 - 0.22), 0.0)
     # deck over the plot front
     deck = rrect(-9.7, 9.7, -2.5, 7.1, (0, 0, 0.8, 0.8), seg=5)
     mb.slab(deck, 0.0, T, "wood", bevel=0.015, segs=1, bottom=False)
-    # tables with umbrellas (desk spots), lounger, bench, standing table
-    with mb.at(-6.0, T, 1.55, 25):
-        b.add(F.cafe_table_set(mb, umbrella_h=2.45))
-    with mb.at(-2.3, T, 3.0, -15):
-        b.add(F.cafe_table_set(mb, umbrella_h=2.45))
+    # four working tables in the open, umbrellas planted behind the sitters so
+    # the camera (+Z side) sees them under the rim; loungers, standing table
+    for (x, z, yaw, umb) in ((-6.2, 1.55, 20, False), (-2.6, 3.1, -12, True), (-5.6, 5.05, 8, True),
+                             (3.3, 3.15, -22, False)):
+        with mb.at(x, T, z, yaw):
+            b.add(F.cafe_table_set(mb))
+            if umb:
+                with mb.at(0.45, 0.0, -0.9):
+                    F.umbrella(mb, r=1.25, h=2.45)
     with mb.at(-7.0, T, Z1 + 0.32, 0):
-        b.add(F.bench_back(mb, 1.5))
+        F.bench_back(mb, 1.5)
     with mb.at(7.2, T, 2.4, -20):
         b.add(F.lounger(mb, cushion="stripes"))
     with mb.at(8.7, T, 3.0, -20):
         F.lounger(mb, cushion="stripes")
-    with mb.at(7.6, T, 4.6, 0):
+    with mb.at(8.3, T, 0.75, 0):
         F.umbrella(mb, r=1.4, h=2.5)
-    with mb.at(1.4, T, 4.4, 0):
+    with mb.at(-0.6, T, 4.75, 0):
         b.add(F.poseur_table(mb))
     # surfboards leaning on the right wall of the pavilion
     for k, (z, pin) in enumerate(((-6.9, F.SWATCH_COLOUR), (-6.25, F.SWATCH_WHITE), (-5.6, F.SWATCH_COLOUR))):
         with mb.at(X1 + 0.32, 1.12, z, 90, pitch=-78):
             F.surfboard(mb, pin=pin)
     # planters along the front edge of the deck
-    soils = [F.round_planter(mb, -9.0, 6.4, r=0.42, h=0.55), F.round_planter(mb, 9.0, 6.4, r=0.42, h=0.55),
-             F.planter(mb, 3.0, 4.4, 6.35, 6.85, h=0.5), F.planter(mb, -4.4, -3.0, 6.35, 6.85, h=0.5)]
+    palm_soils = [F.round_planter(mb, -9.0, 6.4, r=0.42, h=0.55), F.round_planter(mb, 9.0, 6.4, r=0.42, h=0.55)]
+    soils = [F.planter(mb, 3.0, 4.4, 6.35, 6.85, h=0.5), F.planter(mb, -4.4, -3.0, 6.35, 6.85, h=0.5)]
     for k, sp in enumerate(soils):
         b.prop(["calathea_orbifolia_01", "anthurium_botany_01"][k % 2], sp, 0.0)
-    b.prop("CoffeeCart_01", (4.0, T, 0.2), -30.0)
-    b.prop("outdoor_table_chair_set_01", (1.6, T, 1.1), 90.0)
-    b.prop("outdoor_table_chair_set_01", (-6.2, T, 5.3), 70.0)
-    b.prop("mid_century_lounge_chair", (4.6, T, 5.4), 200.0)
+    b.prop("CoffeeCart_01", (4.2, T, -0.6), -30.0)
+    b.prop("outdoor_table_chair_set_01", (1.0, T, 1.4), 90.0)
+    b.prop("mid_century_lounge_chair", (5.4, T, 5.5), 200.0)
     b.prop("street_lamp_02", (-9.7, 0.0, 7.7), 0.0)
     b.prop("street_lamp_02", (9.7, 0.0, 7.7), 0.0)
     b.prop("exterior_aircon_unit", (-1.0, y_top + 0.24, -6.6), 0.0)
+    # night life: festoons from the awning posts to poles along the deck front,
+    # one more run up to the roof slab, a sconce by the door
+    zf, yf = Z1 + 3.3, 3.7 - 1.05
+    aw = {x: (x, yf - 0.04, zf - 0.03) for x in (-7.2, -4.1, -1.0, 1.8)}
+    P = [N.pole(mb, x, 6.0, 3.2, y0=T) for x in (-8.4, -4.9, 0.6, 5.6)]
+    N.string_lights(mb, [P[0], aw[-7.2], P[1], aw[-1.0], P[2], aw[1.8]])
+    N.string_lights(mb, [P[2], P[3], (3.4, y_top + 0.02, Z1 + 0.4)])
+    N.string_lights(mb, [P[3], (8.7, 2.9, 4.6)])
+    mb.cylinder(8.7, 4.6, 0.04, T, 2.95, "metal", seg=8, caps=False)
+    N.sconce(mb, 1.85, 2.15, Z1)
+    b.light((-4.4, 3.0, 3.0), 5.5, "warm", floor_y=T)
+    b.light((3.6, 3.0, 3.0), 4.5, "warm", floor_y=T)
+    b.light((0.9, 2.2, -1.5), 3.0, "amber", floor_y=T)
+    b.palm(palm_soils[0], 7.5, 60)
+    b.palm(palm_soils[1], 9.0, 220)
     b.anchors = {"tag_anchor": (-1.0, 9.6, -4.6), "beam_anchor": (0.0, 0.0, 0.0)}
     b.notes = ("Single-storey streamline beach cafe: rounded pavilion with a wrap-around ribbon window, floating "
-               "roof slab, rooftop sign blade, deep coral striped awning over a serving counter, timber deck.")
+               "roof slab, rooftop sign blade, deep coral striped awning over a serving counter, timber deck with "
+               "four working tables in the open, festoon lights and palms at the front corners.")
     return b
 
 
@@ -526,10 +574,11 @@ def plot_diner():
     pat = rrect(-9.7, 9.7, -2.3, 7.0, (0, 0, 0.6, 0.6), seg=4)
     mb.slab(pat, 0.0, T, "terrazzo", bevel=0.012, segs=1, bottom=False)
     D.floor_fan(mb, -7.1, Z1 + 0.05, 0.6, 1.6, T + 0.006, rays=9, ray_mat="stucco")
-    with mb.at(-3.6, T, 1.4, 20):
-        b.add(F.cafe_table_set(mb, umbrella_h=2.4, top="trim"))
-    with mb.at(0.4, T, 2.6, -25):
-        b.add(F.cafe_table_set(mb, umbrella_h=2.4, top="trim"))
+    for (x, z, yaw) in ((-3.6, 1.4, 20), (0.4, 2.6, -25)):
+        with mb.at(x, T, z, yaw):
+            b.add(F.cafe_table_set(mb, top="trim"))
+            with mb.at(0.45, 0.0, -0.9):
+                F.umbrella(mb, r=1.25, h=2.4)
     with mb.at(4.4, T, 5.9, 180):
         b.add(F.bench_back(mb, 1.8))
     with mb.at(-1.0, T, 5.3, 0):
@@ -556,8 +605,8 @@ def plot_diner():
     mb.lathe([(0, -0.12), (0.09, -0.08), (0.12, 0), (0.09, 0.08), (0, 0.12)], star_c[0], star_c[2], "metal", seg=12,
              y0=star_c[1])
     # planters and props
-    soils = [F.planter(mb, 6.6, 9.4, 6.4, 6.9, h=0.5), F.round_planter(mb, -9.1, 6.5, r=0.4, h=0.55),
-             F.round_planter(mb, 7.4, -1.4, r=0.38, h=0.55)]
+    soils = [F.planter(mb, 6.6, 9.4, 6.4, 6.9, h=0.5)]
+    palm_soils = [F.round_planter(mb, -9.1, 6.5, r=0.4, h=0.55), F.round_planter(mb, 7.6, -1.2, r=0.42, h=0.55)]
     for k, sp in enumerate(soils):
         b.prop(["anthurium_botany_01", "calathea_orbifolia_01"][k % 2], sp, 0.0)
     b.prop("outdoor_table_chair_set_01", (4.6, T, 2.0), 90.0)
@@ -566,9 +615,26 @@ def plot_diner():
     b.prop("street_lamp_02", (9.7, 0.0, 7.7), 0.0)
     b.prop("exterior_aircon_unit", (-2.0, roof_y(-2.0) + th, -6.4), 0.0)
     b.prop("exterior_aircon_unit", (2.5, roof_y(2.5) + th, -6.4), 0.0)
+    # night life: festoons from the roof fascia down to poles across the patio,
+    # a sconce by the door, bulbs along the sign pylon's chrome bands
+    P = [N.pole(mb, x, z, 3.2, y0=T) for (x, z) in ((-6.0, 6.2), (-1.9, 6.6), (2.6, 6.3), (6.3, 5.0))]
+    fa = [(x, roof_y(x) - 0.06, -1.3 + (4.9 - x) * 0.7 / 12.1 - 0.1) for x in (-4.0, 0.0, 4.0)]
+    N.string_lights(mb, [P[0], fa[0], P[1], fa[1], P[2], fa[2], P[3]])
+    N.sconce(mb, -6.12, 2.2, Z1)
+    for k in range(5):
+        y = 0.6 + k * 0.35 + 0.03
+        for x in (sx - 0.36, sx + 0.36):
+            N.globe(mb, x, y, sz + 0.27, r=0.035, seg=6)
+    b.light((-2.6, 3.0, 2.6), 5.5, "warm")
+    b.light((3.0, 3.0, 3.6), 5.0, "warm")
+    b.light((-7.1, 2.2, -1.4), 3.0, "amber")
+    b.light((6.9, 2.6, -1.6), 3.0, "warm")
+    b.palm(palm_soils[0], 8.0, 90)
+    b.palm(palm_soils[1], 9.5, 300)
     b.anchors = {"tag_anchor": (-1.0, 8.6, -4.4), "beam_anchor": (0.0, 0.0, 0.0)}
     b.notes = ("MiMo diner: long glazed front with cherry booths inside, chrome bands, an upswept roof that "
-               "cantilevers into a prow over the entrance, walk-up counter, starburst sign pylon.")
+               "cantilevers into a prow over the entrance, walk-up counter, starburst sign pylon, festoon lights "
+               "from the roof fascia over the patio.")
     return b
 
 
@@ -918,3 +984,10 @@ BUILDERS = {
     "tower_2": tower_2,
     "tower_3": tower_3,
 }
+
+# The district's other plot types and the layout live in district.py, which
+# imports Building from this module.
+from . import district as _district  # noqa: E402
+
+BUILDERS.update(_district.BUILDERS)
+LAYOUT = _district.LAYOUT

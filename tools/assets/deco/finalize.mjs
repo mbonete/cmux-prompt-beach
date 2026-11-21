@@ -20,7 +20,7 @@ const spec = JSON.parse(fs.readFileSync(path.join(STAGE, 'spec.json'), 'utf8'));
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const KEEP_EXT = new Set(['EXT_texture_webp', 'KHR_materials_emissive_strength']);
 // emissive and transparent surfaces skip the baked AO
-const NO_AO = new Set(['neon_accent', 'glass', 'interior']);
+const NO_AO = new Set(['neon_accent', 'glass', 'interior', 'bulb']);
 
 const names = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(spec.buildings);
 
@@ -72,6 +72,15 @@ async function finalize(name) {
     mat.setExtras({});
   }
   if (!root.listTextures().length) webp.dispose();
+  // surfaces that skip the baked AO do not need its UV set either
+  for (const mesh of root.listMeshes()) for (const prim of mesh.listPrimitives()) {
+    if (!NO_AO.has(prim.getMaterial()?.getName())) continue;
+    const uv1 = prim.getAttribute('TEXCOORD_1');
+    if (uv1) {
+      prim.setAttribute('TEXCOORD_1', null);
+      if (!uv1.listParents().some((p) => p !== root)) uv1.dispose();
+    }
+  }
   // Blender suffixes duplicate object names (.001); restore the contract names.
   for (const node of root.listNodes()) {
     const n = node.getName();
@@ -131,10 +140,14 @@ manifest.conventions = {
   stool: `stool spots sit ${spec.constants.stool_raise} m up on the footrest so seat and counter keep seat_h and table_h above the root`,
   props: 'prop:<id> empties: local +Z is the front of the prop (Poly Haven models face +Z); extras.prop_id repeats the id because three.js strips ":" from node names (the original name is in userData.name)',
   anchors: 'tag_anchor above the roof for the name tag; beam_anchor on the ground at the plot centre',
-  materials: 'stucco base colour is the pastel tint (override per plot); interior and neon_accent are emissive and meant to be scaled by time of day',
+  materials: 'stucco base colour is the pastel tint (override per plot); interior, neon_accent and bulb are emissive and meant to be scaled by time of day (bulb: festoon bulbs, sconce and lantern glass, marquee bulbs; warm white, emissiveStrength 6; drive it with a night level and switch it off on vacant plots)',
+  lights: 'light_0..light_n (2-4 per plot): the main night light sources. The empty sits at the source; extras.light_radius (metres, 2-6) is the radius of the soft pool to draw on the floor below, extras.light_color a warm hex colour, extras.floor_y the local height of that floor (terrace or deck top). No real lights are intended.',
+  palms: 'palm_0..palm_n: base of a palm trunk (soil in a planter, the ground or the sand); extras.palm_height in metres (5-11). The empty yaw is a free per-palm turn. The beach bar palms stand on the sand at origin height: drop them onto the dune surface.',
+  layout: 'layout.plots[i] is the building type for plot index i (row * 4 + col, row 0 nearest the beach); layout.hangout and layout.overflow name the shared beach bar and co-working types',
   textures: 'shared WebP files in textures/, EXT_texture_webp; ORM packed (R occlusion, G roughness, B metalness)',
 };
 manifest.constants = spec.constants;
+if (spec.layout) manifest.layout = spec.layout;
 manifest.textures = Object.fromEntries(fs.readdirSync(TEX).filter((f) => f.endsWith('.webp')).sort()
   .map((f) => [f, fs.statSync(path.join(TEX, f)).size]));
 const ordered = Object.fromEntries(Object.keys(manifest.assets).sort().map((k) => [k, manifest.assets[k]]));

@@ -1,0 +1,557 @@
+{
+  "asset": {
+    "generator": "Switchboard street kit (Blender 5.2 + glTF-Transform 4.5)",
+    "version": "2.0",
+    "copyright": "Switchboard world v2, original work"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 401,
+      "max": [
+        0.9700000286102295,
+        3,
+        2.1500000953674316
+      ],
+      "min": [
+        -0.9700000286102295,
+        0.5199999809265137,
+        -6.679999828338623
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 401,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 401,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1278,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 330,
+      "bufferView": 1,
+      "byteOffset": 2556
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 684,
+      "bufferView": 1,
+      "byteOffset": 3216
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 288,
+      "bufferView": 1,
+      "byteOffset": 4584
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 144,
+      "bufferView": 1,
+      "byteOffset": 5160
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 264,
+      "bufferView": 1,
+      "byteOffset": 5448
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 168,
+      "bufferView": 1,
+      "byteOffset": 5976
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 91,
+      "max": [
+        0.8299999833106995,
+        2.2200000286102295,
+        2.1500000953674316
+      ],
+      "min": [
+        -0.8299999833106995,
+        0.8999999761581421,
+        -1
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 91,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 91,
+      "bufferView": 2,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 398,
+      "max": [
+        1.0649999380111694,
+        2.950000047683716,
+        1.97833251953125
+      ],
+      "min": [
+        -1.0649999380111694,
+        0.021028853952884674,
+        -2.049999952316284
+      ],
+      "bufferView": 3,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 398,
+      "bufferView": 3,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 398,
+      "bufferView": 3,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 164,
+      "max": [
+        0.07000000029802322,
+        3.0999999046325684,
+        -0.5300000309944153
+      ],
+      "min": [
+        -0.07000000029802322,
+        0.5099999904632568,
+        -6.559999942779541
+      ],
+      "bufferView": 4,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 164,
+      "bufferView": 4,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 164,
+      "bufferView": 4,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 82,
+      "max": [
+        0.07999999821186066,
+        0.800000011920929,
+        1.6800000667572021
+      ],
+      "min": [
+        -0.07999999821186066,
+        0.6399999856948853,
+        1.5199999809265137
+      ],
+      "bufferView": 5,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 82,
+      "bufferView": 5,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 82,
+      "bufferView": 5,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 146,
+      "max": [
+        4.270925045013428,
+        0.10000000149011612,
+        4.2709245681762695
+      ],
+      "min": [
+        -4.270927429199219,
+        -0.07999999821186066,
+        -4.270925998687744
+      ],
+      "bufferView": 6,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 146,
+      "bufferView": 6,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 146,
+      "bufferView": 6,
+      "byteOffset": 24
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 98,
+      "max": [
+        0.06000000238418579,
+        0.7799999713897705,
+        0.07000000029802322
+      ],
+      "min": [
+        -0.06000000238418579,
+        -0.7799999713897705,
+        -0.07000000029802322
+      ],
+      "bufferView": 7,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 98,
+      "bufferView": 7,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 98,
+      "bufferView": 7,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 12832,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 12832,
+      "byteLength": 6312,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 19144,
+      "byteLength": 2912,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 22056,
+      "byteLength": 12736,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 34792,
+      "byteLength": 5248,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 40040,
+      "byteLength": 2624,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 42664,
+      "byteLength": 4672,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 47336,
+      "byteLength": 3136,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "helicopter.bin",
+      "byteLength": 50472
+    }
+  ],
+  "materials": [
+    {
+      "name": "carpaint",
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.3,
+        "metallicFactor": 0.05
+      },
+      "extensions": {
+        "KHR_materials_clearcoat": {
+          "clearcoatFactor": 1,
+          "clearcoatRoughnessFactor": 0.07
+        }
+      }
+    },
+    {
+      "name": "glass",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.007,
+          0.01229,
+          0.016,
+          1
+        ],
+        "roughnessFactor": 0.05,
+        "metallicFactor": 0.3
+      }
+    },
+    {
+      "name": "trim",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.01161,
+          0.01229,
+          0.0137,
+          1
+        ],
+        "roughnessFactor": 0.62,
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "taillight",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.19462,
+          0.00402,
+          0.00335,
+          1
+        ],
+        "roughnessFactor": 0.15,
+        "metallicFactor": 0
+      },
+      "emissiveFactor": [
+        1,
+        0.01764,
+        0.007
+      ],
+      "extensions": {
+        "KHR_materials_emissive_strength": {
+          "emissiveStrength": 3
+        }
+      }
+    },
+    {
+      "name": "headlight",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.87137,
+          0.85499,
+          0.80695,
+          1
+        ],
+        "roughnessFactor": 0.08,
+        "metallicFactor": 0
+      },
+      "emissiveFactor": [
+        1,
+        0.87137,
+        0.68669
+      ],
+      "extensions": {
+        "KHR_materials_emissive_strength": {
+          "emissiveStrength": 4
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "helicopter_body",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 10,
+            "NORMAL": 11,
+            "TEXCOORD_0": 12
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 4
+        },
+        {
+          "attributes": {
+            "POSITION": 13,
+            "NORMAL": 14,
+            "TEXCOORD_0": 15
+          },
+          "mode": 4,
+          "material": 2,
+          "indices": 5
+        },
+        {
+          "attributes": {
+            "POSITION": 16,
+            "NORMAL": 17,
+            "TEXCOORD_0": 18
+          },
+          "mode": 4,
+          "material": 3,
+          "indices": 6
+        },
+        {
+          "attributes": {
+            "POSITION": 19,
+            "NORMAL": 20,
+            "TEXCOORD_0": 21
+          },
+          "mode": 4,
+          "material": 4,
+          "indices": 7
+        }
+      ]
+    },
+    {
+      "name": "rotor",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 22,
+            "NORMAL": 23,
+            "TEXCOORD_0": 24
+          },
+          "mode": 4,
+          "material": 2,
+          "indices": 8
+        }
+      ]
+    },
+    {
+      "name": "tail_rotor",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 25,
+            "NORMAL": 26,
+            "TEXCOORD_0": 27
+          },
+          "mode": 4,
+          "material": 2,
+          "indices": 9
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "helicopter_body",
+      "mesh": 0
+    },
+    {
+      "name": "rotor",
+      "translation": [
+        0,
+        3,
+        -0.4000000059604645
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "tail_rotor",
+      "translation": [
+        -0.11999999731779099,
+        2.450000047683716,
+        -6.449999809265137
+      ],
+      "mesh": 2
+    },
+    {
+      "name": "helicopter",
+      "children": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        3
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "KHR_materials_clearcoat",
+    "KHR_materials_emissive_strength"
+  ]
+}

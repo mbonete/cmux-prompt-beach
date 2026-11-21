@@ -1,0 +1,210 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1890,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 677,
+      "max": [
+        32767,
+        25015,
+        13965
+      ],
+      "min": [
+        -32767,
+        -25015,
+        -13965
+      ],
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 677,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 677,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 16
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 3780,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3780,
+      "byteLength": 13540,
+      "byteStride": 20,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    },
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 1,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "painted_wooden_bench_nor_gl",
+      "mimeType": "image/webp",
+      "uri": "painted_wooden_bench_normal.webp"
+    },
+    {
+      "name": "painted_wooden_bench_diff",
+      "mimeType": "image/webp",
+      "uri": "painted_wooden_bench_albedo.webp"
+    },
+    {
+      "name": "painted_wooden_bench_rough",
+      "mimeType": "image/webp",
+      "uri": "painted_wooden_bench_orm.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "painted_wooden_bench.bin",
+      "byteLength": 17320
+    }
+  ],
+  "materials": [
+    {
+      "name": "painted_wooden_bench",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      },
+      "occlusionTexture": {
+        "index": 2
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "painted_wooden_bench",
+      "children": [
+        1
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.4446457326412201,
+        0
+      ],
+      "scale": [
+        0.5824717879295349,
+        0.5824717879295349,
+        0.5824717879295349
+      ],
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "painted_wooden_bench",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ]
+}

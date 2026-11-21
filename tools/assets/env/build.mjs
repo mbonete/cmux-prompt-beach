@@ -123,11 +123,12 @@ async function stepManifest() {
   const skyK = keep(sky, cfg.sky.hdri.map((h) => h.id));
   const texK = keep(textures, cfg.textures.sets.map((s) => s.id));
   const propK = keep(props, cfg.props.map((p) => p.id));
+  const waterK = keep(water, Object.keys(cfg.procedural).filter((k) => k !== 'seed'));
   const sum = (arr) => arr.reduce((a, b) => a + b, 0);
   const totals = {
     sky: sum(Object.values(skyK).flatMap((s) => Object.values(s.files).map((f) => f.bytes))),
     textures: sum(Object.values(texK).map((t) => t.bytes)),
-    water: sum(Object.values(water).map((w) => w.bytes)),
+    water: sum(Object.values(waterK).map((w) => w.bytes)),
     props: sum(Object.values(propK).map((p) => p.bytes)),
   };
   totals.all = totals.sky + totals.textures + totals.water + totals.props;
@@ -161,7 +162,7 @@ async function stepManifest() {
     }
     assets[`texture:${id}`] = { kind: 'texture', set: id, sizeM: t.sizeM, files: Object.values(t.files).map((f) => f.file), bytes: t.bytes, maps: byMap };
   }
-  for (const [id, w] of Object.entries(water)) {
+  for (const [id, w] of Object.entries(waterK)) {
     assets[`water:${id}`] = { kind: 'water', files: [w.file], bytes: w.bytes, tileM: w.tileM, use: w.use };
   }
   const manifest = {
@@ -180,7 +181,7 @@ async function stepManifest() {
     assets,
     sky: skyK,
     textures: texK,
-    water,
+    water: waterK,
     props: propK,
   };
   await writeJson(path.join(OUT, 'manifest.json'), manifest);
@@ -193,9 +194,9 @@ async function stepManifest() {
   for (const [id, t] of Object.entries(texK)) {
     const c = cfg.textures.sets.find((s) => s.id === id);
     credits.push({ asset: `textures/${id}`, author: c.credit.author, source: t.source, licence: 'CC0 1.0', url: c.credit.url,
-      changes: `Resized to ${Object.keys(t.files).filter((k) => k.startsWith('albedo')).map((k) => k.split('_')[1]).join(' and ')}; ORM packed (metalness 0)${t.orm.occlusion.startsWith('none') ? ', no AO in source (1.0)' : ''}; WebP${t.calibration ? `; albedo calibrated to a neutral mean of ${t.calibration.meanLinear} linear` : ''}.` });
+      changes: `Resized to ${Object.keys(t.files).filter((k) => k.startsWith('albedo')).map((k) => k.split('_')[1]).join(' and ')}; ORM packed (metalness 0)${t.orm.occlusion.startsWith('none') ? ', no AO in source (1.0)' : ''}; WebP${t.calibration?.meanLinear !== undefined ? `; albedo calibrated to a neutral mean of ${t.calibration.meanLinear} linear` : ''}.` });
   }
-  for (const name of Object.keys(water)) {
+  for (const name of Object.keys(waterK)) {
     credits.push({ asset: `textures/water/${name}`, author: 'Switchboard (generated)', source: 'tools/assets/env/blender/procedural.py', licence: 'Original work, same licence as this repository (MIT)', url: null, changes: 'Generated procedurally.' });
   }
   for (const [id, p] of Object.entries(propK)) {

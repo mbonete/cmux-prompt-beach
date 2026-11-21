@@ -1,0 +1,658 @@
+{
+  "assets": {
+    "blimp": {
+      "kind": "air",
+      "files": [
+        "blimp.gltf",
+        "blimp.bin"
+      ],
+      "bytes": 60831,
+      "textureBytes": 0,
+      "tris": 1508,
+      "bounds": {
+        "min": [
+          -6.61,
+          -0.12,
+          -21.11
+        ],
+        "max": [
+          6.61,
+          13.56,
+          21
+        ]
+      },
+      "materials": [
+        "envelope",
+        "paint",
+        "white",
+        "glass",
+        "trim",
+        "taillight",
+        "headlight"
+      ],
+      "tintable": [
+        "paint"
+      ],
+      "emissive": [
+        "taillight",
+        "headlight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Plain airship, 42 m, no markings: silver envelope, four tail fins (paint, tinted per instance) and a small gondola. Pivot under the gondola."
+    },
+    "boat_cruiser": {
+      "kind": "boat",
+      "files": [
+        "boat_cruiser.gltf",
+        "boat_cruiser.bin"
+      ],
+      "bytes": 89537,
+      "textureBytes": 0,
+      "tris": 1914,
+      "bounds": {
+        "min": [
+          -2.15,
+          0.004,
+          -7.9
+        ],
+        "max": [
+          2.15,
+          6.72,
+          7
+        ]
+      },
+      "materials": [
+        "paint",
+        "hull",
+        "teak",
+        "glass",
+        "leather",
+        "metal",
+        "white",
+        "headlight",
+        "chrome"
+      ],
+      "tintable": [
+        "paint"
+      ],
+      "emissive": [
+        "headlight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {
+        "waterline": 0.85
+      },
+      "notes": "Motor yacht, 14 m: a rounded superstructure with a wraparound glass band, flybridge and radar arch. Pivot at the keel; extras.waterline is the float height. paint is tinted per instance."
+    },
+    "boat_sail": {
+      "kind": "boat",
+      "files": [
+        "boat_sail.gltf",
+        "boat_sail.bin"
+      ],
+      "bytes": 54434,
+      "textureBytes": 0,
+      "tris": 1111,
+      "bounds": {
+        "min": [
+          -1.15,
+          0,
+          -3.3
+        ],
+        "max": [
+          1.15,
+          10.8,
+          3.3
+        ]
+      },
+      "materials": [
+        "paint",
+        "hull",
+        "teak",
+        "glass",
+        "trim",
+        "metal",
+        "sail",
+        "headlight"
+      ],
+      "tintable": [
+        "paint"
+      ],
+      "emissive": [
+        "headlight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {
+        "waterline": 1.26
+      },
+      "notes": "Small sloop, 6.6 m, mast 9 m, mainsail and jib set to starboard. Pivot at the bottom of the keel fin; extras.waterline is the float height. paint is tinted per instance."
+    },
+    "boat_speed": {
+      "kind": "boat",
+      "files": [
+        "boat_speed.gltf",
+        "boat_speed.bin"
+      ],
+      "bytes": 81693,
+      "textureBytes": 0,
+      "tris": 1900,
+      "bounds": {
+        "min": [
+          -1.225,
+          0.004,
+          -4.15
+        ],
+        "max": [
+          1.225,
+          2.01,
+          3.6
+        ]
+      },
+      "materials": [
+        "paint",
+        "hull",
+        "teak",
+        "glass",
+        "chrome",
+        "leather",
+        "trim",
+        "headlight"
+      ],
+      "tintable": [
+        "paint"
+      ],
+      "emissive": [
+        "headlight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {
+        "waterline": 0.42
+      },
+      "notes": "Sport speedboat, 7.2 m, twin outboards and a wraparound windscreen. Pivot at the keel; extras.waterline is the float height. paint (boot and sheer stripe) is tinted per instance."
+    },
+    "car_compact": {
+      "kind": "car",
+      "files": [
+        "car_compact.gltf",
+        "car_compact.bin"
+      ],
+      "bytes": 68588,
+      "textureBytes": 0,
+      "tris": 1460,
+      "bounds": {
+        "min": [
+          -1.01,
+          0.015,
+          -2
+        ],
+        "max": [
+          1.01,
+          1.47,
+          2
+        ]
+      },
+      "materials": [
+        "trim",
+        "carpaint",
+        "glass",
+        "chrome",
+        "headlight",
+        "taillight"
+      ],
+      "tintable": [
+        "carpaint"
+      ],
+      "emissive": [
+        "headlight",
+        "taillight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Compact five-door hatchback, 3.95 m. carpaint is tinted per instance; headlight and taillight are emissive."
+    },
+    "car_convertible": {
+      "kind": "car",
+      "files": [
+        "car_convertible.gltf",
+        "car_convertible.bin"
+      ],
+      "bytes": 94790,
+      "textureBytes": 0,
+      "tris": 1914,
+      "bounds": {
+        "min": [
+          -1.04,
+          0.016,
+          -2.25
+        ],
+        "max": [
+          1.04,
+          1.4,
+          2.25
+        ]
+      },
+      "materials": [
+        "trim",
+        "carpaint",
+        "leather",
+        "chrome",
+        "headlight",
+        "taillight",
+        "glass"
+      ],
+      "tintable": [
+        "carpaint"
+      ],
+      "emissive": [
+        "headlight",
+        "taillight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Two-door convertible with the top down, 4.45 m: open cabin with leather seats. carpaint is tinted per instance; headlight and taillight are emissive."
+    },
+    "car_sedan": {
+      "kind": "car",
+      "files": [
+        "car_sedan.gltf",
+        "car_sedan.bin"
+      ],
+      "bytes": 70915,
+      "textureBytes": 0,
+      "tris": 1552,
+      "bounds": {
+        "min": [
+          -1.05,
+          0.016,
+          -2.4
+        ],
+        "max": [
+          1.05,
+          1.44,
+          2.4
+        ]
+      },
+      "materials": [
+        "trim",
+        "carpaint",
+        "glass",
+        "chrome",
+        "headlight",
+        "taillight"
+      ],
+      "tintable": [
+        "carpaint"
+      ],
+      "emissive": [
+        "headlight",
+        "taillight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Mid-size sedan, 4.75 m. carpaint is tinted per instance; headlight and taillight are emissive."
+    },
+    "car_van": {
+      "kind": "car",
+      "files": [
+        "car_van.gltf",
+        "car_van.bin"
+      ],
+      "bytes": 69286,
+      "textureBytes": 0,
+      "tris": 1432,
+      "bounds": {
+        "min": [
+          -1.1,
+          0.017,
+          -2.5
+        ],
+        "max": [
+          1.1,
+          1.92,
+          2.5
+        ]
+      },
+      "materials": [
+        "trim",
+        "carpaint",
+        "glass",
+        "chrome",
+        "headlight",
+        "taillight"
+      ],
+      "tintable": [
+        "carpaint"
+      ],
+      "emissive": [
+        "headlight",
+        "taillight"
+      ],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "People carrier / small van, 4.95 m. carpaint is tinted per instance; headlight and taillight are emissive."
+    },
+    "helicopter": {
+      "kind": "air",
+      "files": [
+        "helicopter.gltf",
+        "helicopter.bin"
+      ],
+      "bytes": 61025,
+      "textureBytes": 0,
+      "tris": 1052,
+      "bounds": {
+        "min": [
+          -4.271,
+          0.021,
+          -6.68
+        ],
+        "max": [
+          4.271,
+          3.23,
+          3.871
+        ]
+      },
+      "materials": [
+        "carpaint",
+        "glass",
+        "trim",
+        "taillight",
+        "headlight"
+      ],
+      "tintable": [
+        "carpaint"
+      ],
+      "emissive": [
+        "taillight",
+        "headlight"
+      ],
+      "nodes": [
+        {
+          "name": "rotor",
+          "pivot": [
+            0,
+            3,
+            -0.4
+          ]
+        },
+        {
+          "name": "tail_rotor",
+          "pivot": [
+            -0.12,
+            2.45,
+            -6.45
+          ]
+        }
+      ],
+      "empties": [],
+      "extras": {},
+      "notes": "Light utility helicopter, 12 m rotor span. Child nodes rotor (spins about +Y at its origin) and tail_rotor (spins about +X at its origin). Pivot under the skids. carpaint is tinted."
+    },
+    "lamp_deco": {
+      "kind": "street",
+      "files": [
+        "lamp_deco.gltf",
+        "lamp_deco.bin"
+      ],
+      "bytes": 34087,
+      "textureBytes": 0,
+      "tris": 590,
+      "bounds": {
+        "min": [
+          -0.3,
+          0,
+          -0.3
+        ],
+        "max": [
+          0.3,
+          4.98,
+          0.3
+        ]
+      },
+      "materials": [
+        "pole",
+        "bulb"
+      ],
+      "tintable": [],
+      "emissive": [
+        "bulb"
+      ],
+      "nodes": [],
+      "empties": [
+        {
+          "name": "bulb_0",
+          "position": [
+            0,
+            4.42,
+            0
+          ],
+          "radius": 0.28
+        }
+      ],
+      "extras": {},
+      "notes": "Deco street lamp, 5 m: stepped octagonal plinth with fins, fluted shaft, opal globe (material bulb, emissive). Empty bulb_0 marks the light centre."
+    },
+    "lamp_promenade": {
+      "kind": "street",
+      "files": [
+        "lamp_promenade.gltf",
+        "lamp_promenade.bin"
+      ],
+      "bytes": 47266,
+      "textureBytes": 0,
+      "tris": 860,
+      "bounds": {
+        "min": [
+          -0.695,
+          0,
+          -0.26
+        ],
+        "max": [
+          0.695,
+          3.54,
+          0.26
+        ]
+      },
+      "materials": [
+        "pole",
+        "bulb"
+      ],
+      "tintable": [],
+      "emissive": [
+        "bulb"
+      ],
+      "nodes": [],
+      "empties": [
+        {
+          "name": "bulb_0",
+          "position": [
+            -0.5,
+            3.28,
+            0
+          ],
+          "radius": 0.2
+        },
+        {
+          "name": "bulb_1",
+          "position": [
+            0.5,
+            3.28,
+            0
+          ],
+          "radius": 0.2
+        }
+      ],
+      "extras": {},
+      "notes": "Short twin-globe Deco lamp for the promenade, 3.5 m. Two opal globes (bulb); empties bulb_0 and bulb_1 mark the light centres."
+    },
+    "lifeguard_tower": {
+      "kind": "beach",
+      "files": [
+        "lifeguard_tower.gltf",
+        "lifeguard_tower.bin",
+        "textures/wood_albedo.webp",
+        "textures/wood_orm.webp",
+        "textures/wood_normal.webp"
+      ],
+      "bytes": 87506,
+      "textureBytes": 47932,
+      "tris": 1341,
+      "bounds": {
+        "min": [
+          -1.78,
+          -0.076,
+          -6.43
+        ],
+        "max": [
+          1.78,
+          5.81,
+          2.03
+        ]
+      },
+      "materials": [
+        "white",
+        "wood",
+        "paint",
+        "glass",
+        "metal",
+        "accent"
+      ],
+      "tintable": [
+        "paint"
+      ],
+      "emissive": [],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Lifeguard tower, original design: a pastel hut with rounded Deco front corners, speed lines and an eyebrow roof on white stilts, a front deck and a ramp down the back. Material paint is the pastel (tint per instance); front +Z faces the sea."
+    },
+    "lounger": {
+      "kind": "beach",
+      "files": [
+        "lounger.gltf",
+        "lounger.bin"
+      ],
+      "bytes": 18826,
+      "textureBytes": 0,
+      "tris": 324,
+      "bounds": {
+        "min": [
+          -0.355,
+          -0.231,
+          -0.903
+        ],
+        "max": [
+          0.355,
+          0.605,
+          0.98
+        ]
+      },
+      "materials": [
+        "white",
+        "cushion"
+      ],
+      "tintable": [
+        "cushion"
+      ],
+      "emissive": [],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Sun lounger, 1.95 m: white frame, cushion (tint per instance) with the backrest up. Seat top 0.36 m. Front +Z is the foot end."
+    },
+    "towel": {
+      "kind": "beach",
+      "files": [
+        "towel.gltf",
+        "towel.bin",
+        "textures/towel_albedo.webp"
+      ],
+      "bytes": 5685,
+      "textureBytes": 3542,
+      "tris": 120,
+      "bounds": {
+        "min": [
+          -0.425,
+          0.004,
+          -0.85
+        ],
+        "max": [
+          0.425,
+          0.02,
+          0.85
+        ]
+      },
+      "materials": [
+        "towel"
+      ],
+      "tintable": [
+        "towel"
+      ],
+      "emissive": [],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Beach towel, 1.7 x 0.85 m, lying on the sand with a slight ripple; striped texture, material towel (tint per instance)."
+    },
+    "umbrella": {
+      "kind": "beach",
+      "files": [
+        "umbrella.gltf",
+        "umbrella.bin"
+      ],
+      "bytes": 15660,
+      "textureBytes": 0,
+      "tris": 280,
+      "bounds": {
+        "min": [
+          -1.12,
+          -0.3,
+          -1.12
+        ],
+        "max": [
+          1.12,
+          2.49,
+          1.12
+        ]
+      },
+      "materials": [
+        "metal",
+        "canvas",
+        "canvas_white"
+      ],
+      "tintable": [
+        "canvas"
+      ],
+      "emissive": [],
+      "nodes": [],
+      "empties": [],
+      "extras": {},
+      "notes": "Open beach umbrella, 2.3 m, eight alternating gores: canvas (tint per instance) and canvas_white, with a scalloped valance. The pole goes 0.3 m into the sand."
+    }
+  },
+  "generator": "tools/assets/street/build_street.py",
+  "conventions": {
+    "units": "metres, glTF Y-up; front of every asset is +Z; pivot at the base centre (ground under props and cars, keel under boats, skids under the helicopter, gondola under the blimp)",
+    "materials": "one material per surface kind, shared names across assets; tintable ones (white base) are meant to be tinted per instance; emissive ones (bulb, headlight, taillight) are authored at night strength and meant to be scaled by time of day",
+    "nodes": "helicopter: child nodes rotor (spin about local +Y) and tail_rotor (spin about local +X) at their pivots",
+    "empties": "lamps: bulb_<n> at the centre of each globe (extras.radius)",
+    "boats": "extras.waterline on the root node: height above the pivot at which the boat floats",
+    "textures": "shared WebP files in textures/, EXT_texture_webp; ORM packed (R occlusion, G roughness, B metalness); normals OpenGL convention"
+  },
+  "textures": {
+    "towel_albedo.webp": 3542,
+    "wood_albedo.webp": 10480,
+    "wood_normal.webp": 14978,
+    "wood_orm.webp": 22474
+  },
+  "totalBytes": 911603
+}

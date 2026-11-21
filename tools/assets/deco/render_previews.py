@@ -194,7 +194,7 @@ def import_gltf(name):
     return [o for o in bpy.data.objects if o not in before]
 
 
-def emission(scale_interior, scale_neon, glass_block=0.0):
+def emission(scale_interior, scale_neon, scale_bulb=0.0):
     for m in bpy.data.materials:
         if not m.use_nodes:
             continue
@@ -205,6 +205,31 @@ def emission(scale_interior, scale_neon, glass_block=0.0):
                 n.inputs["Emission Strength"].default_value = scale_interior
             elif m.name.startswith("neon_accent"):
                 n.inputs["Emission Strength"].default_value = scale_neon
+            elif m.name.startswith("bulb"):
+                n.inputs["Emission Strength"].default_value = scale_bulb
+
+
+def light_pools(power=22.0):
+    """Stand-ins for the client's fake light pools: a soft point light at each
+    light_<n> empty, its reach limited to light_radius."""
+    for ob in list(bpy.data.objects):
+        if ob.type != "EMPTY" or not ob.name.startswith("light_"):
+            continue
+        r = float(ob.get("light_radius", 3.0))
+        h = ob.get("light_color", "#FFC680").lstrip("#")
+        col = [int(h[i:i + 2], 16) / 255.0 for i in (0, 2, 4)]
+        li = bpy.data.lights.new(ob.name + "_pool", "POINT")
+        li.color = [c ** 2.2 for c in col]
+        li.energy = power * r * r
+        li.shadow_soft_size = 0.4
+        try:
+            li.use_custom_distance = True
+            li.cutoff_distance = r * 1.8
+        except Exception:
+            pass
+        lo = bpy.data.objects.new(ob.name + "_pool", li)
+        bpy.context.scene.collection.objects.link(lo)
+        lo.matrix_world = ob.matrix_world.copy()
 
 
 # ---------------------------------------------------------------------------
@@ -341,32 +366,43 @@ def save(path):
 # ---------------------------------------------------------------------------
 # shots
 # ---------------------------------------------------------------------------
-def plot_shots(name, views=("game", "terrace", "back", "night")):
+VIEWS = ("game", "terrace", "back", "night", "night_terrace")
+# the co-working building is turned 90 degrees by the client: its local -X
+# flank faces the usual camera, so its shots look from there
+CAM_YAW = {"plot_coworking": -90.0}
+SAND = {"plot_beach_bar"}
+
+
+def plot_shots(name, views=VIEWS):
+    yaw = CAM_YAW.get(name, 0.0)
     for view in views:
         reset()
-        night = view == "night"
+        night = view.startswith("night")
         render_settings()
         world(night=night, strength=0.05 if night else 0.55)
         if night:
             sun(energy=0.04, color=(0.6, 0.7, 1.0), elev=50)
         else:
             sun()
-        ground()
+        ground(color=(0.55, 0.45, 0.33) if name in SAND else (0.2, 0.18, 0.16))
         import_gltf(name)
         place_props()
         figures()
         if night:
-            emission(3.0, 8.0)
+            emission(3.0, 8.0, 6.0)
+            light_pools()
             bloom(True, 0.8)
         else:
-            emission(0.15, 1.0)
+            emission(0.15, 1.0, 0.0)
             bloom(True, 0.25)
         if view in ("game", "night"):
-            game_camera(target=(0, 3.5, -1.0))
+            game_camera(target=(0, 3.5, -1.0), yaw=yaw)
         elif view == "back":
-            game_camera(yaw=200.0, tilt=32.0, dist=48.0)
-        elif view == "terrace":
-            camera("terrace", (10.5, 5.2, 15.5), (-1.5, 1.6, 1.2), fov=34)
+            game_camera(yaw=200.0 + yaw, tilt=32.0, dist=48.0)
+        elif view in ("terrace", "night_terrace"):
+            c, s_ = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+            rot = lambda p: (p[0] * c + p[2] * s_, p[1], -p[0] * s_ + p[2] * c)
+            camera("terrace", rot((10.5, 5.2, 15.5)), rot((-1.5, 1.6, 1.2)), fov=34)
         save(PREVIEWS / f"{name}_{view}.png")
 
 
@@ -404,8 +440,58 @@ def lineup(names):
         save(PREVIEWS / f"lineup_{'night' if night else 'golden'}.png")
 
 
-def run(names):
+PLOT_X = (-42.0, -16.0, 16.0, 42.0)
+PLOT_Z = (8.0, 34.0, 60.0, 86.0)
+HANGOUT = (4.0, -0.72, -44.0, 0.0)
+OVERFLOW = (-84.0, 0.0, 34.0, 90.0)
+
+
+def district(night=False, cam=None, tag=""):
+    """The whole district as laid out in manifest.json (no props, no people)."""
+    import json
+    lay = json.loads((OUT / "manifest.json").read_text()).get("layout")
+    if not lay:
+        return
+    reset()
+    render_settings(res=(1920, 1080), samples=48)
+    world(night=night, strength=0.05 if night else 0.55)
+    if night:
+        sun(energy=0.04, color=(0.6, 0.7, 1.0), elev=50)
+    else:
+        sun()
+    land = ground(size=1)
+    land.scale = (800, 320, 1)
+    land.location = (0, -(320 / 2 - 12), -0.003)
+    sand = ground(size=1, color=(0.62, 0.52, 0.38))
+    sand.scale = (800, 120, 1)
+    sand.location = (0, 12 + 60, -0.7)
+    slots = [(PLOT_X[i % 4], 0.0, PLOT_Z[i // 4], 0.0, t) for i, t in enumerate(lay["plots"])]
+    slots.append((*HANGOUT, lay["hangout"]))
+    slots.append((*OVERFLOW, lay["overflow"]))
+    for (x, y, z, rot, t) in slots:
+        objs = import_gltf(t)
+        root = [o for o in objs if o.parent is None][0]
+        root.location = gl((x, y, z))
+        root.rotation_euler[2] += math.radians(rot)
+    if night:
+        emission(3.0, 8.0, 6.0)
+        light_pools()
+        bloom(True, 0.8)
+    else:
+        emission(0.15, 1.0, 0.0)
+        bloom(True, 0.25)
+    pos, tgt, fov = cam or ((10.0, 120.0, 215.0), (0.0, 0.0, 30.0), 38)
+    camera("district", pos, tgt, fov=fov)
+    save(PREVIEWS / f"district_{'night' if night else 'golden'}{tag}.png")
+
+
+def run(names, views=VIEWS, with_district=False):
     for n in names:
         if n.startswith("plot_"):
-            plot_shots(n)
-    lineup([n for n in names if not n.startswith("plot_")])
+            plot_shots(n, views)
+    rest = [n for n in names if not n.startswith("plot_")]
+    if rest:
+        lineup(rest)
+    if with_district:
+        district(False)
+        district(True)

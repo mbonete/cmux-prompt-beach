@@ -1,0 +1,226 @@
+{
+  "asset": {
+    "generator": "Switchboard street kit (Blender 5.2 + glTF-Transform 4.5)",
+    "version": "2.0",
+    "copyright": "Switchboard world v2, original work"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 929,
+      "max": [
+        0.6000000238418579,
+        3.5399999618530273,
+        0.25999999046325684
+      ],
+      "min": [
+        -0.6000000238418579,
+        0,
+        -0.25999999046325684
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 929,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 929,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1716,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 864,
+      "bufferView": 1,
+      "byteOffset": 3432
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 260,
+      "max": [
+        0.694985568523407,
+        3.4800000190734863,
+        0.19498558342456818
+      ],
+      "min": [
+        -0.694985568523407,
+        3.0799999237060547,
+        -0.19498558342456818
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 260,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 260,
+      "bufferView": 2,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 29728,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 29728,
+      "byteLength": 5160,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 34888,
+      "byteLength": 8320,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "lamp_promenade.bin",
+      "byteLength": 43208
+    }
+  ],
+  "materials": [
+    {
+      "name": "pole",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.02843,
+          0.10702,
+          0.09531,
+          1
+        ],
+        "roughnessFactor": 0.42,
+        "metallicFactor": 0.35
+      }
+    },
+    {
+      "name": "bulb",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.93011,
+          0.86316,
+          0.76052,
+          1
+        ],
+        "roughnessFactor": 0.25,
+        "metallicFactor": 0
+      },
+      "emissiveFactor": [
+        1,
+        0.65837,
+        0.32314
+      ],
+      "extensions": {
+        "KHR_materials_emissive_strength": {
+          "emissiveStrength": 3
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "lamp_promenade_body",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "bulb_0",
+      "extras": {
+        "radius": 0.2
+      },
+      "translation": [
+        -0.5,
+        3.2799999713897705,
+        0
+      ]
+    },
+    {
+      "name": "bulb_1",
+      "extras": {
+        "radius": 0.2
+      },
+      "translation": [
+        0.5,
+        3.2799999713897705,
+        0
+      ]
+    },
+    {
+      "name": "lamp_promenade_body",
+      "mesh": 0
+    },
+    {
+      "name": "lamp_promenade",
+      "children": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        3
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "KHR_materials_emissive_strength"
+  ]
+}

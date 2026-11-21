@@ -17,52 +17,7 @@
       -10,
       -20
     ],
-    "hdri": [
-      {
-        "id": "qwantani_sunset_puresky",
-        "src": "assets-src/polyhaven/hdri/qwantani_sunset_puresky_4k.hdr",
-        "mood": "sunset",
-        "clouds": false,
-        "credit": {
-          "author": "Greg Zaal (photography), Jarod Guest (processing)",
-          "url": "https://polyhaven.com/a/qwantani_sunset_puresky"
-        },
-        "cloudsEvidence": true,
-        "cloudsVerdict": "Not viable. Its only clouds are faint cirrus a few percent brighter than the sky and a horizon haze/stratus band the colour of the glow behind it. Three separations were tried (spatially smoothed clear sky, a clear-sky model in elevation x angle-to-sun, and the red/blue-ratio cloud cue that works for the day sky): each classifies the warm horizon glow itself as cloud and gives blotchy alpha (evidence: sky_qwantani_sunset_puresky_clouds_rejected.png). Use the HDRI itself as the visible sky, or the day cumulus layer relit in the shader."
-      },
-      {
-        "id": "qwantani_dusk_2_puresky",
-        "src": "assets-src/polyhaven/hdri/qwantani_dusk_2_puresky_4k.hdr",
-        "mood": "dusk",
-        "clouds": false,
-        "credit": {
-          "author": "Greg Zaal (photography), Jarod Guest (processing)",
-          "url": "https://polyhaven.com/a/qwantani_dusk_2_puresky"
-        },
-        "cloudsEvidence": true,
-        "cloudsVerdict": "Not viable. The clouds are a low stratus bank on the horizon (0.5-5 deg) the same lilac as the twilight behind it; no cue separates it from the glow (evidence: sky_qwantani_dusk_2_puresky_clouds_rejected.png). Use the HDRI itself as the visible sky."
-      },
-      {
-        "id": "qwantani_night_puresky",
-        "src": "assets-src/polyhaven/hdri/qwantani_night_puresky_4k.hdr",
-        "mood": "night",
-        "stars": true,
-        "credit": {
-          "author": "Greg Zaal (photography), Jarod Guest (processing)",
-          "url": "https://polyhaven.com/a/qwantani_night_puresky"
-        }
-      },
-      {
-        "id": "kloofendal_48d_partly_cloudy_puresky",
-        "src": "assets-src/polyhaven/hdri/kloofendal_48d_partly_cloudy_puresky_4k.hdr",
-        "mood": "day",
-        "clouds": true,
-        "credit": {
-          "author": "Greg Zaal (original), Jarod Guest (sky edits)",
-          "url": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky"
-        }
-      }
-    ]
+    "hdri": []
   },
   "textures": {
     "sizes": [
@@ -93,7 +48,10 @@
           3
         ],
         "sizeSource": "estimate: ambientCG publishes no dimensions for Ground093C; set from the scale of the wind-eroded ripples",
-        "why": "Chosen over Poly Haven coast_sand_01: Ground093C is the warm cream sand of the palette, while coast_sand_01 is brown and gravelly with debris."
+        "why": "Chosen over Poly Haven coast_sand_01: Ground093C is the warm cream sand of the palette, while coast_sand_01 is brown and gravelly with debris.",
+        "sizes": [
+          2048
+        ]
       },
       {
         "id": "sand_wet",
@@ -119,7 +77,10 @@
             0.117
           ]
         },
-        "why": "Source albedo is very dark (mean linear 0.11) and reads olive-grey next to sand_dry; it is scaled per channel to sand_dry's mean colour x 0.4 (wet sand is roughly 40-50% as bright as the same sand dry), keeping its variation, so the shoreline blends from dry to wet without a hue jump. Remove `calibrate` in config.json to get the source colours back."
+        "why": "Source albedo is very dark (mean linear 0.11) and reads olive-grey next to sand_dry; it is scaled per channel to sand_dry's mean colour x 0.4 (wet sand is roughly 40-50% as bright as the same sand dry), keeping its variation, so the shoreline blends from dry to wet without a hue jump. Remove `calibrate` in config.json to get the source colours back.",
+        "sizes": [
+          1024
+        ]
       },
       {
         "id": "asphalt",
@@ -137,26 +98,10 @@
           3,
           3
         ],
-        "sizeSource": "Poly Haven API dimensions"
-      },
-      {
-        "id": "road_marked",
-        "source": "ambientCG Road007",
-        "credit": {
-          "author": "ambientCG (Lennart Demes)",
-          "url": "https://ambientcg.com/view?id=Road007"
-        },
-        "maps": {
-          "albedo": "assets-src/ambientcg/Road007/Road007_2K-JPG_Color.jpg",
-          "normal": "assets-src/ambientcg/Road007/Road007_2K-JPG_NormalGL.jpg",
-          "roughness": "assets-src/ambientcg/Road007/Road007_2K-JPG_Roughness.jpg"
-        },
-        "sizeM": [
-          7.5,
-          7.5
-        ],
-        "sizeSource": "ambientCG API dimensionX/Y = 750 x 750 cm",
-        "notes": "Two-lane road across U (edge lines at u = 0.07 and 0.93, dashed centre line at u = 0.5); tiles along V. Map U across the road, V along it."
+        "sizeSource": "Poly Haven API dimensions",
+        "sizes": [
+          2048
+        ]
       },
       {
         "id": "pavers",
@@ -176,7 +121,10 @@
           2
         ],
         "sizeSource": "estimate: ambientCG publishes no dimensions; 4 x 4 square slabs per tile, read as standard 50 cm pavers",
-        "why": "Chosen over Poly Haven interlocking_concrete_pavers: large neutral square slabs read cleanly from a high camera and sit with the cream/pastel palette and terrazzo; the interlocking set is a busy red-brown diamond pattern that reads as a driveway."
+        "why": "Chosen over Poly Haven interlocking_concrete_pavers: large neutral square slabs read cleanly from a high camera and sit with the cream/pastel palette and terrazzo; the interlocking set is a busy red-brown diamond pattern that reads as a driveway.",
+        "sizes": [
+          2048
+        ]
       },
       {
         "id": "concrete",
@@ -194,48 +142,10 @@
           1.8,
           1.8
         ],
-        "sizeSource": "Poly Haven API dimensions"
-      },
-      {
-        "id": "plaster_white",
-        "source": "Poly Haven painted_plaster_wall",
-        "credit": {
-          "author": "Amal Kumar",
-          "url": "https://polyhaven.com/a/painted_plaster_wall"
-        },
-        "maps": {
-          "albedo": "assets-src/polyhaven/textures/painted_plaster_wall/textures/painted_plaster_wall_diff_2k.jpg",
-          "normal": "assets-src/polyhaven/textures/painted_plaster_wall/textures/painted_plaster_wall_nor_gl_2k.jpg",
-          "arm": "assets-src/polyhaven/textures/painted_plaster_wall/textures/painted_plaster_wall_arm_2k.jpg"
-        },
-        "calibrate": {
-          "meanLinear": 0.72,
-          "neutral": true
-        },
-        "sizeM": [
-          2,
-          2
-        ],
         "sizeSource": "Poly Haven API dimensions",
-        "why": "Chosen over ambientCG PaintedPlaster017: square, known real size, finer stucco relief; PaintedPlaster017 is 2:1, has no published size and a smeared patch in its normal map. The source is a mid grey with a lilac cast, so the albedo is calibrated to a neutral white (mean linear 0.72, variation kept) so a pastel tint can multiply it directly."
-      },
-      {
-        "id": "plaster_beige",
-        "source": "Poly Haven beige_wall_001",
-        "credit": {
-          "author": "Dimitrios Savva (photography), Rico Cilliers (processing)",
-          "url": "https://polyhaven.com/a/beige_wall_001"
-        },
-        "maps": {
-          "albedo": "assets-src/polyhaven/textures/beige_wall_001/textures/beige_wall_001_diff_2k.jpg",
-          "normal": "assets-src/polyhaven/textures/beige_wall_001/textures/beige_wall_001_nor_gl_2k.jpg",
-          "roughness": "assets-src/polyhaven/textures/beige_wall_001/textures/beige_wall_001_rough_2k.jpg"
-        },
-        "sizeM": [
-          3,
-          3
-        ],
-        "sizeSource": "Poly Haven API dimensions"
+        "sizes": [
+          1024
+        ]
       }
     ]
   },
@@ -249,14 +159,6 @@
         0.35
       ],
       "octaves": 4
-    },
-    "foam": {
-      "size": 1024,
-      "tileM": 4
-    },
-    "caustics": {
-      "size": 1024,
-      "tileM": 3
     }
   },
   "props": [
@@ -307,45 +209,6 @@
         "CoffeeCart_01_cart"
       ],
       "notes": "Pivot is the base centre of the cart body; the power cord trails to a plug about 1.4 m to the cart's left (-X)."
-    },
-    {
-      "id": "modular_wooden_pier",
-      "src": "assets-src/polyhaven/models/modular_wooden_pier/modular_wooden_pier_1k.gltf",
-      "credit": {
-        "author": "Rico Cilliers",
-        "url": "https://polyhaven.com/a/modular_wooden_pier"
-      },
-      "texture": 1024,
-      "pivot": "origin-y",
-      "lod0MaxTris": 7000,
-      "dropAttributes": [
-        "COLOR_0"
-      ],
-      "variants": {
-        "section_01": [
-          "modular_wooden_pier_section_01"
-        ],
-        "section_02": [
-          "modular_wooden_pier_section_02"
-        ],
-        "section_03": [
-          "modular_wooden_pier_section_03"
-        ],
-        "section_04": [
-          "modular_wooden_pier_section_04"
-        ],
-        "section_05": [
-          "modular_wooden_pier_section_05"
-        ],
-        "poles": [
-          "modular_wooden_pier_poles"
-        ],
-        "planks": [
-          "modular_wooden_pier_planks"
-        ]
-      },
-      "notes": "Modular kit. Each module is a child node with its own lod0/lod1; module nodes keep the source layout (the assembled pier), so use the whole scene or clone one module and reset its position. Height origin kept from the source (y = 0 is the source ground/water level; the poles reach about 1 m below it).",
-      "lod1": true
     },
     {
       "id": "classic_laptop",
@@ -469,15 +332,6 @@
       "notes": "Pivot kept at the waterline (y = 0); the hull reaches 0.81 m below it. The lamp is an emissive texture (KHR_materials_emissive_strength)."
     },
     {
-      "id": "utility_box_01",
-      "src": "assets-src/polyhaven/models/utility_box_01/utility_box_01_1k.gltf",
-      "credit": {
-        "author": "James Ray Cock",
-        "url": "https://polyhaven.com/a/utility_box_01"
-      },
-      "texture": 512
-    },
-    {
       "id": "anthurium_botany_01",
       "src": "assets-src/polyhaven/models/anthurium_botany_01/anthurium_botany_01_1k.gltf",
       "credit": {
@@ -545,5 +399,6 @@
       },
       "texture": 1024
     }
-  ]
+  ],
+  "_shipping": "Only what the client uses ships: the sky is drawn by a shader (no HDRIs), each texture set at the one size the client samples, the ocean normal map, and the props the buildings place. Add an entry back here before using it."
 }

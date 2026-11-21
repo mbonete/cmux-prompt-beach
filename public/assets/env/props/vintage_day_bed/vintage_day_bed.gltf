@@ -1,0 +1,209 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 8145,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2000,
+      "max": [
+        32767,
+        18726,
+        14197
+      ],
+      "min": [
+        -32767,
+        -18726,
+        -14197
+      ],
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2000,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 2000,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 16
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 16292,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 16292,
+      "byteLength": 40000,
+      "byteStride": 20,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    },
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 1,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "vintage_day_bed_nor_gl",
+      "mimeType": "image/webp",
+      "uri": "vintage_day_bed_normal.webp"
+    },
+    {
+      "name": "vintage_day_bed_diff",
+      "mimeType": "image/webp",
+      "uri": "vintage_day_bed_albedo.webp"
+    },
+    {
+      "name": "vintage_day_bed_metal-vintage_day_bed_rough",
+      "mimeType": "image/webp",
+      "uri": "vintage_day_bed_orm.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "vintage_day_bed.bin",
+      "byteLength": 56292
+    }
+  ],
+  "materials": [
+    {
+      "name": "vintage_day_bed",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      },
+      "occlusionTexture": {
+        "index": 2
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "vintage_day_bed",
+      "children": [
+        1
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.5636732578277588,
+        0
+      ],
+      "scale": [
+        0.9862775802612305,
+        0.9862775802612305,
+        0.9862775802612305
+      ],
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "vintage_day_bed",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ]
+}

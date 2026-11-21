@@ -1,0 +1,583 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 10338,
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 10626,
+      "bufferView": 0,
+      "byteOffset": 20676
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 5406,
+      "bufferView": 0,
+      "byteOffset": 41928
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 5982,
+      "bufferView": 0,
+      "byteOffset": 52740
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 11640,
+      "bufferView": 0,
+      "byteOffset": 64704
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2303,
+      "max": [
+        32767,
+        23150,
+        28679
+      ],
+      "min": [
+        -32767,
+        -23150,
+        -28679
+      ],
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2303,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 2303,
+      "normalized": true,
+      "bufferView": 1,
+      "byteOffset": 16
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1990,
+      "max": [
+        25855,
+        22566,
+        32767
+      ],
+      "min": [
+        -25855,
+        -22566,
+        -32767
+      ],
+      "normalized": true,
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1990,
+      "normalized": true,
+      "bufferView": 2,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 1990,
+      "normalized": true,
+      "bufferView": 2,
+      "byteOffset": 16
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2042,
+      "max": [
+        32031,
+        24242,
+        32767
+      ],
+      "min": [
+        -32031,
+        -24242,
+        -32767
+      ],
+      "normalized": true,
+      "bufferView": 3,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2042,
+      "normalized": true,
+      "bufferView": 3,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 2042,
+      "normalized": true,
+      "bufferView": 3,
+      "byteOffset": 16
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1048,
+      "max": [
+        32767,
+        18870,
+        23606
+      ],
+      "min": [
+        -32767,
+        -18870,
+        -23606
+      ],
+      "normalized": true,
+      "bufferView": 4,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1048,
+      "normalized": true,
+      "bufferView": 4,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 1048,
+      "normalized": true,
+      "bufferView": 4,
+      "byteOffset": 16
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1152,
+      "max": [
+        27719,
+        19742,
+        32767
+      ],
+      "min": [
+        -27719,
+        -19742,
+        -32767
+      ],
+      "normalized": true,
+      "bufferView": 5,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1152,
+      "normalized": true,
+      "bufferView": 5,
+      "byteOffset": 8
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5123,
+      "count": 1152,
+      "normalized": true,
+      "bufferView": 5,
+      "byteOffset": 16
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 87984,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 87984,
+      "byteLength": 46060,
+      "byteStride": 20,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 134044,
+      "byteLength": 39800,
+      "byteStride": 20,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 173844,
+      "byteLength": 40840,
+      "byteStride": 20,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 214684,
+      "byteLength": 20960,
+      "byteStride": 20,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 235644,
+      "byteLength": 23040,
+      "byteStride": 20,
+      "target": 34962
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    },
+    {
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 1,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "calathea_orbifolia_01_nor_gl",
+      "mimeType": "image/webp",
+      "uri": "calathea_orbifolia_01_normal.webp"
+    },
+    {
+      "name": "calathea_orbifolia_01_diff",
+      "mimeType": "image/webp",
+      "uri": "calathea_orbifolia_01_albedo.webp"
+    },
+    {
+      "name": "calathea_orbifolia_01_rough",
+      "mimeType": "image/webp",
+      "uri": "calathea_orbifolia_01_orm.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "calathea_orbifolia_01.bin",
+      "byteLength": 258684
+    }
+  ],
+  "materials": [
+    {
+      "name": "calathea_orbifolia_01",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "metallicFactor": 0,
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      },
+      "normalTexture": {
+        "index": 1
+      },
+      "occlusionTexture": {
+        "index": 2
+      },
+      "extensions": {
+        "KHR_materials_ior": {
+          "ior": 1.4500000476837158
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 4
+        }
+      ]
+    },
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8,
+            "NORMAL": 9,
+            "TEXCOORD_0": 10
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    },
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 11,
+            "NORMAL": 12,
+            "TEXCOORD_0": 13
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 1
+        }
+      ]
+    },
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 14,
+            "NORMAL": 15,
+            "TEXCOORD_0": 16
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 2
+        }
+      ]
+    },
+    {
+      "name": "lod0",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 17,
+            "NORMAL": 18,
+            "TEXCOORD_0": 19
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "calathea_orbifolia_01",
+      "children": [
+        1,
+        3,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "name": "a",
+      "translation": [
+        -0.94545,
+        0,
+        -0.33398
+      ],
+      "children": [
+        2
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.21214713156223297,
+        0
+      ],
+      "scale": [
+        0.3002999722957611,
+        0.3002999722957611,
+        0.3002999722957611
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "b",
+      "translation": [
+        0.04326,
+        0.00241,
+        -0.25863
+      ],
+      "children": [
+        4
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.1516013741493225,
+        0
+      ],
+      "scale": [
+        0.22014091908931732,
+        0.22014091908931732,
+        0.22014091908931732
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "c",
+      "translation": [
+        1.05814,
+        0.00378,
+        -0.31808
+      ],
+      "children": [
+        6
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.1419886201620102,
+        0
+      ],
+      "scale": [
+        0.19191983342170715,
+        0.19191983342170715,
+        0.19191983342170715
+      ],
+      "mesh": 2
+    },
+    {
+      "name": "d",
+      "translation": [
+        -0.41775,
+        0.00492,
+        0.50271
+      ],
+      "children": [
+        8
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.06517940014600754,
+        0
+      ],
+      "scale": [
+        0.11319266259670258,
+        0.11319266259670258,
+        0.11319266259670258
+      ],
+      "mesh": 3
+    },
+    {
+      "name": "e",
+      "translation": [
+        0.54529,
+        0.00401,
+        0.47102
+      ],
+      "children": [
+        10
+      ]
+    },
+    {
+      "name": "lod0",
+      "translation": [
+        0,
+        0.07578231394290924,
+        0
+      ],
+      "scale": [
+        0.12577736377716064,
+        0.12577736377716064,
+        0.12577736377716064
+      ],
+      "mesh": 4
+    }
+  ],
+  "scenes": [
+    {
+      "name": "calathea_orbifolia_01",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_texture_webp",
+    "KHR_materials_ior",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ]
+}

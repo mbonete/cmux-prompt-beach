@@ -1,0 +1,214 @@
+{
+  "asset": {
+    "generator": "Switchboard street kit (Blender 5.2 + glTF-Transform 4.5)",
+    "version": "2.0",
+    "copyright": "Switchboard world v2, original work"
+  },
+  "accessors": [
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 708,
+      "max": [
+        0.30000001192092896,
+        4.980000019073486,
+        0.30000001192092896
+      ],
+      "min": [
+        -0.30000001192092896,
+        0,
+        -0.30000001192092896
+      ],
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 708,
+      "bufferView": 0,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 708,
+      "bufferView": 0,
+      "byteOffset": 24
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1338,
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 432,
+      "bufferView": 1,
+      "byteOffset": 2676
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 126,
+      "max": [
+        0.27297982573509216,
+        4.699999809265137,
+        0.27297982573509216
+      ],
+      "min": [
+        -0.27297982573509216,
+        4.139999866485596,
+        -0.27297982573509216
+      ],
+      "bufferView": 2,
+      "byteOffset": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5126,
+      "count": 126,
+      "bufferView": 2,
+      "byteOffset": 12
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 126,
+      "bufferView": 2,
+      "byteOffset": 24
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 22656,
+      "byteStride": 32,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 22656,
+      "byteLength": 3540,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 26196,
+      "byteLength": 4032,
+      "byteStride": 32,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "lamp_deco.bin",
+      "byteLength": 30228
+    }
+  ],
+  "materials": [
+    {
+      "name": "pole",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.02843,
+          0.10702,
+          0.09531,
+          1
+        ],
+        "roughnessFactor": 0.42,
+        "metallicFactor": 0.35
+      }
+    },
+    {
+      "name": "bulb",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.93011,
+          0.86316,
+          0.76052,
+          1
+        ],
+        "roughnessFactor": 0.25,
+        "metallicFactor": 0
+      },
+      "emissiveFactor": [
+        1,
+        0.65837,
+        0.32314
+      ],
+      "extensions": {
+        "KHR_materials_emissive_strength": {
+          "emissiveStrength": 3
+        }
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "lamp_deco_body",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "bulb_0",
+      "extras": {
+        "radius": 0.28
+      },
+      "translation": [
+        0,
+        4.420000076293945,
+        0
+      ]
+    },
+    {
+      "name": "lamp_deco_body",
+      "mesh": 0
+    },
+    {
+      "name": "lamp_deco",
+      "children": [
+        0,
+        1
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        2
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "KHR_materials_emissive_strength"
+  ]
+}

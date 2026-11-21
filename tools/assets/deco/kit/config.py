@@ -24,9 +24,10 @@ PREVIEWS = SRC / "_previews" / "buildings"
 # what the building assumed.
 # ---------------------------------------------------------------------------
 SEAT_H = 0.46          # chair, bench and stoop seat above the person's root
-DESK_H = 0.74          # desk / table top above the person's root
+DESK_H = 0.72          # desk / table top above the person's root (the seated
+                       # work clip measures 0.719 m to the forearms)
 STOOL_RAISE = 0.29     # bar stools: the root sits on the footrest, 0.29 m up,
-                       # so the seat (0.75) and counter (1.03) keep SEAT_H/DESK_H
+                       # so the seat (0.75) and counter (1.01) keep SEAT_H/DESK_H
 LOUNGER_SEAT_H = 0.34  # sun lounger cushion top above the root
 DESK_CHAIR_BACK = 0.50 # chair centre to desk front edge, along the facing axis
 
@@ -57,6 +58,7 @@ TILE = {
     "awning": 2.0,     # V direction; U is set by the stripe period
     "neon_accent": 1.0,
     "interior": 1.0,
+    "bulb": 1.0,
 }
 AWNING_STRIPE_PERIOD = 0.56  # one coloured + one white stripe
 
@@ -80,6 +82,13 @@ PALETTE = {
     "chrome": "#D9DCDF",
     "brushed": "#B8BCC0",
     "tower_white": "#EDEBE6",
+}
+# Night lights: colours for the light_<n> empties (the client's fake light
+# pools) and the bulb material. Warm only.
+LIGHT = {
+    "warm": "#FFC680",     # string lights, festoon bulbs
+    "amber": "#FFAE5C",    # lanterns, sconces
+    "candle": "#FFD9A6",   # frosted globes, marquee bulbs
 }
 NEON = {
     "violet": "#D27BFF",

@@ -1,0 +1,2557 @@
+{
+ "_about": "Rocketbox people for world v2. Units metres, Y up, characters face +Z, feet at the origin. Bone names are the original Biped names; three.js sanitizes node names (spaces become underscores) identically in avatar and animation files, so AnimationMixer binds clips from anims/<skeleton>.gltf to any avatar of that skeleton.",
+ "conventions": {
+  "lods": "Each avatar has two SkinnedMesh nodes, lod0 and lod1, bound to one skeleton. Show one at a time.",
+  "rootMotion": "Only Bip01 has translation tracks. Clips with mode \"root\" move Bip01 away from the origin: when such a clip ends, move the character root by groundEnd (pos in the character's start frame, yaw about +Y) and continue with an in-place clip, which will then line up.",
+  "walk": "walk is in place: move the character forward (+Z local) at clips.walk.speed m/s to keep the feet planted.",
+  "blending": "Tracks that never leave the bind pose are omitted; three.js blends missing tracks to the bind pose, which is what they would contain.",
+  "alpha": "Materials named \"alpha\" (hair cards, eyelashes) are alphaMode MASK, double-sided. Enable material.alphaToCoverage with MSAA for softer hair edges."
+ },
+ "avatars": {
+  "Female_Adult_01": {
+   "files": [
+    "Female_Adult_01/Female_Adult_01.bin",
+    "Female_Adult_01/Female_Adult_01.gltf",
+    "Female_Adult_01/textures/alpha_color.webp",
+    "Female_Adult_01/textures/body_color.webp",
+    "Female_Adult_01/textures/body_normal.webp",
+    "Female_Adult_01/textures/body_orm.webp",
+    "Female_Adult_01/textures/head_color.webp",
+    "Female_Adult_01/textures/head_normal.webp",
+    "Female_Adult_01/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Adult_01/Female_Adult_01.gltf",
+   "skeleton": "f",
+   "height": 1.7433,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0046,
+     -0.2502
+    ],
+    "max": [
+     0.6086,
+     1.7388,
+     0.126
+    ]
+   },
+   "tris": {
+    "lod0": 8732,
+    "lod1": 2497
+   },
+   "bytes": 1140083,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Female_Adult_03": {
+   "files": [
+    "Female_Adult_03/Female_Adult_03.bin",
+    "Female_Adult_03/Female_Adult_03.gltf",
+    "Female_Adult_03/textures/alpha_color.webp",
+    "Female_Adult_03/textures/body_color.webp",
+    "Female_Adult_03/textures/body_normal.webp",
+    "Female_Adult_03/textures/body_orm.webp",
+    "Female_Adult_03/textures/head_color.webp",
+    "Female_Adult_03/textures/head_normal.webp",
+    "Female_Adult_03/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Adult_03/Female_Adult_03.gltf",
+   "skeleton": "f",
+   "height": 1.7389,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0001,
+     -0.2016
+    ],
+    "max": [
+     0.6086,
+     1.7388,
+     0.1241
+    ]
+   },
+   "tris": {
+    "lod0": 9208,
+    "lod1": 2496
+   },
+   "bytes": 1159427,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Female_Adult_06": {
+   "files": [
+    "Female_Adult_06/Female_Adult_06.bin",
+    "Female_Adult_06/Female_Adult_06.gltf",
+    "Female_Adult_06/textures/alpha_color.webp",
+    "Female_Adult_06/textures/body_color.webp",
+    "Female_Adult_06/textures/body_normal.webp",
+    "Female_Adult_06/textures/body_orm.webp",
+    "Female_Adult_06/textures/head_color.webp",
+    "Female_Adult_06/textures/head_normal.webp",
+    "Female_Adult_06/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Adult_06/Female_Adult_06.gltf",
+   "skeleton": "f",
+   "height": 1.7363,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0017,
+     -0.2083
+    ],
+    "max": [
+     0.6086,
+     1.7346,
+     0.164
+    ]
+   },
+   "tris": {
+    "lod0": 6992,
+    "lod1": 2498
+   },
+   "bytes": 889386,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Female_Adult_08": {
+   "files": [
+    "Female_Adult_08/Female_Adult_08.bin",
+    "Female_Adult_08/Female_Adult_08.gltf",
+    "Female_Adult_08/textures/alpha_color.webp",
+    "Female_Adult_08/textures/body_color.webp",
+    "Female_Adult_08/textures/body_normal.webp",
+    "Female_Adult_08/textures/body_orm.webp",
+    "Female_Adult_08/textures/head_color.webp",
+    "Female_Adult_08/textures/head_normal.webp",
+    "Female_Adult_08/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Adult_08/Female_Adult_08.gltf",
+   "skeleton": "f",
+   "height": 1.7349,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0004,
+     -0.2036
+    ],
+    "max": [
+     0.6086,
+     1.7345,
+     0.158
+    ]
+   },
+   "tris": {
+    "lod0": 8276,
+    "lod1": 2498
+   },
+   "bytes": 1132702,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Female_Adult_11": {
+   "files": [
+    "Female_Adult_11/Female_Adult_11.bin",
+    "Female_Adult_11/Female_Adult_11.gltf",
+    "Female_Adult_11/textures/alpha_color.webp",
+    "Female_Adult_11/textures/body_color.webp",
+    "Female_Adult_11/textures/body_normal.webp",
+    "Female_Adult_11/textures/body_orm.webp",
+    "Female_Adult_11/textures/head_color.webp",
+    "Female_Adult_11/textures/head_normal.webp",
+    "Female_Adult_11/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Adult_11/Female_Adult_11.gltf",
+   "skeleton": "f",
+   "height": 1.7364,
+   "bounds": {
+    "min": [
+     -0.6087,
+     -0.0004,
+     -0.2471
+    ],
+    "max": [
+     0.6087,
+     1.736,
+     0.1272
+    ]
+   },
+   "tris": {
+    "lod0": 8896,
+    "lod1": 2498
+   },
+   "bytes": 1212174,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Female_Adult_12": {
+   "files": [
+    "Female_Adult_12/Female_Adult_12.bin",
+    "Female_Adult_12/Female_Adult_12.gltf",
+    "Female_Adult_12/textures/alpha_color.webp",
+    "Female_Adult_12/textures/body_color.webp",
+    "Female_Adult_12/textures/body_normal.webp",
+    "Female_Adult_12/textures/body_orm.webp",
+    "Female_Adult_12/textures/head_color.webp",
+    "Female_Adult_12/textures/head_normal.webp",
+    "Female_Adult_12/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Adult_12/Female_Adult_12.gltf",
+   "skeleton": "f",
+   "height": 1.7267,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0005,
+     -0.2371
+    ],
+    "max": [
+     0.6087,
+     1.7262,
+     0.1349
+    ]
+   },
+   "tris": {
+    "lod0": 8774,
+    "lod1": 2498
+   },
+   "bytes": 1104209,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Female_Adult_17": {
+   "files": [
+    "Female_Adult_17/Female_Adult_17.bin",
+    "Female_Adult_17/Female_Adult_17.gltf",
+    "Female_Adult_17/textures/alpha_color.webp",
+    "Female_Adult_17/textures/body_color.webp",
+    "Female_Adult_17/textures/body_normal.webp",
+    "Female_Adult_17/textures/body_orm.webp",
+    "Female_Adult_17/textures/head_color.webp",
+    "Female_Adult_17/textures/head_normal.webp",
+    "Female_Adult_17/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Adult_17/Female_Adult_17.gltf",
+   "skeleton": "f",
+   "height": 1.751,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0001,
+     -0.1998
+    ],
+    "max": [
+     0.6086,
+     1.7509,
+     0.1208
+    ]
+   },
+   "tris": {
+    "lod0": 8516,
+    "lod1": 2497
+   },
+   "bytes": 1052246,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Female_Party_02": {
+   "files": [
+    "Female_Party_02/Female_Party_02.bin",
+    "Female_Party_02/Female_Party_02.gltf",
+    "Female_Party_02/textures/alpha_color.webp",
+    "Female_Party_02/textures/body_color.webp",
+    "Female_Party_02/textures/body_normal.webp",
+    "Female_Party_02/textures/body_orm.webp",
+    "Female_Party_02/textures/head_color.webp",
+    "Female_Party_02/textures/head_normal.webp",
+    "Female_Party_02/textures/head_orm.webp"
+   ],
+   "gltf": "Female_Party_02/Female_Party_02.gltf",
+   "skeleton": "f",
+   "height": 1.7903,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0021,
+     -0.2321
+    ],
+    "max": [
+     0.6086,
+     1.7881,
+     0.1208
+    ]
+   },
+   "tris": {
+    "lod0": 9874,
+    "lod1": 2499
+   },
+   "bytes": 1225715,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Sports_Female_02": {
+   "files": [
+    "Sports_Female_02/Sports_Female_02.bin",
+    "Sports_Female_02/Sports_Female_02.gltf",
+    "Sports_Female_02/textures/alpha_color.webp",
+    "Sports_Female_02/textures/body_color.webp",
+    "Sports_Female_02/textures/body_normal.webp",
+    "Sports_Female_02/textures/body_orm.webp",
+    "Sports_Female_02/textures/head_color.webp",
+    "Sports_Female_02/textures/head_normal.webp",
+    "Sports_Female_02/textures/head_orm.webp"
+   ],
+   "gltf": "Sports_Female_02/Sports_Female_02.gltf",
+   "skeleton": "f",
+   "height": 1.7375,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0046,
+     -0.2175
+    ],
+    "max": [
+     0.6086,
+     1.7329,
+     0.1291
+    ]
+   },
+   "tris": {
+    "lod0": 8580,
+    "lod1": 2498
+   },
+   "bytes": 1012592,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Business_Female_01": {
+   "files": [
+    "Business_Female_01/Business_Female_01.bin",
+    "Business_Female_01/Business_Female_01.gltf",
+    "Business_Female_01/textures/alpha_color.webp",
+    "Business_Female_01/textures/body_color.webp",
+    "Business_Female_01/textures/body_normal.webp",
+    "Business_Female_01/textures/body_orm.webp",
+    "Business_Female_01/textures/head_color.webp",
+    "Business_Female_01/textures/head_normal.webp",
+    "Business_Female_01/textures/head_orm.webp"
+   ],
+   "gltf": "Business_Female_01/Business_Female_01.gltf",
+   "skeleton": "f",
+   "height": 1.7404,
+   "bounds": {
+    "min": [
+     -0.6086,
+     -0.0005,
+     -0.1724
+    ],
+    "max": [
+     0.6087,
+     1.7399,
+     0.1326
+    ]
+   },
+   "tris": {
+    "lod0": 8966,
+    "lod1": 2498
+   },
+   "bytes": 1088763,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Male_Adult_01": {
+   "files": [
+    "Male_Adult_01/Male_Adult_01.bin",
+    "Male_Adult_01/Male_Adult_01.gltf",
+    "Male_Adult_01/textures/alpha_color.webp",
+    "Male_Adult_01/textures/body_color.webp",
+    "Male_Adult_01/textures/body_normal.webp",
+    "Male_Adult_01/textures/body_orm.webp",
+    "Male_Adult_01/textures/head_color.webp",
+    "Male_Adult_01/textures/head_normal.webp",
+    "Male_Adult_01/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_01/Male_Adult_01.gltf",
+   "skeleton": "m",
+   "height": 1.8237,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0009,
+     -0.1438
+    ],
+    "max": [
+     0.6741,
+     1.8228,
+     0.196
+    ]
+   },
+   "tris": {
+    "lod0": 7440,
+    "lod1": 2497
+   },
+   "bytes": 998095,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Male_Adult_04": {
+   "files": [
+    "Male_Adult_04/Male_Adult_04.bin",
+    "Male_Adult_04/Male_Adult_04.gltf",
+    "Male_Adult_04/textures/alpha_color.webp",
+    "Male_Adult_04/textures/body_color.webp",
+    "Male_Adult_04/textures/body_normal.webp",
+    "Male_Adult_04/textures/body_orm.webp",
+    "Male_Adult_04/textures/head_color.webp",
+    "Male_Adult_04/textures/head_normal.webp",
+    "Male_Adult_04/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_04/Male_Adult_04.gltf",
+   "skeleton": "m",
+   "height": 1.8686,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0007,
+     -0.1529
+    ],
+    "max": [
+     0.6741,
+     1.8679,
+     0.1912
+    ]
+   },
+   "tris": {
+    "lod0": 8684,
+    "lod1": 2498
+   },
+   "bytes": 1196098,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Male_Adult_06": {
+   "files": [
+    "Male_Adult_06/Male_Adult_06.bin",
+    "Male_Adult_06/Male_Adult_06.gltf",
+    "Male_Adult_06/textures/alpha_color.webp",
+    "Male_Adult_06/textures/body_color.webp",
+    "Male_Adult_06/textures/body_normal.webp",
+    "Male_Adult_06/textures/body_orm.webp",
+    "Male_Adult_06/textures/head_color.webp",
+    "Male_Adult_06/textures/head_normal.webp",
+    "Male_Adult_06/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_06/Male_Adult_06.gltf",
+   "skeleton": "m",
+   "height": 1.8313,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0008,
+     -0.1323
+    ],
+    "max": [
+     0.6741,
+     1.8305,
+     0.2081
+    ]
+   },
+   "tris": {
+    "lod0": 7456,
+    "lod1": 2498
+   },
+   "bytes": 1076871,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Male_Adult_08": {
+   "files": [
+    "Male_Adult_08/Male_Adult_08.bin",
+    "Male_Adult_08/Male_Adult_08.gltf",
+    "Male_Adult_08/textures/alpha_color.webp",
+    "Male_Adult_08/textures/body_color.webp",
+    "Male_Adult_08/textures/body_normal.webp",
+    "Male_Adult_08/textures/body_orm.webp",
+    "Male_Adult_08/textures/head_color.webp",
+    "Male_Adult_08/textures/head_normal.webp",
+    "Male_Adult_08/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_08/Male_Adult_08.gltf",
+   "skeleton": "m",
+   "height": 1.8257,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0009,
+     -0.1357
+    ],
+    "max": [
+     0.6741,
+     1.8248,
+     0.203
+    ]
+   },
+   "tris": {
+    "lod0": 7364,
+    "lod1": 2498
+   },
+   "bytes": 1046050,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Male_Adult_09": {
+   "files": [
+    "Male_Adult_09/Male_Adult_09.bin",
+    "Male_Adult_09/Male_Adult_09.gltf",
+    "Male_Adult_09/textures/alpha_color.webp",
+    "Male_Adult_09/textures/body_color.webp",
+    "Male_Adult_09/textures/body_normal.webp",
+    "Male_Adult_09/textures/body_orm.webp",
+    "Male_Adult_09/textures/head_color.webp",
+    "Male_Adult_09/textures/head_normal.webp",
+    "Male_Adult_09/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_09/Male_Adult_09.gltf",
+   "skeleton": "m",
+   "height": 1.8222,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0008,
+     -0.1707
+    ],
+    "max": [
+     0.6741,
+     1.8214,
+     0.1912
+    ]
+   },
+   "tris": {
+    "lod0": 7426,
+    "lod1": 2497
+   },
+   "bytes": 1090794,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Male_Adult_10": {
+   "files": [
+    "Male_Adult_10/Male_Adult_10.bin",
+    "Male_Adult_10/Male_Adult_10.gltf",
+    "Male_Adult_10/textures/alpha_color.webp",
+    "Male_Adult_10/textures/body_color.webp",
+    "Male_Adult_10/textures/body_normal.webp",
+    "Male_Adult_10/textures/body_orm.webp",
+    "Male_Adult_10/textures/head_color.webp",
+    "Male_Adult_10/textures/head_normal.webp",
+    "Male_Adult_10/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_10/Male_Adult_10.gltf",
+   "skeleton": "m",
+   "height": 1.8313,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0023,
+     -0.1436
+    ],
+    "max": [
+     0.6741,
+     1.829,
+     0.1985
+    ]
+   },
+   "tris": {
+    "lod0": 6732,
+    "lod1": 2499
+   },
+   "bytes": 1016140,
+   "alphaMaterials": [
+    {
+     "name": "alpha",
+     "mode": "MASK",
+     "cutoff": 0.4
+    }
+   ],
+   "notes": "hair/eyelash cards in material \"alpha\""
+  },
+  "Male_Adult_12": {
+   "files": [
+    "Male_Adult_12/Male_Adult_12.bin",
+    "Male_Adult_12/Male_Adult_12.gltf",
+    "Male_Adult_12/textures/body_color.webp",
+    "Male_Adult_12/textures/body_normal.webp",
+    "Male_Adult_12/textures/body_orm.webp",
+    "Male_Adult_12/textures/head_color.webp",
+    "Male_Adult_12/textures/head_normal.webp",
+    "Male_Adult_12/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_12/Male_Adult_12.gltf",
+   "skeleton": "m",
+   "height": 1.8069,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0009,
+     -0.1581
+    ],
+    "max": [
+     0.6741,
+     1.8059,
+     0.2024
+    ]
+   },
+   "tris": {
+    "lod0": 6722,
+    "lod1": 2498
+   },
+   "bytes": 929111,
+   "alphaMaterials": [],
+   "notes": "no alpha material (short hair painted on the head)"
+  },
+  "Male_Adult_16": {
+   "files": [
+    "Male_Adult_16/Male_Adult_16.bin",
+    "Male_Adult_16/Male_Adult_16.gltf",
+    "Male_Adult_16/textures/body_color.webp",
+    "Male_Adult_16/textures/body_normal.webp",
+    "Male_Adult_16/textures/body_orm.webp",
+    "Male_Adult_16/textures/head_color.webp",
+    "Male_Adult_16/textures/head_normal.webp",
+    "Male_Adult_16/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_16/Male_Adult_16.gltf",
+   "skeleton": "m",
+   "height": 1.809,
+   "bounds": {
+    "min": [
+     -0.6741,
+     -0.0002,
+     -0.1323
+    ],
+    "max": [
+     0.6741,
+     1.8089,
+     0.202
+    ]
+   },
+   "tris": {
+    "lod0": 7064,
+    "lod1": 2498
+   },
+   "bytes": 794817,
+   "alphaMaterials": [],
+   "notes": "no alpha material (short hair painted on the head)"
+  },
+  "Male_Adult_17": {
+   "files": [
+    "Male_Adult_17/Male_Adult_17.bin",
+    "Male_Adult_17/Male_Adult_17.gltf",
+    "Male_Adult_17/textures/body_color.webp",
+    "Male_Adult_17/textures/body_normal.webp",
+    "Male_Adult_17/textures/body_orm.webp",
+    "Male_Adult_17/textures/head_color.webp",
+    "Male_Adult_17/textures/head_normal.webp",
+    "Male_Adult_17/textures/head_orm.webp"
+   ],
+   "gltf": "Male_Adult_17/Male_Adult_17.gltf",
+   "skeleton": "m",
+   "height": 1.8117,
+   "bounds": {
+    "min": [
+     -0.6741,
+     0.0002,
+     -0.1525
+    ],
+    "max": [
+     0.6741,
+     1.8119,
+     0.1959
+    ]
+   },
+   "tris": {
+    "lod0": 7084,
+    "lod1": 2491
+   },
+   "bytes": 965410,
+   "alphaMaterials": [],
+   "notes": "no alpha material (short hair painted on the head)"
+  },
+  "Sports_Male_04": {
+   "files": [
+    "Sports_Male_04/Sports_Male_04.bin",
+    "Sports_Male_04/Sports_Male_04.gltf",
+    "Sports_Male_04/textures/body_color.webp",
+    "Sports_Male_04/textures/body_normal.webp",
+    "Sports_Male_04/textures/body_orm.webp",
+    "Sports_Male_04/textures/head_color.webp",
+    "Sports_Male_04/textures/head_normal.webp",
+    "Sports_Male_04/textures/head_orm.webp"
+   ],
+   "gltf": "Sports_Male_04/Sports_Male_04.gltf",
+   "skeleton": "m",
+   "height": 1.8042,
+   "bounds": {
+    "min": [
+     -0.6741,
+     0.0026,
+     -0.1238
+    ],
+    "max": [
+     0.6741,
+     1.8069,
+     0.1985
+    ]
+   },
+   "tris": {
+    "lod0": 7520,
+    "lod1": 2498
+   },
+   "bytes": 852334,
+   "alphaMaterials": [],
+   "notes": "no alpha material (short hair painted on the head)"
+  }
+ },
+ "anims": {
+  "m": {
+   "gltf": "anims/m.gltf",
+   "files": [
+    "anims/m.bin",
+    "anims/m.gltf"
+   ],
+   "bytes": 1245848,
+   "joints": 81,
+   "clips": {
+    "idle": {
+     "duration": 11.6667,
+     "loop": true,
+     "mode": "static",
+     "source": "m_idle_neutral_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 833,
+     "maxReductionErrDeg": 0.561
+    },
+    "idle_look": {
+     "duration": 4.6333,
+     "loop": true,
+     "mode": "static",
+     "source": "m_idle_look_around_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 949,
+     "maxReductionErrDeg": 0.596
+    },
+    "walk": {
+     "duration": 1.2,
+     "loop": true,
+     "mode": "walk",
+     "source": "m_walk_neutral_01.max.fbx",
+     "speed": 1.0117,
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8979,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8979,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.9 deg, 0.0 cm)",
+     "footSlideCm": {
+      "L": 0.93,
+      "R": 0.98
+     },
+     "keys": 603,
+     "maxReductionErrDeg": 0.198
+    },
+    "sit_down_table": {
+     "duration": 4.2,
+     "loop": false,
+     "mode": "root",
+     "source": "m_sit_down_table_left.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5787,
+       0.6493
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0.6493
+      ],
+      "yawDeg": -90
+     },
+     "note": "Ends seated, turned 90 degrees (see groundEnd).",
+     "keys": 1611,
+     "maxReductionErrDeg": 0.594
+    },
+    "work_table": {
+     "duration": 11.3,
+     "loop": true,
+     "mode": "static",
+     "source": "m_work_table.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "note": "Standing at a table and leaning over it (hands at about 0.70 m); not a seated typing clip.",
+     "keys": 4551,
+     "maxReductionErrDeg": 0.599
+    },
+    "sit_table_idle": {
+     "duration": 45.7,
+     "loop": true,
+     "mode": "static",
+     "source": "m_sit_table_idle_neutral_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5787,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5787,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 3624,
+     "maxReductionErrDeg": 0.599
+    },
+    "sit_table_relaxed": {
+     "duration": 44.3333,
+     "loop": true,
+     "mode": "static",
+     "source": "m_sit_table_idle_relaxed_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5787,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5787,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 6723,
+     "maxReductionErrDeg": 0.6
+    },
+    "sit_table_yawn": {
+     "duration": 6.4,
+     "loop": false,
+     "mode": "static",
+     "source": "m_sit_table_idle_yawn.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5787,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5787,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 1342,
+     "maxReductionErrDeg": 0.597
+    },
+    "stand_up_table": {
+     "duration": 3.4,
+     "loop": false,
+     "mode": "root",
+     "source": "m_sit_stand_up_table_left.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5787,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0.5525,
+       0.8952,
+       0.2535
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0.5525,
+       0,
+       0.2535
+      ],
+      "yawDeg": 90.22
+     },
+     "note": "Starts seated; pairs with sit_down_table.",
+     "keys": 1692,
+     "maxReductionErrDeg": 0.597
+    },
+    "sit_down_chair": {
+     "duration": 2.9,
+     "loop": false,
+     "mode": "root",
+     "source": "m_sit_down_chair_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5911,
+       -0.4606
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       -0.4606
+      ],
+      "yawDeg": 0
+     },
+     "note": "Backs 0.45 m onto the chair behind the start position.",
+     "keys": 1015,
+     "maxReductionErrDeg": 0.59
+    },
+    "sit_chair_relaxed": {
+     "duration": 36.4,
+     "loop": true,
+     "mode": "static",
+     "source": "m_sit_chair_idle_relaxed_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5911,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5911,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 4455,
+     "maxReductionErrDeg": 0.595
+    },
+    "sit_chair_yawn": {
+     "duration": 7.6667,
+     "loop": false,
+     "mode": "static",
+     "source": "m_sit_chair_idle_yawn.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5911,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5911,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 1183,
+     "maxReductionErrDeg": 0.597
+    },
+    "stand_up_chair": {
+     "duration": 2.5,
+     "loop": false,
+     "mode": "root",
+     "source": "m_sit_stand_up_chair_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5911,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0.0163,
+       0.8952,
+       0.4229
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0.0163,
+       0,
+       0.4229
+      ],
+      "yawDeg": 0
+     },
+     "keys": 1000,
+     "maxReductionErrDeg": 0.579
+    },
+    "wave": {
+     "duration": 2.8333,
+     "loop": true,
+     "mode": "static",
+     "source": "m_wave_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 1254,
+     "maxReductionErrDeg": 0.6
+    },
+    "phone_talk": {
+     "duration": 31.9,
+     "loop": true,
+     "mode": "static",
+     "source": "m_cell_phone_talk_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 6688,
+     "maxReductionErrDeg": 0.599
+    },
+    "phone_text": {
+     "duration": 34.4667,
+     "loop": true,
+     "mode": "static",
+     "source": "m_cell_phone_textmessage.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.2 deg, 0.0 cm)",
+     "keys": 4661,
+     "maxReductionErrDeg": 0.6
+    },
+    "cheer": {
+     "duration": 24.6333,
+     "loop": false,
+     "mode": "static",
+     "source": "m_cheer_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 12397,
+     "maxReductionErrDeg": 0.6
+    },
+    "cheer_alt": {
+     "duration": 4.2,
+     "loop": false,
+     "mode": "static",
+     "source": "m_cheer_03.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 1587,
+     "maxReductionErrDeg": 0.594
+    },
+    "drink": {
+     "duration": 35,
+     "loop": true,
+     "mode": "static",
+     "source": "m_drink_drinking.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 3484,
+     "maxReductionErrDeg": 0.6
+    },
+    "headphones": {
+     "duration": 25.7,
+     "loop": true,
+     "mode": "static",
+     "source": "m_headphones_idle.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 3463,
+     "maxReductionErrDeg": 0.599
+    },
+    "stretch": {
+     "duration": 6.6333,
+     "loop": false,
+     "mode": "static",
+     "source": "m_idle_stretch_arms_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.8952,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 2339,
+     "maxReductionErrDeg": 0.599
+    },
+    "fist_pump": {
+     "duration": 2.4667,
+     "loop": false,
+     "mode": "m2m",
+     "source": "victory-fist-pump.glb",
+     "rootStart": {
+      "bip01": [
+       -0.0332,
+       0.8778,
+       0.1383
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       -0.0366,
+       0.8786,
+       0.1393
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "note": "Retargeted from Mesh2Motion; starts and ends in a neutral stance.",
+     "keys": 825,
+     "maxReductionErrDeg": 0.599
+    },
+    "sleep": {
+     "duration": 4.8,
+     "loop": true,
+     "mode": "m2m",
+     "source": "sleeping.glb",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.1821,
+       0.0038
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.1821,
+       0.0038
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "note": "Lying flat on the floor, root at floor level. Not shaped for a reclined lounger. source is a single held pose; breathing added procedurally",
+     "keys": 105,
+     "maxReductionErrDeg": 0.13
+    },
+    "lay_to_idle": {
+     "duration": 1.5333,
+     "loop": false,
+     "mode": "m2m",
+     "source": "laytoidle.glb",
+     "rootStart": {
+      "bip01": [
+       -0.034,
+       0.1927,
+       -0.0806
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       -0.0315,
+       0.8711,
+       0.0686
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "note": "From lying on the floor (sleep) to standing; ends at the idle stance.",
+     "keys": 1160,
+     "maxReductionErrDeg": 0.599
+    },
+    "sitting_writing": {
+     "duration": 4.8,
+     "loop": true,
+     "mode": "m2m",
+     "source": "sitting-writing.glb",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5118,
+       -0.1469
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5118,
+       -0.1469
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "note": "Seated (seat about 0.41 m), hands on a raised writing surface. source is a single held pose; breathing added procedurally",
+     "keys": 107,
+     "maxReductionErrDeg": 0.126
+    }
+   }
+  },
+  "f": {
+   "gltf": "anims/f.gltf",
+   "files": [
+    "anims/f.bin",
+    "anims/f.gltf"
+   ],
+   "bytes": 1423968,
+   "joints": 81,
+   "clips": {
+    "idle": {
+     "duration": 15.5333,
+     "loop": true,
+     "mode": "static",
+     "source": "f_idle_neutral_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.1 deg, 0.0 cm)",
+     "keys": 967,
+     "maxReductionErrDeg": 0.568
+    },
+    "idle_look": {
+     "duration": 4.4667,
+     "loop": true,
+     "mode": "static",
+     "source": "f_idle_look_around_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.1 deg, 0.0 cm)",
+     "keys": 795,
+     "maxReductionErrDeg": 0.597
+    },
+    "walk": {
+     "duration": 1.2,
+     "loop": true,
+     "mode": "walk",
+     "source": "f_walk_neutral_01.max.fbx",
+     "speed": 1.2138,
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9167,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9167,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (1.4 deg, 0.0 cm)",
+     "footSlideCm": {
+      "L": 3.55,
+      "R": 4.04
+     },
+     "keys": 636,
+     "maxReductionErrDeg": 0.6
+    },
+    "sit_down_table": {
+     "duration": 4.9667,
+     "loop": false,
+     "mode": "root",
+     "source": "f_sit_down_table_left.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0.0383,
+       0.6112,
+       0.651
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0.0383,
+       0,
+       0.651
+      ],
+      "yawDeg": -90
+     },
+     "note": "Ends seated, turned 90 degrees (see groundEnd).",
+     "keys": 2200,
+     "maxReductionErrDeg": 0.597
+    },
+    "work_table": {
+     "duration": 28.3,
+     "loop": true,
+     "mode": "static",
+     "source": "f_work_table.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.1 deg, 0.0 cm)",
+     "note": "Standing at a table and leaning over it (hands at about 0.70 m); not a seated typing clip.",
+     "keys": 7103,
+     "maxReductionErrDeg": 0.6
+    },
+    "sit_table_idle": {
+     "duration": 26.2333,
+     "loop": true,
+     "mode": "static",
+     "source": "f_sit_table_idle_neutral_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 1868,
+     "maxReductionErrDeg": 0.596
+    },
+    "sit_table_relaxed": {
+     "duration": 27.6667,
+     "loop": true,
+     "mode": "static",
+     "source": "f_sit_table_idle_relaxed_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 3053,
+     "maxReductionErrDeg": 0.596
+    },
+    "sit_table_yawn": {
+     "duration": 7.1333,
+     "loop": false,
+     "mode": "static",
+     "source": "f_sit_table_idle_yawn.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 1088,
+     "maxReductionErrDeg": 0.599
+    },
+    "stand_up_table": {
+     "duration": 5.0667,
+     "loop": false,
+     "mode": "root",
+     "source": "f_sit_stand_up_table_left.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0.388,
+       0.9194,
+       0.1621
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0.388,
+       0,
+       0.1621
+      ],
+      "yawDeg": 90
+     },
+     "note": "Starts seated; pairs with sit_down_table.",
+     "keys": 2060,
+     "maxReductionErrDeg": 0.597
+    },
+    "sit_down_chair": {
+     "duration": 4.9,
+     "loop": false,
+     "mode": "root",
+     "source": "f_sit_down_chair_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.6112,
+       -0.4534
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       -0.4534
+      ],
+      "yawDeg": 0
+     },
+     "note": "Backs 0.45 m onto the chair behind the start position.",
+     "keys": 1548,
+     "maxReductionErrDeg": 0.6
+    },
+    "sit_chair_relaxed": {
+     "duration": 37.4333,
+     "loop": true,
+     "mode": "static",
+     "source": "f_sit_chair_idle_relaxed_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 4458,
+     "maxReductionErrDeg": 0.6
+    },
+    "sit_chair_yawn": {
+     "duration": 7.4,
+     "loop": false,
+     "mode": "static",
+     "source": "f_sit_chair_idle_yawn.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 924,
+     "maxReductionErrDeg": 0.598
+    },
+    "stand_up_chair": {
+     "duration": 3.3333,
+     "loop": false,
+     "mode": "root",
+     "source": "f_sit_stand_up_chair_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.6112,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0.4007
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0.4007
+      ],
+      "yawDeg": 0
+     },
+     "keys": 1177,
+     "maxReductionErrDeg": 0.599
+    },
+    "wave": {
+     "duration": 5.5333,
+     "loop": true,
+     "mode": "static",
+     "source": "f_wave_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.1 deg, 0.0 cm)",
+     "keys": 1510,
+     "maxReductionErrDeg": 0.599
+    },
+    "phone_talk": {
+     "duration": 41.1667,
+     "loop": true,
+     "mode": "inplace",
+     "source": "f_cell_phone_talk_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 8430,
+     "maxReductionErrDeg": 0.6
+    },
+    "phone_text": {
+     "duration": 20.5333,
+     "loop": true,
+     "mode": "static",
+     "source": "f_cell_phone_textmessage.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 2586,
+     "maxReductionErrDeg": 0.599
+    },
+    "cheer": {
+     "duration": 15.3,
+     "loop": false,
+     "mode": "static",
+     "source": "f_cheer_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 9421,
+     "maxReductionErrDeg": 0.6
+    },
+    "cheer_alt": {
+     "duration": 18.3667,
+     "loop": false,
+     "mode": "static",
+     "source": "f_cheer_02.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 18089,
+     "maxReductionErrDeg": 0.6
+    },
+    "drink": {
+     "duration": 11.9,
+     "loop": true,
+     "mode": "static",
+     "source": "f_drink_drinking.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 1263,
+     "maxReductionErrDeg": 0.586
+    },
+    "headphones": {
+     "duration": 33,
+     "loop": true,
+     "mode": "static",
+     "source": "f_headphones_idle.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "keys": 8401,
+     "maxReductionErrDeg": 0.598
+    },
+    "stretch": {
+     "duration": 7.3,
+     "loop": false,
+     "mode": "static",
+     "source": "f_idle_stretch_arms_01.max.fbx",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.9194,
+       0
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "keys": 1983,
+     "maxReductionErrDeg": 0.597
+    },
+    "fist_pump": {
+     "duration": 2.4667,
+     "loop": false,
+     "mode": "m2m",
+     "source": "victory-fist-pump.glb",
+     "rootStart": {
+      "bip01": [
+       -0.04,
+       0.9072,
+       0.0937
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       -0.0435,
+       0.9069,
+       0.0947
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "note": "Retargeted from Mesh2Motion; starts and ends in a neutral stance.",
+     "keys": 827,
+     "maxReductionErrDeg": 0.6
+    },
+    "sleep": {
+     "duration": 4.8,
+     "loop": true,
+     "mode": "m2m",
+     "source": "sleeping.glb",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.1611,
+       0.0039
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.1611,
+       0.0039
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "note": "Lying flat on the floor, root at floor level. Not shaped for a reclined lounger. source is a single held pose; breathing added procedurally",
+     "keys": 105,
+     "maxReductionErrDeg": 0.132
+    },
+    "lay_to_idle": {
+     "duration": 1.5333,
+     "loop": false,
+     "mode": "m2m",
+     "source": "laytoidle.glb",
+     "rootStart": {
+      "bip01": [
+       -0.0399,
+       0.1777,
+       -0.1319
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       -0.0374,
+       0.8993,
+       0.022
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "note": "From lying on the floor (sleep) to standing; ends at the idle stance.",
+     "keys": 1160,
+     "maxReductionErrDeg": 0.6
+    },
+    "sitting_writing": {
+     "duration": 4.8,
+     "loop": true,
+     "mode": "m2m",
+     "source": "sitting-writing.glb",
+     "rootStart": {
+      "bip01": [
+       0,
+       0.5149,
+       -0.1515
+      ]
+     },
+     "rootEnd": {
+      "bip01": [
+       0,
+       0.5149,
+       -0.1515
+      ]
+     },
+     "groundEnd": {
+      "pos": [
+       0,
+       0,
+       0
+      ],
+      "yawDeg": 0
+     },
+     "loopFix": "drift-spread (0.0 deg, 0.0 cm)",
+     "note": "Seated (seat about 0.41 m), hands on a raised writing surface. source is a single held pose; breathing added procedurally",
+     "keys": 107,
+     "maxReductionErrDeg": 0.129
+    }
+   }
+  }
+ },
+ "furniture": {
+  "_about": "What the clips assume, measured on the posed reference meshes (Male_Adult_04, Female_Adult_01), metres, glTF space, character root at the origin facing +Z. Seat height = underside of buttocks/thighs (top of the seat). Table top = lowest forearm/hand point while the forearms rest on the table. seatBackZ = back of the buttocks, kneesZ = front of the knees, tableNearEdgeZ = nearest hand point (the table edge must not be closer). Static sitting clips are in place, so positions are relative to the character root, which is then the seat spot. Per-gender values are in \"measured\".",
+  "seatHeightTable": 0.462,
+  "seatHeightChair": 0.435,
+  "tableTop": 0.719,
+  "tableNearEdgeZ": 0.293,
+  "seatBackZ": -0.166,
+  "kneesZ": 0.398,
+  "workTableStanding": {
+   "note": "work_table is a STANDING clip (leaning over a table), not seated typing.",
+   "handsLowestZ": 0.703
+  },
+  "sittingWriting": {
+   "note": "Mesh2Motion sitting_writing: seated, hands on a writing surface in front.",
+   "seatHeight": 0.408,
+   "handsLowestZ": 0.819
+  },
+  "measured": {
+   "m": {
+    "work_table": {
+     "seatContactZ": 0.5402,
+     "handsMinZ": 0.7073,
+     "handsMedianMinZ": 0.8046,
+     "forearmsMinZ": 0.7073,
+     "pelvis": [
+      -0.0287,
+      0.891,
+      -0.0189
+     ],
+     "handsNearestZ": 0.2248,
+     "handsFarthestZ": 0.3846,
+     "seatBackZ": -0.1339,
+     "seatFrontZ": 0.1649
+    },
+    "sit_table_idle": {
+     "seatContactZ": 0.4398,
+     "handsMinZ": 0.7336,
+     "handsMedianMinZ": 0.7425,
+     "forearmsMinZ": 0.7336,
+     "pelvis": [
+      0.0007,
+      0.5784,
+      -0.0007
+     ],
+     "handsNearestZ": 0.3278,
+     "handsFarthestZ": 0.5163,
+     "seatBackZ": -0.1427,
+     "seatFrontZ": 0.3949
+    },
+    "sit_table_relaxed": {
+     "seatContactZ": 0.452,
+     "handsMinZ": 0.716,
+     "handsMedianMinZ": 0.7356,
+     "forearmsMinZ": 0.7012,
+     "pelvis": [
+      -0.0014,
+      0.583,
+      0.0039
+     ],
+     "handsNearestZ": 0.4482,
+     "handsFarthestZ": 0.6277,
+     "seatBackZ": -0.1227,
+     "seatFrontZ": 0.3576
+    },
+    "sit_chair_relaxed": {
+     "seatContactZ": 0.4081,
+     "handsMinZ": 0.4998,
+     "handsMedianMinZ": 0.5261,
+     "forearmsMinZ": 0.4998,
+     "pelvis": [
+      0,
+      0.5911,
+      0
+     ],
+     "handsNearestZ": 0.1153,
+     "handsFarthestZ": 0.3071,
+     "seatBackZ": -0.1547,
+     "seatFrontZ": 0.3627
+    },
+    "sitting_writing": {
+     "seatContactZ": 0.4023,
+     "handsMinZ": 0.8255,
+     "handsMedianMinZ": 0.8354,
+     "forearmsMinZ": 0.8255,
+     "pelvis": [
+      0,
+      0.5118,
+      -0.1469
+     ],
+     "handsNearestZ": 0.1034,
+     "handsFarthestZ": 0.2904,
+     "seatBackZ": -0.291,
+     "seatFrontZ": 0.2183
+    }
+   },
+   "f": {
+    "work_table": {
+     "seatContactZ": 0.5021,
+     "handsMinZ": 0.6995,
+     "handsMedianMinZ": 0.8958,
+     "forearmsMinZ": 0.6995,
+     "pelvis": [
+      -0.0442,
+      0.9225,
+      -0.0295
+     ],
+     "handsNearestZ": 0.3272,
+     "handsFarthestZ": 0.514,
+     "seatBackZ": -0.1918,
+     "seatFrontZ": 0.0623
+    },
+    "sit_table_idle": {
+     "seatContactZ": 0.4715,
+     "handsMinZ": 0.7259,
+     "handsMedianMinZ": 0.7304,
+     "forearmsMinZ": 0.7259,
+     "pelvis": [
+      0.0019,
+      0.6098,
+      -0.0001
+     ],
+     "handsNearestZ": 0.1201,
+     "handsFarthestZ": 0.2782,
+     "seatBackZ": -0.1802,
+     "seatFrontZ": 0.428
+    },
+    "sit_table_relaxed": {
+     "seatContactZ": 0.4838,
+     "handsMinZ": 0.7151,
+     "handsMedianMinZ": 0.7342,
+     "forearmsMinZ": 0.7151,
+     "pelvis": [
+      -0.0055,
+      0.6212,
+      0.0033
+     ],
+     "handsNearestZ": 0.2743,
+     "handsFarthestZ": 0.4126,
+     "seatBackZ": -0.1656,
+     "seatFrontZ": 0.393
+    },
+    "sit_chair_relaxed": {
+     "seatContactZ": 0.4622,
+     "handsMinZ": 0.5113,
+     "handsMedianMinZ": 0.5546,
+     "forearmsMinZ": 0.5113,
+     "pelvis": [
+      -0.0005,
+      0.616,
+      -0.0006
+     ],
+     "handsNearestZ": 0.0839,
+     "handsFarthestZ": 0.2676,
+     "seatBackZ": -0.1883,
+     "seatFrontZ": 0.4068
+    },
+    "sitting_writing": {
+     "seatContactZ": 0.4132,
+     "handsMinZ": 0.8117,
+     "handsMedianMinZ": 0.8204,
+     "forearmsMinZ": 0.8117,
+     "pelvis": [
+      0,
+      0.5149,
+      -0.1515
+     ],
+     "handsNearestZ": 0.0633,
+     "handsFarthestZ": 0.2248,
+     "seatBackZ": -0.3264,
+     "seatFrontZ": 0.2576
+    }
+   }
+  }
+ },
+ "totalBytes": 23716077
+}

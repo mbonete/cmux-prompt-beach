@@ -209,8 +209,24 @@ class MB:
         self.bm = bmesh.new()
         self.uv = self.bm.loops.layers.uv.new("UVMap")
         self.lock = self.bm.faces.layers.int.new("uvlock")
+        # "soft" faces (bulbs, festoon wires) are smooth shaded with one pinned
+        # UV, so their vertices are shared: tiny parts stay cheap in bytes
+        self.soft_layer = self.bm.faces.layers.int.new("soft")
+        self._soft = 0
         self.mats = []
         self._xf = []
+
+    @contextmanager
+    def soft(self, pin=(0.5, 0.5)):
+        """Faces made inside are smooth shaded with one pinned UV (bulbs,
+        cables): shared vertices, no seams."""
+        self._soft += 1
+        prev, self._pin = getattr(self, "_pin", (0.5, 0.5)), pin
+        try:
+            yield
+        finally:
+            self._soft -= 1
+            self._pin = prev
 
     @contextmanager
     def at(self, x=0.0, y=0.0, z=0.0, yaw=0.0, pitch=0.0):
@@ -256,6 +272,9 @@ class MB:
             return None
         f.material_index = self.mi(mat)
         f.smooth = True
+        if self._soft:
+            f[self.soft_layer] = 1
+            uvs = [self._pin] * len(vs)
         if uvs is not None:
             for l, uv in zip(f.loops, uvs):
                 l[self.uv].uv = uv

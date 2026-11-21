@@ -6,10 +6,10 @@ names refer to files in public/assets/buildings/textures/<name>.webp.
 """
 import copy
 
-from .config import PALETTE, NEON, hex_lin
+from .config import PALETTE, NEON, LIGHT, hex_lin
 
 ALLOWED = ["stucco", "trim", "glass", "glass_block", "metal", "terrazzo", "wood", "awning", "roof",
-           "concrete", "planter", "water", "neon_accent", "interior"]
+           "concrete", "planter", "water", "neon_accent", "interior", "bulb"]
 
 BASE = {
     "stucco": dict(base=hex_lin(PALETTE["flamingo"]), albedo="stucco_albedo", orm="stucco_orm",
@@ -34,6 +34,10 @@ BASE = {
     "water": dict(base=hex_lin("#2E9C9F"), rough=0.05, metal=0.0),
     "neon_accent": dict(base=hex_lin("#F4E6F0"), rough=0.3, metal=0.0, emissive=hex_lin(NEON["violet"])[:3],
                         emissiveStrength=4.0),
+    # festoon bulbs, sconce and lantern glass, marquee bulbs: warm white emissive
+    # that the client scales with a night level (and turns off on vacant plots)
+    "bulb": dict(base=hex_lin("#FFF3E2"), rough=0.3, metal=0.0, emissive=hex_lin(LIGHT["candle"])[:3],
+                 emissiveStrength=6.0),
     "interior": dict(base=[1, 1, 1, 1], albedo="interior_albedo", emissiveTex="interior_emissive",
                      emissive=[1.0, 1.0, 1.0], emissiveStrength=1.0, rough=0.05, metal=0.0),
 }

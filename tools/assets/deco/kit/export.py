@@ -58,8 +58,11 @@ def finish_mesh(mb, name, sharp_deg=48.0, merge=True, weighted=True):
     _box_uv(mb)
     bmesh.ops.triangulate(bm, faces=bm.faces, quad_method='BEAUTY', ngon_method='BEAUTY')
     lim = math.radians(sharp_deg)
+    soft = mb.soft_layer
     for e in bm.edges:
         if len(e.link_faces) == 2:
+            if e.link_faces[0][soft] and e.link_faces[1][soft]:
+                continue
             a = e.calc_face_angle(0.0)
             if a > lim:
                 e.smooth = False
@@ -135,7 +138,7 @@ def export(path):
     )
 
 
-NO_AO = {"neon_accent", "interior", "glass"}  # keep in sync with finalize.mjs
+NO_AO = {"neon_accent", "interior", "glass", "bulb"}  # keep in sync with finalize.mjs
 PACK_SCALE = 0.965
 WHITE_UV = 0.985
 

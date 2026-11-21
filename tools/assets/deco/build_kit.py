@@ -38,6 +38,9 @@ def parse():
     ap.add_argument("--no-finalize", action="store_true")
     ap.add_argument("--previews", action="store_true")
     ap.add_argument("--preview-only", action="store_true")
+    ap.add_argument("--views", default="", help="comma list of preview views (game,terrace,back,night,night_terrace)")
+    ap.add_argument("--district", action="store_true", help="also render the whole district layout")
+    ap.add_argument("--visibility-only", action="store_true", help="only run the spot visibility check")
     return ap.parse_args(argv)
 
 
@@ -84,6 +87,12 @@ def build_one(name):
                           "yaw": round(s["yaw"], 2)})
         for p in b.props:
             X.empty(f"prop:{p['id']}", p["pos"], p["yaw"], rt, {"prop_id": p["id"]})
+        for i, li in enumerate(b.lights):
+            X.empty(f"light_{i}", li["pos"], 0.0, rt, {"light_radius": round(li["radius"], 2),
+                                                     "light_color": li["color"],
+                                                     "floor_y": round(li["floor_y"], 3)})
+        for i, pa in enumerate(b.palms):
+            X.empty(f"palm_{i}", pa["pos"], pa["yaw"], rt, {"palm_height": round(pa["height"], 2)})
     for k, pos in b.anchors.items():
         X.empty(k, pos, 0.0, rt)
     path = STAGE / name / f"{name}.gltf"
@@ -94,9 +103,13 @@ def build_one(name):
         "tris": tris,
         "notes": b.notes,
         "look": b.look,
-        "materials": M.resolve(mats, **{k: v for k, v in b.look.items() if k in ("stucco", "trim", "neon", "awning", "interior")}),
+        "materials": M.resolve(mats, **{k: v for k, v in b.look.items()
+                                        if k in ("stucco", "trim", "neon", "awning", "interior", "extra")}),
         "spots": spots,
         "props": [{"id": p["id"], "pos": [round(v, 3) for v in p["pos"]], "yaw": round(p["yaw"], 2)} for p in b.props],
+        "lights": [{"pos": [round(v, 3) for v in li["pos"]], "radius": li["radius"], "color": li["color"]}
+                   for li in b.lights],
+        "palms": [{"pos": [round(v, 3) for v in pa["pos"]], "height": pa["height"]} for pa in b.palms],
     }
     return spec
 
@@ -105,7 +118,7 @@ def main():
     args = parse()
     t0 = time.time()
     names = [n for n in BLD.BUILDERS if not args.only or n in args.only.split(",")]
-    if not args.preview_only:
+    if not args.preview_only and not args.visibility_only:
         if not args.no_textures:
             TX.bake_all()
             print(f"[deco] textures baked in {time.time() - t0:.1f}s")
@@ -120,16 +133,26 @@ def main():
             print(f"[deco] {n}: {spec['buildings'][n]['tris']} tris ({time.time() - t1:.1f}s)")
         # keep only buildings that still exist
         spec["buildings"] = {k: v for k, v in spec["buildings"].items() if k in BLD.BUILDERS}
+        spec["layout"] = BLD.LAYOUT
         spec_path.parent.mkdir(parents=True, exist_ok=True)
         spec_path.write_text(json.dumps(spec, indent=1, sort_keys=True))
         if not args.no_finalize:
             subprocess.run(["node", str(HERE / "finalize.mjs"), *names], check=True, cwd=str(REPO))
             subprocess.run(["node", str(HERE / "check.mjs")], check=True, cwd=str(REPO))
+    hidden = []
+    if not args.preview_only and not args.no_finalize or args.visibility_only:
+        import visibility
+        hidden = visibility.run(names)
+        if args.visibility_only:
+            sys.exit(1 if hidden else 0)
     if args.previews or args.preview_only:
         sys.path.insert(0, str(HERE))
         import render_previews
-        render_previews.run(names)
+        views = tuple(v for v in args.views.split(",") if v) or render_previews.VIEWS
+        render_previews.run(names, views, with_district=args.district)
     print(f"[deco] done in {time.time() - t0:.1f}s")
+    if hidden:
+        raise SystemExit(f"[deco] {len(hidden)} visibility/light problem(s) (see [visibility] above)")
 
 
 if __name__ == "__main__":

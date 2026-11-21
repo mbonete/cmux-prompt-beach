@@ -1,0 +1,2507 @@
+{
+  "generator": "tools/assets/env/build.mjs (config: tools/assets/env/config.json)",
+  "conventions": {
+    "paths": "Relative to public/assets/env/ (served at /assets/env/).",
+    "index": "assets[id] is a flat index (props by id, skies by id, texture sets as texture:<set>, water textures as water:<name>) with files[] and the key data; the sky, textures, water and props sections hold the full detail.",
+    "units": "Metres; glTF Y-up. Props face +Z where they have a front; pivot at the base centre unless the entry says otherwise.",
+    "props": "Each prop file: root node <id> > [variant nodes] > lod0 [, lod1]. Show one LOD at a time. lod0/lod1 nodes (or their part children) carry the KHR_mesh_quantization dequantisation transform (a scale and offset): move, clone or hide them, but do not reset their local transforms. Variant nodes keep the source layout; to place one variant on its own, clone it and zero its position.",
+    "equirect": "u = x / width from the left edge, v = y / height from the top. azimuthDeg = u * 360. elevationDeg = 90 - v * 180. three.js r187 (EquirectUV.js, HDRLoader flipY) maps world direction d to u = atan2(d.z, d.x) / 2pi + 0.5, so with no rotation d = (cos el cos t, sin el, cos el sin t), t = (u - 0.5) * 2pi: u = 0.25 is -Z, 0.5 is +X, 0.75 is +Z. sun.directionThree is that vector. To put the sun over the sea (-Z), set scene.backgroundRotation.y = scene.environmentRotation.y = sun.rotationYToPutSunAtNegZ and place the DirectionalLight at (0, sin el, -cos el) * distance. Derived from the three.js r187 source (backgroundRotation and environmentRotation are applied as the transposed rotation to the lookup direction; check.mjs verifies the numbers with three's own Matrix4/Euler). Caveat from the same source: with WebGPURenderer an equirect scene.background is sampled through PMREMNode, which also multiplies by materialEnvRotation, and for the background mesh that resolves to scene.environmentRotation whenever scene.environment is set. So with both set, the visible sky may turn twice; if it does, set only environmentRotation.y. Confirm once at look-dev.",
+    "skyIntensity": "HDR values are as shipped by Poly Haven (relative, not absolute: the night HDRI is exposed up). sun.intensity is the irradiance of the removed sun disc in the same units, so with environmentIntensity = k use DirectionalLight intensity = k * sun.intensity and colour sun.colorLinear. Pick per-mood intensities at look-dev.",
+    "layers": "Cloud and star layers cover the upper hemisphere only: 4096 x 1024, row 0 = zenith, last row = horizon, same u as their HDRI. sRGB WebP; linear HDR radiance = srgbToLinear(texel.rgb) * hdrScale. Clouds: straight (not premultiplied) alpha.",
+    "textures": "albedo sRGB; normal OpenGL (+Y up); orm linear R occlusion, G roughness, B metalness. sizeM is the real-world size one texture repeat covers: UV scale = metres / sizeM."
+  },
+  "totals": {
+    "sky": 0,
+    "textures": 10952862,
+    "water": 173842,
+    "props": 6949735,
+    "all": 18076439,
+    "texturesBySize": {
+      "1k": 1549070,
+      "2k": 9403792
+    }
+  },
+  "assets": {
+    "street_lamp_02": {
+      "kind": "prop",
+      "gltf": "props/street_lamp_02/street_lamp_02.gltf",
+      "files": [
+        "props/street_lamp_02/street_lamp_02.gltf",
+        "props/street_lamp_02/street_lamp_02.bin",
+        "props/street_lamp_02/street_lamp_02_normal.webp",
+        "props/street_lamp_02/street_lamp_02_albedo.webp",
+        "props/street_lamp_02/street_lamp_02_orm.webp"
+      ],
+      "bytes": 629015,
+      "tris": {
+        "street_lamp_02": {
+          "lod0": 14612,
+          "lod1": 4405
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.193,
+          0,
+          0
+        ],
+        "max": [
+          0.193,
+          1.675,
+          0.807
+        ]
+      },
+      "pivot": "wall",
+      "front": "+Z",
+      "structure": "street_lamp_02 > lod0 [, lod1]",
+      "materials": [
+        "metal",
+        "glass"
+      ]
+    },
+    "CoffeeCart_01": {
+      "kind": "prop",
+      "gltf": "props/CoffeeCart_01/CoffeeCart_01.gltf",
+      "files": [
+        "props/CoffeeCart_01/CoffeeCart_01.gltf",
+        "props/CoffeeCart_01/CoffeeCart_01.bin",
+        "props/CoffeeCart_01/CoffeeCart_01_cart_normal.webp",
+        "props/CoffeeCart_01/CoffeeCart_01_cart_albedo.webp",
+        "props/CoffeeCart_01/CoffeeCart_01_cart_orm.webp",
+        "props/CoffeeCart_01/CoffeeCart_01_props_normal.webp",
+        "props/CoffeeCart_01/CoffeeCart_01_props_albedo.webp",
+        "props/CoffeeCart_01/CoffeeCart_01_props_orm.webp"
+      ],
+      "bytes": 1041167,
+      "tris": {
+        "CoffeeCart_01": {
+          "lod0": 14545,
+          "lod1": 4440
+        }
+      },
+      "bounds": {
+        "min": [
+          -1.447,
+          0,
+          -0.709
+        ],
+        "max": [
+          0.72,
+          1.718,
+          0.365
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "CoffeeCart_01 > lod0 [, lod1]",
+      "materials": [
+        "CoffeeCart_01_cart",
+        "CoffeeCart_01_props",
+        "CoffeeCart_01_mugs"
+      ]
+    },
+    "classic_laptop": {
+      "kind": "prop",
+      "gltf": "props/classic_laptop/classic_laptop.gltf",
+      "files": [
+        "props/classic_laptop/classic_laptop.gltf",
+        "props/classic_laptop/classic_laptop.bin",
+        "props/classic_laptop/classic_laptop_normal.webp",
+        "props/classic_laptop/classic_laptop_albedo.webp",
+        "props/classic_laptop/classic_laptop_orm.webp"
+      ],
+      "bytes": 626904,
+      "tris": {
+        "classic_laptop": {
+          "lod0": 14450,
+          "lod1": 4520
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.15,
+          0,
+          -0.112
+        ],
+        "max": [
+          0.15,
+          0.25,
+          0.112
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "classic_laptop > lod0 [, lod1]",
+      "materials": [
+        "body",
+        "screen"
+      ]
+    },
+    "mid_century_lounge_chair": {
+      "kind": "prop",
+      "gltf": "props/mid_century_lounge_chair/mid_century_lounge_chair.gltf",
+      "files": [
+        "props/mid_century_lounge_chair/mid_century_lounge_chair.gltf",
+        "props/mid_century_lounge_chair/mid_century_lounge_chair.bin",
+        "props/mid_century_lounge_chair/mid_century_lounge_chair_normal.webp",
+        "props/mid_century_lounge_chair/mid_century_lounge_chair_albedo.webp",
+        "props/mid_century_lounge_chair/mid_century_lounge_chair_orm.webp"
+      ],
+      "bytes": 505042,
+      "tris": {
+        "mid_century_lounge_chair": {
+          "lod0": 6148
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.504,
+          0,
+          -0.595
+        ],
+        "max": [
+          0.504,
+          1.169,
+          0.595
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "mid_century_lounge_chair > lod0 [, lod1]",
+      "materials": [
+        "mid_century_lounge_chair"
+      ]
+    },
+    "outdoor_table_chair_set_01": {
+      "kind": "prop",
+      "gltf": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01.gltf",
+      "files": [
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01.gltf",
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01.bin",
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_chair_normal.webp",
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_chair_albedo.webp",
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_chair_orm.webp",
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_table_normal.webp",
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_table_albedo.webp",
+        "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_table_orm.webp"
+      ],
+      "bytes": 730155,
+      "tris": {
+        "outdoor_table_chair_set_01": {
+          "lod0": 9828
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.371,
+          0,
+          -0.859
+        ],
+        "max": [
+          0.371,
+          0.859,
+          0.859
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "outdoor_table_chair_set_01 > lod0 > {table, chair_01, chair_02} [, lod1 > ...]",
+      "materials": [
+        "outdoor_table_chair_set_01_chair",
+        "outdoor_table_chair_set_01_table"
+      ]
+    },
+    "painted_wooden_bench": {
+      "kind": "prop",
+      "gltf": "props/painted_wooden_bench/painted_wooden_bench.gltf",
+      "files": [
+        "props/painted_wooden_bench/painted_wooden_bench.gltf",
+        "props/painted_wooden_bench/painted_wooden_bench.bin",
+        "props/painted_wooden_bench/painted_wooden_bench_normal.webp",
+        "props/painted_wooden_bench/painted_wooden_bench_albedo.webp",
+        "props/painted_wooden_bench/painted_wooden_bench_orm.webp"
+      ],
+      "bytes": 444639,
+      "tris": {
+        "painted_wooden_bench": {
+          "lod0": 630
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.582,
+          0,
+          -0.248
+        ],
+        "max": [
+          0.582,
+          0.889,
+          0.248
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "painted_wooden_bench > lod0 [, lod1]",
+      "materials": [
+        "painted_wooden_bench"
+      ]
+    },
+    "exterior_aircon_unit": {
+      "kind": "prop",
+      "gltf": "props/exterior_aircon_unit/exterior_aircon_unit.gltf",
+      "files": [
+        "props/exterior_aircon_unit/exterior_aircon_unit.gltf",
+        "props/exterior_aircon_unit/exterior_aircon_unit.bin",
+        "props/exterior_aircon_unit/exterior_aircon_unit_01_normal.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_01_albedo.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_01_orm.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_02_normal.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_01_albedo_alpha.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_02_orm.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_rusted_01_normal.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_rusted_01_albedo.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_rusted_01_orm.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_rusted_02_normal.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_rusted_02_albedo_alpha.webp",
+        "props/exterior_aircon_unit/exterior_aircon_unit_rusted_02_orm.webp"
+      ],
+      "bytes": 789118,
+      "tris": {
+        "clean": {
+          "lod0": 9493
+        },
+        "rusted": {
+          "lod0": 9493
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.9,
+          0,
+          -0.187
+        ],
+        "max": [
+          0.9,
+          0.928,
+          0.187
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "exterior_aircon_unit > {clean, rusted} > lod0 [, lod1]",
+      "materials": [
+        "body",
+        "grille",
+        "body_rusted",
+        "grille_rusted"
+      ]
+    },
+    "ocean_buoy": {
+      "kind": "prop",
+      "gltf": "props/ocean_buoy/ocean_buoy.gltf",
+      "files": [
+        "props/ocean_buoy/ocean_buoy.gltf",
+        "props/ocean_buoy/ocean_buoy.bin",
+        "props/ocean_buoy/ocean_buoy_emissive.webp",
+        "props/ocean_buoy/ocean_buoy_normal.webp",
+        "props/ocean_buoy/ocean_buoy_albedo.webp",
+        "props/ocean_buoy/ocean_buoy_orm.webp"
+      ],
+      "bytes": 610887,
+      "tris": {
+        "ocean_buoy": {
+          "lod0": 12240,
+          "lod1": 3672
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.533,
+          -0.809,
+          -0.476
+        ],
+        "max": [
+          0.533,
+          1.847,
+          0.476
+        ]
+      },
+      "pivot": "origin-y",
+      "front": "+Z",
+      "structure": "ocean_buoy > lod0 [, lod1]",
+      "materials": [
+        "buoy"
+      ]
+    },
+    "anthurium_botany_01": {
+      "kind": "prop",
+      "gltf": "props/anthurium_botany_01/anthurium_botany_01.gltf",
+      "files": [
+        "props/anthurium_botany_01/anthurium_botany_01.gltf",
+        "props/anthurium_botany_01/anthurium_botany_01.bin",
+        "props/anthurium_botany_01/anthurium_botany_01_normal.webp",
+        "props/anthurium_botany_01/anthurium_botany_01_albedo.webp",
+        "props/anthurium_botany_01/anthurium_botany_01_orm.webp"
+      ],
+      "bytes": 549803,
+      "tris": {
+        "a": {
+          "lod0": 3880
+        },
+        "b": {
+          "lod0": 3880
+        },
+        "c": {
+          "lod0": 4030
+        },
+        "d": {
+          "lod0": 3880
+        },
+        "e": {
+          "lod0": 3879
+        },
+        "f": {
+          "lod0": 3880
+        }
+      },
+      "bounds": {
+        "min": [
+          -1.398,
+          0,
+          -0.899
+        ],
+        "max": [
+          1.398,
+          0.498,
+          0.899
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "anthurium_botany_01 > {a, b, c, d, e, f} > lod0 [, lod1]",
+      "materials": [
+        "anthurium_botany_01"
+      ]
+    },
+    "calathea_orbifolia_01": {
+      "kind": "prop",
+      "gltf": "props/calathea_orbifolia_01/calathea_orbifolia_01.gltf",
+      "files": [
+        "props/calathea_orbifolia_01/calathea_orbifolia_01.gltf",
+        "props/calathea_orbifolia_01/calathea_orbifolia_01.bin",
+        "props/calathea_orbifolia_01/calathea_orbifolia_01_normal.webp",
+        "props/calathea_orbifolia_01/calathea_orbifolia_01_albedo.webp",
+        "props/calathea_orbifolia_01/calathea_orbifolia_01_orm.webp"
+      ],
+      "bytes": 352350,
+      "tris": {
+        "a": {
+          "lod0": 3880
+        },
+        "b": {
+          "lod0": 3446
+        },
+        "c": {
+          "lod0": 3542
+        },
+        "d": {
+          "lod0": 1802
+        },
+        "e": {
+          "lod0": 1994
+        }
+      },
+      "bounds": {
+        "min": [
+          -1.246,
+          0,
+          -0.597
+        ],
+        "max": [
+          1.246,
+          0.424,
+          0.597
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "calathea_orbifolia_01 > {a, b, c, d, e} > lod0 [, lod1]",
+      "materials": [
+        "calathea_orbifolia_01"
+      ]
+    },
+    "vintage_day_bed": {
+      "kind": "prop",
+      "gltf": "props/vintage_day_bed/vintage_day_bed.gltf",
+      "files": [
+        "props/vintage_day_bed/vintage_day_bed.gltf",
+        "props/vintage_day_bed/vintage_day_bed.bin",
+        "props/vintage_day_bed/vintage_day_bed_normal.webp",
+        "props/vintage_day_bed/vintage_day_bed_albedo.webp",
+        "props/vintage_day_bed/vintage_day_bed_orm.webp"
+      ],
+      "bytes": 670655,
+      "tris": {
+        "vintage_day_bed": {
+          "lod0": 2715
+        }
+      },
+      "bounds": {
+        "min": [
+          -0.986,
+          0,
+          -0.427
+        ],
+        "max": [
+          0.986,
+          1.127,
+          0.427
+        ]
+      },
+      "pivot": "base",
+      "front": "+Z",
+      "structure": "vintage_day_bed > lod0 [, lod1]",
+      "materials": [
+        "vintage_day_bed"
+      ]
+    },
+    "texture:sand_dry": {
+      "kind": "texture",
+      "set": "sand_dry",
+      "sizeM": [
+        3,
+        3
+      ],
+      "files": [
+        "textures/sand_dry/albedo_2k.webp",
+        "textures/sand_dry/normal_2k.webp",
+        "textures/sand_dry/orm_2k.webp"
+      ],
+      "bytes": 1268610,
+      "maps": {
+        "2k": {
+          "albedo": "textures/sand_dry/albedo_2k.webp",
+          "normal": "textures/sand_dry/normal_2k.webp",
+          "orm": "textures/sand_dry/orm_2k.webp"
+        }
+      }
+    },
+    "texture:sand_wet": {
+      "kind": "texture",
+      "set": "sand_wet",
+      "sizeM": [
+        1.87,
+        1.87
+      ],
+      "files": [
+        "textures/sand_wet/albedo_1k.webp",
+        "textures/sand_wet/normal_1k.webp",
+        "textures/sand_wet/orm_1k.webp"
+      ],
+      "bytes": 581664,
+      "maps": {
+        "1k": {
+          "albedo": "textures/sand_wet/albedo_1k.webp",
+          "normal": "textures/sand_wet/normal_1k.webp",
+          "orm": "textures/sand_wet/orm_1k.webp"
+        }
+      }
+    },
+    "texture:asphalt": {
+      "kind": "texture",
+      "set": "asphalt",
+      "sizeM": [
+        3,
+        3
+      ],
+      "files": [
+        "textures/asphalt/albedo_2k.webp",
+        "textures/asphalt/normal_2k.webp",
+        "textures/asphalt/orm_2k.webp"
+      ],
+      "bytes": 5422728,
+      "maps": {
+        "2k": {
+          "albedo": "textures/asphalt/albedo_2k.webp",
+          "normal": "textures/asphalt/normal_2k.webp",
+          "orm": "textures/asphalt/orm_2k.webp"
+        }
+      }
+    },
+    "texture:pavers": {
+      "kind": "texture",
+      "set": "pavers",
+      "sizeM": [
+        2,
+        2
+      ],
+      "files": [
+        "textures/pavers/albedo_2k.webp",
+        "textures/pavers/normal_2k.webp",
+        "textures/pavers/orm_2k.webp"
+      ],
+      "bytes": 2712454,
+      "maps": {
+        "2k": {
+          "albedo": "textures/pavers/albedo_2k.webp",
+          "normal": "textures/pavers/normal_2k.webp",
+          "orm": "textures/pavers/orm_2k.webp"
+        }
+      }
+    },
+    "texture:concrete": {
+      "kind": "texture",
+      "set": "concrete",
+      "sizeM": [
+        1.8,
+        1.8
+      ],
+      "files": [
+        "textures/concrete/albedo_1k.webp",
+        "textures/concrete/normal_1k.webp",
+        "textures/concrete/orm_1k.webp"
+      ],
+      "bytes": 967406,
+      "maps": {
+        "1k": {
+          "albedo": "textures/concrete/albedo_1k.webp",
+          "normal": "textures/concrete/normal_1k.webp",
+          "orm": "textures/concrete/orm_1k.webp"
+        }
+      }
+    },
+    "water:ocean_normal": {
+      "kind": "water",
+      "files": [
+        "textures/water/ocean_normal.webp"
+      ],
+      "bytes": 173842,
+      "tileM": 8,
+      "use": "Tangent-space normal map, OpenGL (+Y up). Sample it twice at different scales and scroll directions and blend (or use partial derivative blending) to hide repetition."
+    }
+  },
+  "sky": {},
+  "textures": {
+    "sand_dry": {
+      "source": "ambientCG Ground093C",
+      "sourceFiles": [
+        "assets-src/ambientcg/Ground093C/Ground093C_2K-JPG_Color.jpg",
+        "assets-src/ambientcg/Ground093C/Ground093C_2K-JPG_NormalGL.jpg",
+        "assets-src/ambientcg/Ground093C/Ground093C_2K-JPG_AmbientOcclusion.jpg",
+        "assets-src/ambientcg/Ground093C/Ground093C_2K-JPG_Roughness.jpg"
+      ],
+      "sizeM": [
+        3,
+        3
+      ],
+      "sizeSource": "estimate: ambientCG publishes no dimensions for Ground093C; set from the scale of the wind-eroded ripples",
+      "why": "Chosen over Poly Haven coast_sand_01: Ground093C is the warm cream sand of the palette, while coast_sand_01 is brown and gravelly with debris.",
+      "colorSpace": {
+        "albedo": "sRGB",
+        "normal": "linear, OpenGL (+Y up)",
+        "orm": "linear; R occlusion, G roughness, B metalness"
+      },
+      "orm": {
+        "occlusion": "AO map",
+        "roughness": "roughness map",
+        "metalness": "0"
+      },
+      "calibration": null,
+      "seams": {
+        "albedo": {
+          "x": {
+            "ratio": 1.315,
+            "vsMax": 1.174,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.3,
+            "vsMax": 1.155,
+            "pass": true
+          }
+        },
+        "normal": {
+          "x": {
+            "ratio": 1.241,
+            "vsMax": 1.063,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.188,
+            "vsMax": 1.02,
+            "pass": true
+          }
+        },
+        "orm": {
+          "x": {
+            "ratio": 1.079,
+            "vsMax": 0.932,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.135,
+            "vsMax": 0.999,
+            "pass": true
+          }
+        }
+      },
+      "seamless": true,
+      "files": {
+        "albedo_2k": {
+          "file": "textures/sand_dry/albedo_2k.webp",
+          "bytes": 107716,
+          "width": 2048,
+          "height": 2048
+        },
+        "normal_2k": {
+          "file": "textures/sand_dry/normal_2k.webp",
+          "bytes": 403680,
+          "width": 2048,
+          "height": 2048
+        },
+        "orm_2k": {
+          "file": "textures/sand_dry/orm_2k.webp",
+          "bytes": 757214,
+          "width": 2048,
+          "height": 2048
+        }
+      },
+      "bytes": 1268610
+    },
+    "sand_wet": {
+      "source": "Poly Haven damp_beach_sand_02",
+      "sourceFiles": [
+        "assets-src/polyhaven/textures/damp_beach_sand_02/textures/damp_beach_sand_02_diff_2k.jpg",
+        "assets-src/polyhaven/textures/damp_beach_sand_02/textures/damp_beach_sand_02_nor_gl_2k.jpg",
+        "assets-src/polyhaven/textures/damp_beach_sand_02/textures/damp_beach_sand_02_arm_2k.jpg"
+      ],
+      "sizeM": [
+        1.87,
+        1.87
+      ],
+      "sizeSource": "Poly Haven API dimensions",
+      "why": "Source albedo is very dark (mean linear 0.11) and reads olive-grey next to sand_dry; it is scaled per channel to sand_dry's mean colour x 0.4 (wet sand is roughly 40-50% as bright as the same sand dry), keeping its variation, so the shoreline blends from dry to wet without a hue jump. Remove `calibrate` in config.json to get the source colours back.",
+      "colorSpace": {
+        "albedo": "sRGB",
+        "normal": "linear, OpenGL (+Y up)",
+        "orm": "linear; R occlusion, G roughness, B metalness"
+      },
+      "orm": {
+        "occlusion": "arm.R",
+        "roughness": "arm.G",
+        "metalness": "forced 0 (dielectric)"
+      },
+      "calibration": {
+        "meanLinearRGB": [
+          0.24,
+          0.193,
+          0.117
+        ],
+        "sourceMeanLinear": [
+          0.1096,
+          0.0928,
+          0.0611
+        ],
+        "gain": [
+          2.1889,
+          2.0803,
+          1.9164
+        ],
+        "clippedFraction": 0
+      },
+      "seams": {
+        "albedo": {
+          "x": {
+            "ratio": 1.017,
+            "vsMax": 0.832,
+            "pass": true
+          },
+          "y": {
+            "ratio": 0.973,
+            "vsMax": 0.824,
+            "pass": true
+          }
+        },
+        "normal": {
+          "x": {
+            "ratio": 1.088,
+            "vsMax": 0.882,
+            "pass": true
+          },
+          "y": {
+            "ratio": 0.919,
+            "vsMax": 0.601,
+            "pass": true
+          }
+        },
+        "orm": {
+          "x": {
+            "ratio": 1.212,
+            "vsMax": 0.971,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.07,
+            "vsMax": 0.82,
+            "pass": true
+          }
+        }
+      },
+      "seamless": true,
+      "files": {
+        "albedo_1k": {
+          "file": "textures/sand_wet/albedo_1k.webp",
+          "bytes": 233520,
+          "width": 1024,
+          "height": 1024
+        },
+        "normal_1k": {
+          "file": "textures/sand_wet/normal_1k.webp",
+          "bytes": 185570,
+          "width": 1024,
+          "height": 1024
+        },
+        "orm_1k": {
+          "file": "textures/sand_wet/orm_1k.webp",
+          "bytes": 162574,
+          "width": 1024,
+          "height": 1024
+        }
+      },
+      "bytes": 581664
+    },
+    "asphalt": {
+      "source": "Poly Haven asphalt_02",
+      "sourceFiles": [
+        "assets-src/polyhaven/textures/asphalt_02/textures/asphalt_02_diff_2k.jpg",
+        "assets-src/polyhaven/textures/asphalt_02/textures/asphalt_02_nor_gl_2k.jpg",
+        "assets-src/polyhaven/textures/asphalt_02/textures/asphalt_02_rough_2k.jpg"
+      ],
+      "sizeM": [
+        3,
+        3
+      ],
+      "sizeSource": "Poly Haven API dimensions",
+      "colorSpace": {
+        "albedo": "sRGB",
+        "normal": "linear, OpenGL (+Y up)",
+        "orm": "linear; R occlusion, G roughness, B metalness"
+      },
+      "orm": {
+        "occlusion": "none in source (1.0)",
+        "roughness": "roughness map",
+        "metalness": "0"
+      },
+      "calibration": null,
+      "seams": {
+        "albedo": {
+          "x": {
+            "ratio": 0.972,
+            "vsMax": 0.843,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.059,
+            "vsMax": 0.957,
+            "pass": true
+          }
+        },
+        "normal": {
+          "x": {
+            "ratio": 0.975,
+            "vsMax": 0.795,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.015,
+            "vsMax": 0.88,
+            "pass": true
+          }
+        },
+        "orm": {
+          "x": {
+            "ratio": 1.173,
+            "vsMax": 0.985,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.301,
+            "vsMax": 1.14,
+            "pass": true
+          }
+        }
+      },
+      "seamless": true,
+      "files": {
+        "albedo_2k": {
+          "file": "textures/asphalt/albedo_2k.webp",
+          "bytes": 1756456,
+          "width": 2048,
+          "height": 2048
+        },
+        "normal_2k": {
+          "file": "textures/asphalt/normal_2k.webp",
+          "bytes": 2191560,
+          "width": 2048,
+          "height": 2048
+        },
+        "orm_2k": {
+          "file": "textures/asphalt/orm_2k.webp",
+          "bytes": 1474712,
+          "width": 2048,
+          "height": 2048
+        }
+      },
+      "bytes": 5422728
+    },
+    "pavers": {
+      "source": "ambientCG PavingStones136",
+      "sourceFiles": [
+        "assets-src/ambientcg/PavingStones136/PavingStones136_2K-JPG_Color.jpg",
+        "assets-src/ambientcg/PavingStones136/PavingStones136_2K-JPG_NormalGL.jpg",
+        "assets-src/ambientcg/PavingStones136/PavingStones136_2K-JPG_AmbientOcclusion.jpg",
+        "assets-src/ambientcg/PavingStones136/PavingStones136_2K-JPG_Roughness.jpg"
+      ],
+      "sizeM": [
+        2,
+        2
+      ],
+      "sizeSource": "estimate: ambientCG publishes no dimensions; 4 x 4 square slabs per tile, read as standard 50 cm pavers",
+      "why": "Chosen over Poly Haven interlocking_concrete_pavers: large neutral square slabs read cleanly from a high camera and sit with the cream/pastel palette and terrazzo; the interlocking set is a busy red-brown diamond pattern that reads as a driveway.",
+      "colorSpace": {
+        "albedo": "sRGB",
+        "normal": "linear, OpenGL (+Y up)",
+        "orm": "linear; R occlusion, G roughness, B metalness"
+      },
+      "orm": {
+        "occlusion": "AO map",
+        "roughness": "roughness map",
+        "metalness": "0"
+      },
+      "calibration": null,
+      "seams": {
+        "albedo": {
+          "x": {
+            "ratio": 1.674,
+            "vsMax": 0.855,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.714,
+            "vsMax": 0.666,
+            "pass": true
+          }
+        },
+        "normal": {
+          "x": {
+            "ratio": 3.33,
+            "vsMax": 0.695,
+            "pass": true
+          },
+          "y": {
+            "ratio": 4.402,
+            "vsMax": 0.911,
+            "pass": true
+          }
+        },
+        "orm": {
+          "x": {
+            "ratio": 2.733,
+            "vsMax": 0.9,
+            "pass": true
+          },
+          "y": {
+            "ratio": 2.923,
+            "vsMax": 0.944,
+            "pass": true
+          }
+        }
+      },
+      "seamless": true,
+      "files": {
+        "albedo_2k": {
+          "file": "textures/pavers/albedo_2k.webp",
+          "bytes": 875790,
+          "width": 2048,
+          "height": 2048
+        },
+        "normal_2k": {
+          "file": "textures/pavers/normal_2k.webp",
+          "bytes": 815518,
+          "width": 2048,
+          "height": 2048
+        },
+        "orm_2k": {
+          "file": "textures/pavers/orm_2k.webp",
+          "bytes": 1021146,
+          "width": 2048,
+          "height": 2048
+        }
+      },
+      "bytes": 2712454
+    },
+    "concrete": {
+      "source": "Poly Haven concrete_pavement",
+      "sourceFiles": [
+        "assets-src/polyhaven/textures/concrete_pavement/textures/concrete_pavement_diff_2k.jpg",
+        "assets-src/polyhaven/textures/concrete_pavement/textures/concrete_pavement_nor_gl_2k.jpg",
+        "assets-src/polyhaven/textures/concrete_pavement/textures/concrete_pavement_arm_2k.jpg"
+      ],
+      "sizeM": [
+        1.8,
+        1.8
+      ],
+      "sizeSource": "Poly Haven API dimensions",
+      "colorSpace": {
+        "albedo": "sRGB",
+        "normal": "linear, OpenGL (+Y up)",
+        "orm": "linear; R occlusion, G roughness, B metalness"
+      },
+      "orm": {
+        "occlusion": "arm.R",
+        "roughness": "arm.G",
+        "metalness": "forced 0 (dielectric)"
+      },
+      "calibration": null,
+      "seams": {
+        "albedo": {
+          "x": {
+            "ratio": 1.341,
+            "vsMax": 0.784,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.392,
+            "vsMax": 0.589,
+            "pass": true
+          }
+        },
+        "normal": {
+          "x": {
+            "ratio": 1.28,
+            "vsMax": 1.03,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.189,
+            "vsMax": 0.853,
+            "pass": true
+          }
+        },
+        "orm": {
+          "x": {
+            "ratio": 1.408,
+            "vsMax": 1.062,
+            "pass": true
+          },
+          "y": {
+            "ratio": 1.076,
+            "vsMax": 0.741,
+            "pass": true
+          }
+        }
+      },
+      "seamless": true,
+      "files": {
+        "albedo_1k": {
+          "file": "textures/concrete/albedo_1k.webp",
+          "bytes": 284282,
+          "width": 1024,
+          "height": 1024
+        },
+        "normal_1k": {
+          "file": "textures/concrete/normal_1k.webp",
+          "bytes": 538068,
+          "width": 1024,
+          "height": 1024
+        },
+        "orm_1k": {
+          "file": "textures/concrete/orm_1k.webp",
+          "bytes": 145056,
+          "width": 1024,
+          "height": 1024
+        }
+      },
+      "bytes": 967406
+    }
+  },
+  "water": {
+    "ocean_normal": {
+      "file": "textures/water/ocean_normal.webp",
+      "bytes": 173842,
+      "width": 1024,
+      "height": 1024,
+      "tileM": 8,
+      "use": "Tangent-space normal map, OpenGL (+Y up). Sample it twice at different scales and scroll directions and blend (or use partial derivative blending) to hide repetition.",
+      "rmsSlope": 0.12,
+      "maxSlope": 0.5120013579179097,
+      "peakWavelengthM": 2,
+      "heightRangeM": [
+        -0.030810481179846867,
+        0.036268405032689514
+      ],
+      "windDirectionUV": [
+        0.9438583563660174,
+        -0.33035042472810605
+      ]
+    }
+  },
+  "props": {
+    "street_lamp_02": {
+      "source": "assets-src/polyhaven/models/street_lamp_02/street_lamp_02_1k.gltf",
+      "credit": {
+        "author": "Josh Dean",
+        "url": "https://polyhaven.com/a/street_lamp_02"
+      },
+      "gltf": "props/street_lamp_02/street_lamp_02.gltf",
+      "files": [
+        {
+          "file": "props/street_lamp_02/street_lamp_02.gltf",
+          "bytes": 9661
+        },
+        {
+          "file": "props/street_lamp_02/street_lamp_02.bin",
+          "bytes": 372424
+        },
+        {
+          "file": "props/street_lamp_02/street_lamp_02_normal.webp",
+          "bytes": 86444,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/street_lamp_02/street_lamp_02_albedo.webp",
+          "bytes": 34732,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/street_lamp_02/street_lamp_02_orm.webp",
+          "bytes": 125754,
+          "width": 1024,
+          "height": 1024
+        }
+      ],
+      "bytes": 629015,
+      "textureSize": 1024,
+      "pivot": "wall",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.193,
+          0,
+          0
+        ],
+        "max": [
+          0.193,
+          1.675,
+          0.807
+        ]
+      },
+      "structure": "street_lamp_02 > lod0 [, lod1]",
+      "variants": {
+        "street_lamp_02": {
+          "lod1Error": 0.04893,
+          "sourceTris": 20338,
+          "lod0Tris": 14612,
+          "lod1Tris": 4405,
+          "lod0Error": 0.00993,
+          "bounds": {
+            "min": [
+              -0.193,
+              0,
+              0
+            ],
+            "max": [
+              0.193,
+              1.675,
+              0.807
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "metal",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "street_lamp_02_albedo.webp",
+            "normal": "street_lamp_02_normal.webp",
+            "orm": "street_lamp_02_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "glass",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "normal": "street_lamp_02_normal.webp"
+          },
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "Wall-mounted Victorian lantern on a bracket, not a free-standing lamp post. Pivot: wall plane (z = 0), bottom of the bracket, centred in x; +Z points away from the wall. Make `glass` and `bulb` emissive at night.",
+        "street_lamp_02: LOD0 simplified 20338 -> 14612 tris (max error 0.99% of radius)"
+      ]
+    },
+    "CoffeeCart_01": {
+      "source": "assets-src/polyhaven/models/CoffeeCart_01/CoffeeCart_01_1k.gltf",
+      "credit": {
+        "author": "Joe Seabuhr",
+        "url": "https://polyhaven.com/a/CoffeeCart_01"
+      },
+      "gltf": "props/CoffeeCart_01/CoffeeCart_01.gltf",
+      "files": [
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01.gltf",
+          "bytes": 10641
+        },
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01.bin",
+          "bytes": 491504
+        },
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01_cart_normal.webp",
+          "bytes": 89168,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01_cart_albedo.webp",
+          "bytes": 52356,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01_cart_orm.webp",
+          "bytes": 78460,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01_props_normal.webp",
+          "bytes": 106800,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01_props_albedo.webp",
+          "bytes": 89664,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/CoffeeCart_01/CoffeeCart_01_props_orm.webp",
+          "bytes": 122574,
+          "width": 1024,
+          "height": 1024
+        }
+      ],
+      "bytes": 1041167,
+      "textureSize": 1024,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -1.447,
+          0,
+          -0.709
+        ],
+        "max": [
+          0.72,
+          1.718,
+          0.365
+        ]
+      },
+      "structure": "CoffeeCart_01 > lod0 [, lod1]",
+      "variants": {
+        "CoffeeCart_01": {
+          "lod1Error": 0.03176,
+          "sourceTris": 27659,
+          "lod0Tris": 14545,
+          "lod1Tris": 4440,
+          "lod0Error": 0.00756,
+          "bounds": {
+            "min": [
+              -1.447,
+              0,
+              -0.709
+            ],
+            "max": [
+              0.72,
+              1.718,
+              0.365
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "CoffeeCart_01_cart",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "CoffeeCart_01_cart_albedo.webp",
+            "normal": "CoffeeCart_01_cart_normal.webp",
+            "orm": "CoffeeCart_01_cart_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "CoffeeCart_01_props",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "CoffeeCart_01_props_albedo.webp",
+            "normal": "CoffeeCart_01_props_normal.webp",
+            "orm": "CoffeeCart_01_props_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "CoffeeCart_01_mugs",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {},
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "Pivot is the base centre of the cart body; the power cord trails to a plug about 1.4 m to the cart's left (-X).",
+        "CoffeeCart_01: LOD0 simplified 27659 -> 14545 tris (max error 0.76% of radius)"
+      ]
+    },
+    "classic_laptop": {
+      "source": "assets-src/polyhaven/models/classic_laptop/classic_laptop_1k.gltf",
+      "credit": {
+        "author": "Arrangemonk",
+        "url": "https://polyhaven.com/a/classic_laptop"
+      },
+      "gltf": "props/classic_laptop/classic_laptop.gltf",
+      "files": [
+        {
+          "file": "props/classic_laptop/classic_laptop.gltf",
+          "bytes": 7148
+        },
+        {
+          "file": "props/classic_laptop/classic_laptop.bin",
+          "bytes": 494912
+        },
+        {
+          "file": "props/classic_laptop/classic_laptop_normal.webp",
+          "bytes": 44844,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/classic_laptop/classic_laptop_albedo.webp",
+          "bytes": 34664,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/classic_laptop/classic_laptop_orm.webp",
+          "bytes": 45336,
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "bytes": 626904,
+      "textureSize": 512,
+      "pivot": "base",
+      "scale": 0.46,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.15,
+          0,
+          -0.112
+        ],
+        "max": [
+          0.15,
+          0.25,
+          0.112
+        ]
+      },
+      "structure": "classic_laptop > lod0 [, lod1]",
+      "variants": {
+        "classic_laptop": {
+          "lod1Error": 0.01625,
+          "sourceTris": 14450,
+          "lod0Tris": 14450,
+          "lod1Tris": 4520,
+          "bounds": {
+            "min": [
+              -0.15,
+              0,
+              -0.112
+            ],
+            "max": [
+              0.15,
+              0.25,
+              0.112
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "body",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "classic_laptop_albedo.webp",
+            "normal": "classic_laptop_normal.webp",
+            "orm": "classic_laptop_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "screen",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {},
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "Source is modelled about 2.2x too large (65 cm wide); scaled by 0.46 to a 30 cm wide 1990s notebook. The screen is its own material `screen` (dark, no texture) with planar UVs 0..1 (u to +X, v = 0 at the top) so the client can make it emissive or map a texture."
+      ]
+    },
+    "mid_century_lounge_chair": {
+      "source": "assets-src/polyhaven/models/mid_century_lounge_chair/mid_century_lounge_chair_1k.gltf",
+      "credit": {
+        "author": "Kuutti Siitonen",
+        "url": "https://polyhaven.com/a/mid_century_lounge_chair"
+      },
+      "gltf": "props/mid_century_lounge_chair/mid_century_lounge_chair.gltf",
+      "files": [
+        {
+          "file": "props/mid_century_lounge_chair/mid_century_lounge_chair.gltf",
+          "bytes": 3700
+        },
+        {
+          "file": "props/mid_century_lounge_chair/mid_century_lounge_chair.bin",
+          "bytes": 120948
+        },
+        {
+          "file": "props/mid_century_lounge_chair/mid_century_lounge_chair_normal.webp",
+          "bytes": 162808,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/mid_century_lounge_chair/mid_century_lounge_chair_albedo.webp",
+          "bytes": 110708,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/mid_century_lounge_chair/mid_century_lounge_chair_orm.webp",
+          "bytes": 106878,
+          "width": 1024,
+          "height": 1024
+        }
+      ],
+      "bytes": 505042,
+      "textureSize": 1024,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.504,
+          0,
+          -0.595
+        ],
+        "max": [
+          0.504,
+          1.169,
+          0.595
+        ]
+      },
+      "structure": "mid_century_lounge_chair > lod0 [, lod1]",
+      "variants": {
+        "mid_century_lounge_chair": {
+          "sourceTris": 6148,
+          "lod0Tris": 6148,
+          "bounds": {
+            "min": [
+              -0.504,
+              0,
+              -0.595
+            ],
+            "max": [
+              0.504,
+              1.169,
+              0.595
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "mid_century_lounge_chair",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "mid_century_lounge_chair_albedo.webp",
+            "normal": "mid_century_lounge_chair_normal.webp",
+            "orm": "mid_century_lounge_chair_orm.webp"
+          },
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": []
+    },
+    "outdoor_table_chair_set_01": {
+      "source": "assets-src/polyhaven/models/outdoor_table_chair_set_01/outdoor_table_chair_set_01_1k.gltf",
+      "credit": {
+        "author": "James Ray Cock",
+        "url": "https://polyhaven.com/a/outdoor_table_chair_set_01"
+      },
+      "gltf": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01.gltf",
+      "files": [
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01.gltf",
+          "bytes": 8187
+        },
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01.bin",
+          "bytes": 307648
+        },
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_chair_normal.webp",
+          "bytes": 25838,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_chair_albedo.webp",
+          "bytes": 75164,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_chair_orm.webp",
+          "bytes": 102656,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_table_normal.webp",
+          "bytes": 21634,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_table_albedo.webp",
+          "bytes": 74858,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/outdoor_table_chair_set_01/outdoor_table_chair_set_01_table_orm.webp",
+          "bytes": 114170,
+          "width": 1024,
+          "height": 1024
+        }
+      ],
+      "bytes": 730155,
+      "textureSize": 1024,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.371,
+          0,
+          -0.859
+        ],
+        "max": [
+          0.371,
+          0.859,
+          0.859
+        ]
+      },
+      "structure": "outdoor_table_chair_set_01 > lod0 > {table, chair_01, chair_02} [, lod1 > ...]",
+      "variants": {
+        "outdoor_table_chair_set_01": {
+          "sourceTris": 9828,
+          "lod0Tris": 9828,
+          "bounds": {
+            "min": [
+              -0.371,
+              0,
+              -0.859
+            ],
+            "max": [
+              0.371,
+              0.859,
+              0.859
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "outdoor_table_chair_set_01_chair",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "outdoor_table_chair_set_01_chair_albedo.webp",
+            "normal": "outdoor_table_chair_set_01_chair_normal.webp",
+            "orm": "outdoor_table_chair_set_01_chair_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "outdoor_table_chair_set_01_table",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "outdoor_table_chair_set_01_table_albedo.webp",
+            "normal": "outdoor_table_chair_set_01_table_normal.webp",
+            "orm": "outdoor_table_chair_set_01_table_orm.webp"
+          },
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "lod0 keeps the table and the two chairs as separate child nodes (table, chair_01, chair_02) so chairs can be moved."
+      ]
+    },
+    "painted_wooden_bench": {
+      "source": "assets-src/polyhaven/models/painted_wooden_bench/painted_wooden_bench_1k.gltf",
+      "credit": {
+        "author": "Kirill Sannikov",
+        "url": "https://polyhaven.com/a/painted_wooden_bench"
+      },
+      "gltf": "props/painted_wooden_bench/painted_wooden_bench.gltf",
+      "files": [
+        {
+          "file": "props/painted_wooden_bench/painted_wooden_bench.gltf",
+          "bytes": 3651
+        },
+        {
+          "file": "props/painted_wooden_bench/painted_wooden_bench.bin",
+          "bytes": 17320
+        },
+        {
+          "file": "props/painted_wooden_bench/painted_wooden_bench_normal.webp",
+          "bytes": 283112,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/painted_wooden_bench/painted_wooden_bench_albedo.webp",
+          "bytes": 69604,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/painted_wooden_bench/painted_wooden_bench_orm.webp",
+          "bytes": 70952,
+          "width": 1024,
+          "height": 1024
+        }
+      ],
+      "bytes": 444639,
+      "textureSize": 1024,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.582,
+          0,
+          -0.248
+        ],
+        "max": [
+          0.582,
+          0.889,
+          0.248
+        ]
+      },
+      "structure": "painted_wooden_bench > lod0 [, lod1]",
+      "variants": {
+        "painted_wooden_bench": {
+          "sourceTris": 630,
+          "lod0Tris": 630,
+          "bounds": {
+            "min": [
+              -0.582,
+              0,
+              -0.248
+            ],
+            "max": [
+              0.582,
+              0.889,
+              0.248
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "painted_wooden_bench",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "painted_wooden_bench_albedo.webp",
+            "normal": "painted_wooden_bench_normal.webp",
+            "orm": "painted_wooden_bench_orm.webp"
+          },
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": []
+    },
+    "exterior_aircon_unit": {
+      "source": "assets-src/polyhaven/models/exterior_aircon_unit/exterior_aircon_unit_1k.gltf",
+      "credit": {
+        "author": "Monsta3D",
+        "url": "https://polyhaven.com/a/exterior_aircon_unit"
+      },
+      "gltf": "props/exterior_aircon_unit/exterior_aircon_unit.gltf",
+      "files": [
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit.gltf",
+          "bytes": 10586
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit.bin",
+          "bytes": 248004
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_01_normal.webp",
+          "bytes": 40588,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_01_albedo.webp",
+          "bytes": 34754,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_01_orm.webp",
+          "bytes": 40622,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_02_normal.webp",
+          "bytes": 94972,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_01_albedo_alpha.webp",
+          "bytes": 13530,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_02_orm.webp",
+          "bytes": 19758,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_rusted_01_normal.webp",
+          "bytes": 49924,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_rusted_01_albedo.webp",
+          "bytes": 44082,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_rusted_01_orm.webp",
+          "bytes": 43226,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_rusted_02_normal.webp",
+          "bytes": 96450,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_rusted_02_albedo_alpha.webp",
+          "bytes": 18392,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/exterior_aircon_unit/exterior_aircon_unit_rusted_02_orm.webp",
+          "bytes": 34230,
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "bytes": 789118,
+      "textureSize": 512,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.9,
+          0,
+          -0.187
+        ],
+        "max": [
+          0.9,
+          0.928,
+          0.187
+        ]
+      },
+      "structure": "exterior_aircon_unit > {clean, rusted} > lod0 [, lod1]",
+      "variants": {
+        "clean": {
+          "sourceTris": 9493,
+          "lod0Tris": 9493,
+          "offset": [
+            -0.5,
+            0,
+            0
+          ],
+          "bounds": {
+            "min": [
+              -0.4,
+              0,
+              -0.187
+            ],
+            "max": [
+              0.4,
+              0.928,
+              0.187
+            ]
+          }
+        },
+        "rusted": {
+          "sourceTris": 9493,
+          "lod0Tris": 9493,
+          "offset": [
+            0.5,
+            0,
+            0
+          ],
+          "bounds": {
+            "min": [
+              -0.4,
+              0,
+              -0.187
+            ],
+            "max": [
+              0.4,
+              0.928,
+              0.187
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "body",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "exterior_aircon_unit_01_albedo.webp",
+            "normal": "exterior_aircon_unit_01_normal.webp",
+            "orm": "exterior_aircon_unit_01_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "grille",
+          "alphaMode": "MASK",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "exterior_aircon_unit_01_albedo_alpha.webp",
+            "normal": "exterior_aircon_unit_02_normal.webp",
+            "orm": "exterior_aircon_unit_02_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "body_rusted",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "exterior_aircon_unit_rusted_01_albedo.webp",
+            "normal": "exterior_aircon_unit_rusted_01_normal.webp",
+            "orm": "exterior_aircon_unit_rusted_01_orm.webp"
+          },
+          "extensions": []
+        },
+        {
+          "name": "grille_rusted",
+          "alphaMode": "MASK",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "exterior_aircon_unit_rusted_02_albedo_alpha.webp",
+            "normal": "exterior_aircon_unit_rusted_02_normal.webp",
+            "orm": "exterior_aircon_unit_rusted_02_orm.webp"
+          },
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "Two variants (clean, rusted). The source glTF puts the grille's opacity map in the base colour slot; it is moved to the alpha channel (MASK) over a flat metal grey."
+      ]
+    },
+    "ocean_buoy": {
+      "source": "assets-src/polyhaven/models/ocean_buoy/ocean_buoy_1k.gltf",
+      "credit": {
+        "author": "Mateusz Sadek",
+        "url": "https://polyhaven.com/a/ocean_buoy"
+      },
+      "gltf": "props/ocean_buoy/ocean_buoy.gltf",
+      "files": [
+        {
+          "file": "props/ocean_buoy/ocean_buoy.gltf",
+          "bytes": 5487
+        },
+        {
+          "file": "props/ocean_buoy/ocean_buoy.bin",
+          "bytes": 413072
+        },
+        {
+          "file": "props/ocean_buoy/ocean_buoy_emissive.webp",
+          "bytes": 1096,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/ocean_buoy/ocean_buoy_normal.webp",
+          "bytes": 61452,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/ocean_buoy/ocean_buoy_albedo.webp",
+          "bytes": 51678,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/ocean_buoy/ocean_buoy_orm.webp",
+          "bytes": 78102,
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "bytes": 610887,
+      "textureSize": 512,
+      "pivot": "origin-y",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.533,
+          -0.809,
+          -0.476
+        ],
+        "max": [
+          0.533,
+          1.847,
+          0.476
+        ]
+      },
+      "structure": "ocean_buoy > lod0 [, lod1]",
+      "variants": {
+        "ocean_buoy": {
+          "lod1Error": 0.00331,
+          "sourceTris": 12240,
+          "lod0Tris": 12240,
+          "lod1Tris": 3672,
+          "bounds": {
+            "min": [
+              -0.533,
+              -0.809,
+              -0.476
+            ],
+            "max": [
+              0.533,
+              1.847,
+              0.476
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "buoy",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "ocean_buoy_albedo.webp",
+            "normal": "ocean_buoy_normal.webp",
+            "orm": "ocean_buoy_orm.webp",
+            "emissive": "ocean_buoy_emissive.webp"
+          },
+          "extensions": [
+            "KHR_materials_emissive_strength"
+          ]
+        }
+      ],
+      "extensionsUsed": [
+        "KHR_materials_emissive_strength",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "Pivot kept at the waterline (y = 0); the hull reaches 0.81 m below it. The lamp is an emissive texture (KHR_materials_emissive_strength)."
+      ]
+    },
+    "anthurium_botany_01": {
+      "source": "assets-src/polyhaven/models/anthurium_botany_01/anthurium_botany_01_1k.gltf",
+      "credit": {
+        "author": "Rob Tuytel (scanning), Rico Cilliers (modeling)",
+        "url": "https://polyhaven.com/a/anthurium_botany_01"
+      },
+      "gltf": "props/anthurium_botany_01/anthurium_botany_01.gltf",
+      "files": [
+        {
+          "file": "props/anthurium_botany_01/anthurium_botany_01.gltf",
+          "bytes": 11977
+        },
+        {
+          "file": "props/anthurium_botany_01/anthurium_botany_01.bin",
+          "bytes": 453296
+        },
+        {
+          "file": "props/anthurium_botany_01/anthurium_botany_01_normal.webp",
+          "bytes": 35680,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/anthurium_botany_01/anthurium_botany_01_albedo.webp",
+          "bytes": 20244,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/anthurium_botany_01/anthurium_botany_01_orm.webp",
+          "bytes": 28606,
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "bytes": 549803,
+      "textureSize": 512,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -1.398,
+          0,
+          -0.899
+        ],
+        "max": [
+          1.398,
+          0.498,
+          0.899
+        ]
+      },
+      "structure": "anthurium_botany_01 > {a, b, c, d, e, f} > lod0 [, lod1]",
+      "variants": {
+        "a": {
+          "sourceTris": 15808,
+          "lod0Tris": 3880,
+          "lod0Error": 0.00263,
+          "offset": [
+            -0.94993,
+            0,
+            0.32793
+          ],
+          "bounds": {
+            "min": [
+              -0.448,
+              0,
+              -0.571
+            ],
+            "max": [
+              0.448,
+              0.498,
+              0.571
+            ]
+          }
+        },
+        "b": {
+          "sourceTris": 15544,
+          "lod0Tris": 3880,
+          "lod0Error": 0.0037,
+          "offset": [
+            0.02183,
+            0.00359,
+            0.22858
+          ],
+          "bounds": {
+            "min": [
+              -0.378,
+              0,
+              -0.285
+            ],
+            "max": [
+              0.378,
+              0.472,
+              0.286
+            ]
+          }
+        },
+        "c": {
+          "sourceTris": 9072,
+          "lod0Tris": 4030,
+          "lod0Error": 0.00199,
+          "offset": [
+            1.09758,
+            0.00344,
+            0.23664
+          ],
+          "bounds": {
+            "min": [
+              -0.3,
+              0,
+              -0.329
+            ],
+            "max": [
+              0.3,
+              0.359,
+              0.328
+            ]
+          }
+        },
+        "d": {
+          "sourceTris": 10360,
+          "lod0Tris": 3880,
+          "lod0Error": 0.00287,
+          "offset": [
+            -0.98571,
+            0.00545,
+            -0.7235
+          ],
+          "bounds": {
+            "min": [
+              -0.24,
+              0,
+              -0.175
+            ],
+            "max": [
+              0.24,
+              0.301,
+              0.175
+            ]
+          }
+        },
+        "e": {
+          "sourceTris": 7664,
+          "lod0Tris": 3879,
+          "lod0Error": 0.00244,
+          "offset": [
+            -0.02123,
+            0.00677,
+            -0.67534
+          ],
+          "bounds": {
+            "min": [
+              -0.16,
+              0,
+              -0.145
+            ],
+            "max": [
+              0.16,
+              0.159,
+              0.145
+            ]
+          }
+        },
+        "f": {
+          "sourceTris": 8704,
+          "lod0Tris": 3880,
+          "lod0Error": 0.00239,
+          "offset": [
+            1.04553,
+            0.00607,
+            -0.717
+          ],
+          "bounds": {
+            "min": [
+              -0.156,
+              0,
+              -0.139
+            ],
+            "max": [
+              0.157,
+              0.139,
+              0.139
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "anthurium_botany_01",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "anthurium_botany_01_albedo.webp",
+            "normal": "anthurium_botany_01_normal.webp",
+            "orm": "anthurium_botany_01_orm.webp"
+          },
+          "extensions": [
+            "KHR_materials_ior"
+          ]
+        }
+      ],
+      "extensionsUsed": [
+        "KHR_materials_ior",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "Six ground-planted clumps (no pot), 0.3-0.5 m tall. Alpha-masked, double-sided leaves.",
+        "removed KHR_materials_specular",
+        "anthurium_botany_01: alphaMode MASK -> OPAQUE (no alpha in the source)",
+        "a: LOD0 simplified 15808 -> 3880 tris (max error 0.26% of radius)",
+        "b: LOD0 simplified 15544 -> 3880 tris (max error 0.37% of radius)",
+        "c: LOD0 simplified 9072 -> 4030 tris (max error 0.2% of radius)",
+        "d: LOD0 simplified 10360 -> 3880 tris (max error 0.29% of radius)",
+        "e: LOD0 simplified 7664 -> 3879 tris (max error 0.24% of radius)",
+        "f: LOD0 simplified 8704 -> 3880 tris (max error 0.24% of radius)"
+      ]
+    },
+    "calathea_orbifolia_01": {
+      "source": "assets-src/polyhaven/models/calathea_orbifolia_01/calathea_orbifolia_01_1k.gltf",
+      "credit": {
+        "author": "Rob Tuytel (scanning), Rico Cilliers (modeling)",
+        "url": "https://polyhaven.com/a/calathea_orbifolia_01"
+      },
+      "gltf": "props/calathea_orbifolia_01/calathea_orbifolia_01.gltf",
+      "files": [
+        {
+          "file": "props/calathea_orbifolia_01/calathea_orbifolia_01.gltf",
+          "bytes": 10196
+        },
+        {
+          "file": "props/calathea_orbifolia_01/calathea_orbifolia_01.bin",
+          "bytes": 258684
+        },
+        {
+          "file": "props/calathea_orbifolia_01/calathea_orbifolia_01_normal.webp",
+          "bytes": 42322,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/calathea_orbifolia_01/calathea_orbifolia_01_albedo.webp",
+          "bytes": 22740,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "file": "props/calathea_orbifolia_01/calathea_orbifolia_01_orm.webp",
+          "bytes": 18408,
+          "width": 512,
+          "height": 512
+        }
+      ],
+      "bytes": 352350,
+      "textureSize": 512,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -1.246,
+          0,
+          -0.597
+        ],
+        "max": [
+          1.246,
+          0.424,
+          0.597
+        ]
+      },
+      "structure": "calathea_orbifolia_01 > {a, b, c, d, e} > lod0 [, lod1]",
+      "variants": {
+        "a": {
+          "sourceTris": 5904,
+          "lod0Tris": 3880,
+          "lod0Error": 0.00146,
+          "offset": [
+            -0.94545,
+            0,
+            -0.33398
+          ],
+          "bounds": {
+            "min": [
+              -0.3,
+              0,
+              -0.263
+            ],
+            "max": [
+              0.3,
+              0.424,
+              0.263
+            ]
+          }
+        },
+        "b": {
+          "sourceTris": 3446,
+          "lod0Tris": 3446,
+          "offset": [
+            0.04326,
+            0.00241,
+            -0.25863
+          ],
+          "bounds": {
+            "min": [
+              -0.174,
+              0,
+              -0.22
+            ],
+            "max": [
+              0.174,
+              0.303,
+              0.22
+            ]
+          }
+        },
+        "c": {
+          "sourceTris": 3542,
+          "lod0Tris": 3542,
+          "offset": [
+            1.05814,
+            0.00378,
+            -0.31808
+          ],
+          "bounds": {
+            "min": [
+              -0.188,
+              0,
+              -0.192
+            ],
+            "max": [
+              0.188,
+              0.284,
+              0.192
+            ]
+          }
+        },
+        "d": {
+          "sourceTris": 1802,
+          "lod0Tris": 1802,
+          "offset": [
+            -0.41775,
+            0.00492,
+            0.50271
+          ],
+          "bounds": {
+            "min": [
+              -0.113,
+              0,
+              -0.082
+            ],
+            "max": [
+              0.113,
+              0.13,
+              0.082
+            ]
+          }
+        },
+        "e": {
+          "sourceTris": 1994,
+          "lod0Tris": 1994,
+          "offset": [
+            0.54529,
+            0.00401,
+            0.47102
+          ],
+          "bounds": {
+            "min": [
+              -0.106,
+              0,
+              -0.126
+            ],
+            "max": [
+              0.106,
+              0.152,
+              0.126
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "calathea_orbifolia_01",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "calathea_orbifolia_01_albedo.webp",
+            "normal": "calathea_orbifolia_01_normal.webp",
+            "orm": "calathea_orbifolia_01_orm.webp"
+          },
+          "extensions": [
+            "KHR_materials_ior"
+          ]
+        }
+      ],
+      "extensionsUsed": [
+        "KHR_materials_ior",
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": [
+        "Five ground-planted clumps (no pot), up to 0.42 m tall. Alpha-masked, double-sided leaves.",
+        "removed KHR_materials_specular",
+        "calathea_orbifolia_01: alphaMode MASK -> OPAQUE (no alpha in the source)",
+        "a: LOD0 simplified 5904 -> 3880 tris (max error 0.15% of radius)"
+      ]
+    },
+    "vintage_day_bed": {
+      "source": "assets-src/polyhaven/models/vintage_day_bed/vintage_day_bed_1k.gltf",
+      "credit": {
+        "author": "Aron Łyczek",
+        "url": "https://polyhaven.com/a/vintage_day_bed"
+      },
+      "gltf": "props/vintage_day_bed/vintage_day_bed.gltf",
+      "files": [
+        {
+          "file": "props/vintage_day_bed/vintage_day_bed.gltf",
+          "bytes": 3599
+        },
+        {
+          "file": "props/vintage_day_bed/vintage_day_bed.bin",
+          "bytes": 56292
+        },
+        {
+          "file": "props/vintage_day_bed/vintage_day_bed_normal.webp",
+          "bytes": 284656,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/vintage_day_bed/vintage_day_bed_albedo.webp",
+          "bytes": 190674,
+          "width": 1024,
+          "height": 1024
+        },
+        {
+          "file": "props/vintage_day_bed/vintage_day_bed_orm.webp",
+          "bytes": 135434,
+          "width": 1024,
+          "height": 1024
+        }
+      ],
+      "bytes": 670655,
+      "textureSize": 1024,
+      "pivot": "base",
+      "scale": 1,
+      "rotateY": 0,
+      "front": "+Z",
+      "bounds": {
+        "min": [
+          -0.986,
+          0,
+          -0.427
+        ],
+        "max": [
+          0.986,
+          1.127,
+          0.427
+        ]
+      },
+      "structure": "vintage_day_bed > lod0 [, lod1]",
+      "variants": {
+        "vintage_day_bed": {
+          "sourceTris": 2715,
+          "lod0Tris": 2715,
+          "bounds": {
+            "min": [
+              -0.986,
+              0,
+              -0.427
+            ],
+            "max": [
+              0.986,
+              1.127,
+              0.427
+            ]
+          }
+        }
+      },
+      "materials": [
+        {
+          "name": "vintage_day_bed",
+          "alphaMode": "OPAQUE",
+          "doubleSided": true,
+          "textures": {
+            "baseColor": "vintage_day_bed_albedo.webp",
+            "normal": "vintage_day_bed_normal.webp",
+            "orm": "vintage_day_bed_orm.webp"
+          },
+          "extensions": []
+        }
+      ],
+      "extensionsUsed": [
+        "EXT_texture_webp",
+        "KHR_mesh_quantization"
+      ],
+      "notes": []
+    }
+  }
+}
