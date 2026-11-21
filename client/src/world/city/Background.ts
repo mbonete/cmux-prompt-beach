@@ -64,7 +64,13 @@ export class Background {
       towerSpots.push(new Matrix4().compose(p, new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.floor(r() * 4) * (Math.PI / 2)), new Vector3(1, s, 1)));
     }
 
-    await Promise.all([this.spread(ids('bg'), lowSpots, PASTELS, r), this.spread(ids('tower'), towerSpots, TOWER_TINTS, r, false)]);
+    // Only blocks beside the district cast shadows; further out they'd cost more than they show.
+    const near = (m: Matrix4) => Math.abs(m.elements[12]) < 130 && m.elements[14] < 115;
+    await Promise.all([
+      this.spread(ids('bg'), lowSpots.filter(near), PASTELS, r),
+      this.spread(ids('bg'), lowSpots.filter((m) => !near(m)), PASTELS, r, false),
+      this.spread(ids('tower'), towerSpots, TOWER_TINTS, r, false),
+    ]);
   }
 
   /** Splits placements across the building variants and instances each. */

@@ -42,8 +42,13 @@ export const wind = uniform(1);
 interface Variant {
   trunk: BufferGeometry;
   fronds: BufferGeometry;
+  /** Coarser, solid fronds drawn only into the shadow map (layer 1). */
+  shadowFronds: BufferGeometry;
   height: number;
 }
+
+/** The layer seen only by the sun's shadow camera. */
+export const SHADOW_ONLY_LAYER = 1;
 
 function rng(seed: number) {
   let s = seed;
@@ -52,7 +57,7 @@ function rng(seed: number) {
 
 /** Trunk: rings of vertices along a curved spine, radius tapering upward. */
 function trunkGeometry(height: number, lean: number, curve: number, rnd: () => number) {
-  const rings = 22;
+  const rings = 14;
   const sides = 9;
   const pos: number[] = [];
   const uvs: number[] = [];
@@ -88,8 +93,7 @@ function trunkGeometry(height: number, lean: number, curve: number, rnd: () => n
 }
 
 /** One frond: a strip arching out and drooping, u along it, v across (−1..1). */
-function frondGeometry(top: Vector3, yaw: number, rise: number, length: number, droop: number) {
-  const segs = 14;
+function frondGeometry(top: Vector3, yaw: number, rise: number, length: number, droop: number, segs = 9, widthScale = 1) {
   const pos: number[] = [];
   const uvs: number[] = [];
   const tip: number[] = [];
@@ -104,7 +108,7 @@ function frondGeometry(top: Vector3, yaw: number, rise: number, length: number, 
     const y = Math.sin(rise) * s - droop * s * s;
     const center = new Vector3().copy(top).addScaledVector(dir, out).setY(top.y + y);
     // Width: narrow at the base, widest a third along, pointed at the tip.
-    const w = 1.15 * Math.sin(Math.min(1, t * 1.6) * Math.PI * 0.5) * (1 - Math.pow(t, 2.2)) + 0.05;
+    const w = (1.15 * Math.sin(Math.min(1, t * 1.6) * Math.PI * 0.5) * (1 - Math.pow(t, 2.2)) + 0.05) * widthScale;
     // Leaflets fold up in a shallow V along the rachis.
     for (const v of [-1, 0, 1]) {
       const p = center.clone().addScaledVector(side, v * w);
@@ -136,15 +140,19 @@ function variant(seed: number): Variant {
   const height = 7.5 + rnd() * 5;
   const { geo: trunk, top } = trunkGeometry(height, (rnd() - 0.3) * 0.18, (rnd() - 0.5) * 0.9, rnd);
   const fronds: BufferGeometry[] = [];
+  const shadows: BufferGeometry[] = [];
   const count = 13 + Math.floor(rnd() * 5);
   for (let i = 0; i < count; i++) {
     const yaw = (i / count) * Math.PI * 2 + rnd() * 0.4;
     const young = i % 4 === 0;
     const rise = young ? 0.9 + rnd() * 0.4 : 0.15 + rnd() * 0.45;
     const length = (young ? 3.2 : 4.2) + rnd() * 1.2;
-    fronds.push(frondGeometry(top, yaw, rise, length, young ? 0.06 : 0.12 + rnd() * 0.06));
+    const droop = young ? 0.06 : 0.12 + rnd() * 0.06;
+    fronds.push(frondGeometry(top, yaw, rise, length, droop));
+    // Leaflets are finer than a shadow-map texel; a narrower solid strip casts the same shade.
+    shadows.push(frondGeometry(top, yaw, rise, length, droop, 5, 0.62));
   }
-  return { trunk, fronds: mergeGeometries(fronds), height };
+  return { trunk, fronds: mergeGeometries(fronds), shadowFronds: mergeGeometries(shadows), height };
 }
 
 /** The shared sway: trunk bends from the base, fronds flutter toward their tips. */
@@ -191,40 +199,61 @@ function frondMaterial() {
   return m;
 }
 
+function shadowFrondMaterial() {
+  const m = new MeshStandardNodeMaterial({ side: DoubleSide });
+  m.positionNode = swayNode();
+  return m;
+}
+
 export class Palms {
   readonly group = new Group();
   private readonly variants: Variant[];
   private readonly trunkMat = trunkMaterial();
   private readonly frondMat = frondMaterial();
+  private readonly shadowMat = shadowFrondMaterial();
 
   constructor(seed = 3) {
     this.group.name = 'palms';
     this.variants = [0, 1, 2, 3].map((i) => variant(seed * 101 + i * 7));
   }
 
-  /** Places palms at the given ground points (variant and turn picked per point; optional heights in metres). */
-  plant(points: Vector3[], heights?: number[]) {
+  /**
+   * Places palms at the given ground points (variant and turn picked per point;
+   * optional heights in metres). Only palms where `casts` says so throw shadows:
+   * far from the district a frond shadow costs more than it shows.
+   */
+  plant(points: Vector3[], heights?: number[], casts: (p: Vector3) => boolean = () => true) {
     const r = rng(17);
     const byVariant: Matrix4[][] = this.variants.map(() => []);
+    const shade: boolean[][] = this.variants.map(() => []);
     points.forEach((p, i) => {
       const v = Math.floor(r() * this.variants.length);
       const jitter = 0.85 + r() * 0.35;
       const s = heights?.[i] ? heights[i] / this.variants[v].height : jitter;
       byVariant[v].push(new Matrix4().compose(p, new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), r() * Math.PI * 2), new Vector3(s, s, s)));
+      shade[v].push(casts(p));
     });
-    byVariant.forEach((mats, i) => {
-      if (!mats.length) return;
+    byVariant.forEach((all, i) => {
       const v = this.variants[i];
-      for (const [geo, mat, shadow] of [
-        [v.trunk, this.trunkMat, true],
-        [v.fronds, this.frondMat, true],
-      ] as const) {
-        const im = new InstancedMesh(geo, mat, mats.length);
-        mats.forEach((m, k) => im.setMatrixAt(k, m));
-        im.castShadow = shadow;
-        im.receiveShadow = true;
-        im.computeBoundingSphere();
-        this.group.add(im);
+      for (const cast of [true, false]) {
+        const mats = all.filter((_m, k) => shade[i][k] === cast);
+        if (!mats.length) continue;
+        for (const [geo, mat, kind] of [
+          [v.trunk, this.trunkMat, 'trunk'],
+          [v.fronds, this.frondMat, 'fronds'],
+          [v.shadowFronds, this.shadowMat, 'shadow'],
+        ] as const) {
+          if (kind === 'shadow' && !cast) continue;
+          const im = new InstancedMesh(geo, mat, mats.length);
+          mats.forEach((m, k) => im.setMatrixAt(k, m));
+          // The alpha-tested fronds never draw into the shadow map (discard is costly on
+          // tile-based GPUs); their solid stand-in does, on a layer only the sun sees.
+          im.castShadow = cast && kind !== 'fronds';
+          im.receiveShadow = kind !== 'shadow';
+          if (kind === 'shadow') im.layers.set(SHADOW_ONLY_LAYER);
+          im.computeBoundingSphere();
+          this.group.add(im);
+        }
       }
     });
   }

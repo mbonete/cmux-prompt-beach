@@ -12,9 +12,11 @@ export interface QualityPreset {
   life: number;
 }
 
+// Tuned on a MacBook Air M3 at full window size (2 × 1710 × 896 CSS px): Balanced
+// is the level Auto starts at; temporal AA keeps 1.1× crisp enough on a Retina screen.
 export const PRESETS: Record<QualityLevel, QualityPreset> = {
-  cinematic: { pixelRatio: 1.5, shadowMap: 4096, life: 1 },
-  balanced: { pixelRatio: 1.25, shadowMap: 2048, life: 0.7 },
+  cinematic: { pixelRatio: 1.5, shadowMap: 3072, life: 1 },
+  balanced: { pixelRatio: 1.1, shadowMap: 1536, life: 0.55 },
   light: { pixelRatio: 1, shadowMap: 1024, life: 0.35 },
 };
 

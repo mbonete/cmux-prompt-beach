@@ -13,7 +13,9 @@ import {
   type Scene,
   Vector3,
 } from 'three/webgpu';
-import { float, instancedBufferAttribute, pow, smoothstep, uniform, uv, vec2 } from 'three/tsl';
+import { attribute, float, instancedBufferAttribute, int, materialEmissive, pow, smoothstep, texture, uniform, uniformArray, uv, vec2, vec3 } from 'three/tsl';
+import type { MeshStandardNodeMaterial } from 'three/webgpu';
+import { aoAtlas, mergeStatic, type MergeSource } from '../engine/merge';
 import { loadGLTF, loadJSON } from '../engine/assets';
 import { InstancedModel } from '../engine/instancer';
 import { perInstanceEmission } from '../engine/materials';
@@ -64,7 +66,8 @@ interface PlotRuntime {
   type: string;
   world: Matrix4;
   inverse: Matrix4;
-  instance: number;
+  /** Index into the per-plot light levels the merged buildings read. */
+  slot: number;
   spots: Spot[];
   tag: Vector3;
   beam: Vector3;
@@ -95,12 +98,17 @@ export function repoColor(key: string): Color {
 }
 
 const BASE = '/assets/buildings/';
+/** 16 plots, the beach bar and the co-working. */
+const SLOTS = 18;
+/** Materials whose shadows matter; glass, lights, water and floors don't cast. */
+const CASTS = new Set(['stucco', 'trim', 'concrete', 'roof', 'wood', 'metal', 'awning', 'planter', 'glass_block']);
 
 export class District {
   readonly group = new Group();
   private readonly plots = new Map<PlotKey, PlotRuntime>();
-  private readonly models = new Map<string, InstancedModel>();
-  private readonly lit: { attr: InstancedBufferAttribute; type: string; mesh: InstancedMesh; kind: 'interior' | 'neon_accent' | 'bulb' }[] = [];
+  /** Per plot (slot): windows and neon (0.08 vacant … 1 lived in), and terrace bulbs. */
+  private readonly windowLit = uniformArray(new Array(SLOTS).fill(0.08), 'float');
+  private readonly bulbLit = uniformArray(new Array(SLOTS).fill(0), 'float');
   /** Terrace string lights and lanterns: 0 by day, about 1.5 at night. */
   readonly lampsLevel = uniform(0.1);
   /** Where the plots want palms (from `palm_N` empties), with their heights. */
@@ -141,27 +149,19 @@ export class District {
     const propPlacements = new Map<string, { m: Matrix4; key: PlotKey }[]>();
     const poolSpots: { m: Matrix4; radius: number; color: Color; key: PlotKey }[] = [];
     const floors = new Map<string, Map<string, number>>();
-    for (const t of types) floors.set(t, lightFloors(templates.get(t)!));
     for (const t of types) {
-      const count = slots.filter((s) => s.type === t).length;
-      const model = new InstancedModel(meshOnly(templates.get(t)!), count, { tintable: ['stucco'] });
-      model.addTo(this.group);
-      this.models.set(t, model);
-      for (const mesh of model.meshes) {
-        const name = (mesh.material as { name?: string }).name;
-        // The per-plot pastel comes from the instance colour, so the wall material itself is white.
-        if (name === 'stucco') (mesh.material as unknown as { color: Color }).color.set(0xffffff);
-        if (name === 'interior' || name === 'neon_accent' || name === 'bulb') {
-          const level = name === 'interior' ? this.windowsLevel : name === 'bulb' ? this.lampsLevel : this.neonLevel;
-          this.lit.push({ attr: perInstanceEmission(mesh, level), type: t, mesh, kind: name });
-        }
-      }
+      let needsRay = false;
+      templates.get(t)!.traverse((o) => {
+        if (/^light_\d+$/.test(o.name) && (o.userData as { floor_y?: number }).floor_y === undefined) needsRay = true;
+      });
+      if (needsRay) floors.set(t, lightFloors(templates.get(t)!));
     }
+    const sources = new Map<string, MergeSource>(types.map((t) => [t, { template: meshOnly(templates.get(t)!), placements: [] }]));
 
     slots.forEach((s, i) => {
       const template = templates.get(s.type)!;
       const world = new Matrix4().compose(new Vector3(s.x, s.y, s.z), new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), s.rot), new Vector3(1, 1, 1));
-      const instance = this.models.get(s.type)!.add(world, PASTELS[i % PASTELS.length]);
+      sources.get(s.type)!.placements.push({ matrix: world, tint: PASTELS[i % PASTELS.length], slot: i });
       const spots: Spot[] = [];
       let tag = new Vector3(s.x, 14, s.z);
       let beam = new Vector3(s.x, 0, s.z);
@@ -175,8 +175,9 @@ export class District {
           m.decompose(pos, q, new Vector3());
           spots[e.spot_index ?? Number(o.name.slice(5))] = { position: pos, quaternion: q, kind: e.spot_kind ?? 'standing', seatH: e.seat_h ?? 0.46, tableH: e.table_h ?? 0.74 };
         } else if (/^light_\d+$/.test(o.name)) {
-          const e = o.userData as { light_radius?: number; light_color?: string };
-          const floor = floors.get(s.type)?.get(o.name) ?? 0.05;
+          const e = o.userData as { light_radius?: number; light_color?: string; floor_y?: number };
+          // The kit says where the floor under each light is; older outputs fall back to a raycast.
+          const floor = e.floor_y ?? floors.get(s.type)?.get(o.name) ?? 0.05;
           const local = new Vector3().setFromMatrixPosition(o.matrixWorld);
           local.y = floor + 0.04;
           const at = local.applyMatrix4(world);
@@ -184,7 +185,10 @@ export class District {
           poolSpots.push({ m: new Matrix4().compose(at, new Quaternion(), new Vector3(r, 1, r)), radius: r, color: new Color(e.light_color ?? '#ffcf96'), key: s.key });
         } else if (/^palm_\d+$/.test(o.name)) {
           const e = o.userData as { palm_height?: number };
-          this.palmSpots.push({ position: new Vector3().setFromMatrixPosition(m), height: e.palm_height ?? 8 });
+          const at = new Vector3().setFromMatrixPosition(m);
+          // On the sand (the beach bar), palms stand on the dunes, not at the deck's origin height.
+          if (s.key === 'hangout') at.y = beachHeight(at.z, at.x);
+          this.palmSpots.push({ position: at, height: e.palm_height ?? 8 });
         } else if (o.name === 'tag_anchor') tag = new Vector3().setFromMatrixPosition(m);
         else if (o.name === 'beam_anchor') beam = new Vector3().setFromMatrixPosition(m);
         else if (o.name.startsWith('prop:')) {
@@ -202,12 +206,31 @@ export class District {
       beamFx.group.position.copy(beam);
       beamFx.setColumnBase(Math.max(4, tag.y - beam.y - 3));
       this.group.add(outline.group, beamFx.group);
-      this.plots.set(s.key, { key: s.key, type: s.type, world, inverse: world.clone().invert(), instance, spots, tag, beam, outline, beamFx });
+      this.plots.set(s.key, { key: s.key, type: s.type, world, inverse: world.clone().invert(), slot: i, spots, tag, beam, outline, beamFx });
       this.setLit(s.key, 0.08);
     });
 
+    this.buildMerged([...sources.values()]);
     this.buildPools(poolSpots);
     await this.placeProps(propPlacements);
+  }
+
+  /** Every plot building, merged by material: one draw per material for the whole district. */
+  private buildMerged(sources: MergeSource[]) {
+    const atlas = aoAtlas(sources);
+    const { parts } = mergeStatic(sources, { tintable: new Set(['stucco']), atlas });
+    for (const { mesh, name } of parts) {
+      mesh.castShadow = CASTS.has(name);
+      mesh.receiveShadow = true;
+      if (name === 'interior' || name === 'neon_accent' || name === 'bulb') {
+        const mat = mesh.material as MeshStandardNodeMaterial;
+        const map = mat.emissiveMap ? vec3(texture(mat.emissiveMap, uv()).rgb) : vec3(1, 1, 1);
+        const lit = float((name === 'bulb' ? this.bulbLit : this.windowLit).element(int(attribute('aSlot', 'float'))) as never);
+        const level = name === 'interior' ? this.windowsLevel : name === 'bulb' ? this.lampsLevel : this.neonLevel;
+        mat.emissiveNode = vec3(materialEmissive).mul(map).mul(lit).mul(level);
+      }
+      this.group.add(mesh);
+    }
   }
 
   /** Soft warm pools of light on the terraces at night: additive discs, no real lights. */
@@ -268,11 +291,8 @@ export class District {
     if (!p) return;
     // Terrace lights are on where someone lives, low on a dormant plot, off on a vacant one.
     const bulb = value >= 1 ? 1 : value >= 0.2 ? 0.25 : 0;
-    for (const l of this.lit) {
-      if (l.type !== p.type) continue;
-      l.attr.setX(p.instance, l.kind === 'bulb' ? bulb : value);
-      l.attr.needsUpdate = true;
-    }
+    (this.windowLit.array as number[])[p.slot] = value;
+    (this.bulbLit.array as number[])[p.slot] = bulb;
     for (const sc of this.screens) {
       sc.owner.forEach((k, i) => {
         if (k === key) sc.attr.setX(i, value >= 1 ? 1 : 0);

@@ -25,6 +25,7 @@ export type Mood = 'work' | 'ask' | 'celebrate' | 'relax' | 'doze';
 
 const FADE = 0.35;
 const LOD_DISTANCE = 42;
+const SHADOW_DISTANCE = 70;
 const up = new Vector3(0, 1, 0);
 const tmpV = new Vector3();
 const tmpQ = new Quaternion();
@@ -33,7 +34,10 @@ export class Person {
   readonly root = new Group();
   private readonly body = new Group();
   private model: Object3D | null = null;
-  private lods: SkinnedMesh[] = [];
+  /** The `lod0` / `lod1` nodes (each holds one skinned mesh per material). */
+  private lods: Object3D[] = [];
+  private meshes: SkinnedMesh[] = [];
+  private shadows = true;
   private headBone: Bone | null = null;
   private mixer: AnimationMixer | null = null;
   private clips = new Map<string, AnimationClip>();
@@ -84,13 +88,16 @@ export class Person {
     this.model = model;
     this.clips = clips;
     model.traverse((o) => {
+      const lod = /^lod(\d)$/.exec(o.name);
+      if (lod) this.lods[Number(lod[1])] = o;
       const m = o as SkinnedMesh;
       if (!m.isSkinnedMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
       m.frustumCulled = false;
-      this.lods.push(m);
+      this.meshes.push(m);
     });
+    this.lods = this.lods.filter(Boolean);
     model.traverse((o) => {
       if (!this.headBone && /Head$/.test(o.name) && (o as Bone).isBone) this.headBone = o as Bone;
     });
@@ -286,6 +293,12 @@ export class Person {
     if (this.lods.length > 1) {
       this.lods[0].visible = near;
       this.lods[1].visible = !near;
+    }
+    // A person's shadow is a few pixels from far away; skip it there.
+    const shadows = dist < SHADOW_DISTANCE;
+    if (shadows !== this.shadows) {
+      this.shadows = shadows;
+      for (const m of this.meshes) m.castShadow = shadows;
     }
     this.skipAccum += dt;
     const every = dist > 160 ? 3 : dist > 80 ? 2 : 1;

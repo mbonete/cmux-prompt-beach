@@ -23,7 +23,7 @@ import { LOOKS, cloneLook, lookForHour, mixLook, type Look, type TimeOfDay } fro
 import { wetness } from './env/materials';
 import { Ocean } from './env/ocean';
 import { Sky } from './env/sky';
-import { Palms, wind } from './env/palms';
+import { Palms, SHADOW_ONLY_LAYER, wind } from './env/palms';
 import { beachHeight, buildGround } from './env/ground';
 import { Background } from './city/Background';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
@@ -104,8 +104,13 @@ export class World {
   private hoverNdc: Vector2 | null = null;
   private readonly needsAt: Vector3[] = [];
 
+  /** With `?perf` in the URL: GPU milliseconds per frame (WebGPU timestamp queries), newest last. */
+  readonly gpuTimes: number[] = [];
+  private readonly perf = new URLSearchParams(location.search).has('perf');
+
   static async create(canvas: HTMLCanvasElement, opts: WorldOptions): Promise<World> {
-    const renderer = new WebGPURenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+    const perf = new URLSearchParams(location.search).has('perf');
+    const renderer = new WebGPURenderer({ canvas, antialias: false, powerPreference: 'high-performance', trackTimestamp: perf });
     await renderer.init();
     return new World(renderer, canvas, opts);
   }
@@ -132,6 +137,8 @@ export class World {
 
     this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), plantPalms().group);
     this.lighting = new Lighting(renderer, this.scene, this.sky);
+    // The sun also sees shadow-only stand-ins (palm fronds without their alpha test).
+    this.lighting.sun.shadow.camera.layers.enable(SHADOW_ONLY_LAYER);
     this.district = new District(this.scene);
     this.background = new Background(this.scene);
     this.overlay = new Overlay(canvas.parentElement ?? document.body);
@@ -304,6 +311,13 @@ export class World {
     this.updateRing();
     this.updateHover();
     this.pipeline.render();
+    if (this.perf) {
+      void this.renderer.resolveTimestampsAsync('render').then((ms) => {
+        if (typeof ms !== 'number') return;
+        this.gpuTimes.push(ms);
+        if (this.gpuTimes.length > 600) this.gpuTimes.shift();
+      });
+    }
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
     this.overlay.update(cam, w, h);
@@ -603,8 +617,13 @@ function plantPalms(): Palms {
     if (Math.abs(x - HANGOUT.x) < 14 && Math.abs(z - HANGOUT.z) < 12) continue;
     pts.push(new Vector3(x, beachHeight(z, x), z));
   }
-  palms.plant(pts);
+  palms.plant(pts, undefined, nearDistrict);
   return palms;
+}
+
+/** Where shadows are worth their cost: the district, the promenade and the beach in front of it. */
+export function nearDistrict(p: { x: number; z: number }) {
+  return p.x > -125 && p.x < 130 && p.z > -75 && p.z < 115;
 }
 
 function localHour() {

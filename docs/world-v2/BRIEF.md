@@ -151,6 +151,8 @@ Low-rise (1 to 3 storeys) in the district; a pastel skyline of towers beyond.
 - `textures/<set>/`: tiling PBR sets with the real-world size they cover.
 - `props/<id>/`: converted props.
 
+**Street kit** (`tools/assets/street/` → `public/assets/street/`): lamps (with a `bulb` globe), a lifeguard tower, umbrellas, loungers, towels, cars (`carpaint` tinted per instance, `headlight`, `taillight`), boats (`extras.waterline`), a helicopter (`rotor`, `tail_rotor` nodes) and a blimp. The client's `world/life/` places and moves them.
+
 **Buildings** (`tools/assets/deco/` → `public/assets/buildings/`)
 - Produced by a deterministic headless Blender script.
 - Plot buildings `plot_<type>.gltf`, background buildings `bg_<n>.gltf`, skyline towers `tower_<n>.gltf`.
@@ -158,7 +160,11 @@ Low-rise (1 to 3 storeys) in the district; a pastel skyline of towers beyond.
   - empties `spot_0`…`spot_5`: +Z forward is the direction the person faces; custom property `spot_kind` ∈ desk | lounger | stool | bench | steps | standing
   - empties `tag_anchor` and `beam_anchor`
   - empties `prop:<env prop id>` where the client places a shared prop
-- Material names: `stucco` (its base colour is the pastel tint; the client may override per plot), `trim`, `glass`, `glass_block`, `metal`, `terrazzo`, `wood`, `awning`, `roof`, `concrete`, `planter`, `water`, `neon_accent`.
+- Material names: `stucco` (its base colour is the pastel tint; the client may override per plot), `trim`, `glass`, `glass_block`, `metal`, `terrazzo`, `wood`, `awning`, `roof`, `concrete`, `planter`, `water`, `neon_accent`, `interior`, and `bulb` (festoon bulbs, sconces, lanterns and sign bulbs: the client drives its emission with a night level and turns it off on vacant plots).
+- Empties `light_0`…`light_n` (2–4 per plot) at each main light source, with extras `light_radius` (metres, 2–6), `light_color` (warm hex) and `floor_y` (local height of the floor under it): the client draws a soft fake light pool there at night, no real lights.
+- Empties `palm_0`…`palm_n` at a trunk base with extra `palm_height` (5–11 m): the client plants its own procedural palm there.
+- `manifest.json` carries `layout`: `{ plots: [16 type ids by plot index], hangout, overflow }`, which the client follows. `check.mjs` enforces the layout rules (no equal neighbours, the hotel on the front row, at most two of a type).
+- Every agent spot must stay visible from the +Z side at 27°–45° tilt (`visibility.py` checks it on each build): no canopy, umbrella or awning over a seated person.
 - The plot's state outline is drawn by the client, not baked into the building.
 
 **Server** (`server.mjs`, `server/`, `demo.mjs`, `test/`): see the server task. The client relies on:
