@@ -64,7 +64,7 @@ Static responses carry an `ETag` and answer `If-None-Match` with `304`. `HEAD` r
 | Event | When | Data |
 | --- | --- | --- |
 | `snapshot` | On connect, then whenever anything in it changes (at most about once a second, plus a check every 5 s). | the snapshot below |
-| `tick` | On every agent hook event (tool calls, stop, prompt submit, …). | the tick below |
+| `tick` | On agent hook events (tool calls, stop, prompt submit, …), within a budget: at most one per session every 350 ms and 20 a second in all; the rest are dropped (they're decoration). | the tick below |
 
 The server sends `retry: 2000` and a comment line every 20 s.
 
@@ -92,6 +92,8 @@ The server sends `retry: 2000` and a comment line every 20 s.
 - **`tool.name`:** MCP tools are shown as `server · tool`, e.g. `Linear · list_issues`.
 - **One icon per tool call:** pop it on `PreToolUse`. cmux hooks `PreToolUse` for every tool, but `PostToolUse` only for `PushNotification`. A `PermissionRequest` repeats the tool of the `PreToolUse` before it, so it carries no `tool`.
 - **Demo:** sends `PreToolUse` with a tool every 2.5–9 s per working agent, `UserPromptSubmit` when a new task starts and `Stop` when one finishes.
+- **Helpers:** a session's subagents and workflow agents report their tool calls as the session's own (cmux gives no way to tell them apart), so a session with a big crew is where the tick budget bites.
+- **Swarm demo** (`npm run demo:swarm`): one session with a crew of 487 sending ~240 ticks a second, 150 more sessions across every plot, and 40 of them needing you at once 25 s in. For checking the budgets.
 
 ## Snapshot
 
@@ -101,6 +103,7 @@ The server sends `retry: 2000` and a comment line every 20 s.
   "source": "cmux",                 // new: "cmux" or "demo"
   "demo": true,                     // only in demo mode
   "cmux": { "ok": true, "eventsLive": true },          // ok: false + "error": "…" when the source failed (items are the last good ones)
+  "limited": { "total": 512, "read": 200 } | null,     // cmux lists at most 200 current items and held back the rest; total as cmux counts them
   "items": [ /* Item, in no particular order; sort by `order` for the sidebar order */ ],
   "pulse": { "start": "<iso>", "binMs": 300000, "bins": [ /* 36 counts of tool calls, last 3 h */ ] },
   "world": { /* World, new */ }
@@ -142,6 +145,7 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
   "lastActivityAt": "<iso>" | null,  // from transcript timestamps; use it for "stale"
   "unread": 0,                       // unread cmux notifications for this terminal
   "activity": [ /* 36 bins */ ] | null,
+  "crew": 0,                         // helpers (subagents, workflow agents) whose transcripts in <session>/subagents/ were written in the last 90 s; never people of their own
 
   // new for world v2
   "plot": 0..31 | "hangout" | "overflow" | null,

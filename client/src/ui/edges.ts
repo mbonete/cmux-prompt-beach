@@ -7,7 +7,8 @@ import type { Insets } from './card';
 // Arrows at the screen edge for people who need you but are off screen. Each
 // sits where the line from the screen centre toward them leaves the view, points
 // at them and carries their badge; clicking one flies there. Arrows that would
-// overlap merge into one with a count.
+// overlap merge into one with a count, and past MAX_ARROWS they merge by
+// direction (eight of them), so a swarm needing you can't line the screen.
 
 export interface EdgeTarget {
   row: Row;
@@ -24,6 +25,8 @@ interface Arrow {
 
 const SIZE = 44;
 const MERGE = 56;
+const MAX_ARROWS = 8;
+const SECTOR = Math.PI / 4;
 
 export class EdgeArrows {
   readonly root: HTMLElement;
@@ -80,6 +83,18 @@ export class EdgeArrows {
       const near = placed.find((p) => Math.hypot(p.x - x, p.y - y) < MERGE);
       if (near) near.ids.push(t.row.item.surfaceId);
       else placed.push({ x, y, angle, ids: [t.row.item.surfaceId], ask: t.row.ask, title: t.row.item.title });
+    }
+    if (placed.length > MAX_ARROWS) {
+      // One arrow per direction; it keeps the place of the first (nearest) one there.
+      const bySector = new Map<number, (typeof placed)[number]>();
+      for (const p of placed) {
+        const k = ((Math.round(p.angle / SECTOR) % 8) + 8) % 8;
+        const kept = bySector.get(k);
+        if (kept) kept.ids.push(...p.ids);
+        else bySector.set(k, p);
+      }
+      placed.length = 0;
+      placed.push(...bySector.values());
     }
 
     while (this.pool.length < placed.length) {

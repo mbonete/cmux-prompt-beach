@@ -19,9 +19,17 @@ import {
   prettyModel,
   prettyToolName,
   readConversation,
+  crewSize,
   readTranscript,
   trailingQuestion,
 } from './claude-transcripts.mjs';
+import { mapLimit } from '../budget.mjs';
+
+// cmux lists at most this many current items; it says when it held back more.
+const CURRENT_LIMIT = 200;
+// Sessions are read a few at a time (transcripts, status), so a swarm of them
+// can't open hundreds of files and processes at once.
+const READ_CONCURRENCY = 8;
 
 const BUNDLED_CMUX = '/Applications/cmux.app/Contents/Resources/bin/cmux';
 const CMUX = process.env.CMUX_BIN || (existsSync(BUNDLED_CMUX) ? BUNDLED_CMUX : 'cmux');
@@ -150,7 +158,7 @@ function repoOf(cwd) {
 async function buildSnapshot() {
   const now = Date.now();
   const [current, wsList, feed, notes] = await Promise.all([
-    cmuxJSON(['current', '--json', '--limit', '200']),
+    cmuxJSON(['current', '--json', '--limit', String(CURRENT_LIMIT)]),
     rpc('workspace.list').catch(() => ({ workspaces: [] })),
     rpc('feed.list').catch(() => ({ items: [] })),
     rpc('notification.list').catch(() => ({ notifications: [] })),
@@ -160,7 +168,7 @@ async function buildSnapshot() {
   const terminals = (current.items || []).filter((it) => it.kind === 'terminal' && it.projections?.[0]?.panel_id);
   const wsIds = [...new Set(terminals.map((t) => t.projections[0].workspace_id).filter(Boolean))];
   const statuses = new Map(
-    await Promise.all(wsIds.map(async (id) => [id, parseStatusLines(await cmux(['list-status', '--workspace', id]).catch(() => ''))])),
+    await mapLimit(wsIds, READ_CONCURRENCY, async (id) => [id, parseStatusLines(await cmux(['list-status', '--workspace', id]).catch(() => ''))]),
   );
 
   // Feed: open decisions, activity histogram, last stop message per session.
@@ -191,92 +199,94 @@ async function buildSnapshot() {
     unread.set(n.surface_id, (unread.get(n.surface_id) || 0) + 1);
   }
 
-  const items = await Promise.all(
-    terminals.map(async (t) => {
-      const proj = t.projections[0];
-      const ws = workspaces.get(proj.workspace_id) || {};
-      const { live: agent, ended } = pickAgent(t.agents);
-      const st = statuses.get(proj.workspace_id) || {};
-      const agentStatus = st.claude_code || st.codex || Object.values(st).find((v) => v.work) || null;
-      let programStatus = st.program_status?.value?.replace(/^[\w-]+\s*·\s*/, '') || null;
-      if (/^(working|running|idle|waiting|thinking)$/i.test(programStatus || '')) programStatus = null;
-      const tx = agent?.kind === 'claude' ? await readTranscript(agent.session_id).catch(() => null) : null;
-      const feedDecision = agent ? decisions.get(agent.session_id) : null;
+  const items = await mapLimit(terminals, READ_CONCURRENCY, async (t) => {
+    const proj = t.projections[0];
+    const ws = workspaces.get(proj.workspace_id) || {};
+    const { live: agent, ended } = pickAgent(t.agents);
+    const st = statuses.get(proj.workspace_id) || {};
+    const agentStatus = st.claude_code || st.codex || Object.values(st).find((v) => v.work) || null;
+    let programStatus = st.program_status?.value?.replace(/^[\w-]+\s*·\s*/, '') || null;
+    if (/^(working|running|idle|waiting|thinking)$/i.test(programStatus || '')) programStatus = null;
+    const tx = agent?.kind === 'claude' ? await readTranscript(agent.session_id).catch(() => null) : null;
+    const crew = agent?.kind === 'claude' ? await crewSize(agent.session_id, now).catch(() => 0) : 0;
+    const feedDecision = agent ? decisions.get(agent.session_id) : null;
 
-      let phase = 'shell';
-      let blocked = null;
-      if (agent) {
-        if (feedDecision) {
-          phase = 'blocked';
-          blocked = describeDecision(feedDecision, tx);
-        } else if (tx?.pendingQuestion) {
-          phase = 'blocked';
-          blocked = { kind: 'question', requestId: null, since: tx.lastAssistantAt, questions: tx.pendingQuestion };
-        } else if (tx?.pendingPlan) {
-          phase = 'blocked';
-          blocked = { kind: 'plan', requestId: null, since: tx.lastAssistantAt, plan: tx.pendingPlan };
-        } else if (/permission|needs input|approval/i.test(agentStatus?.value || '')) {
-          phase = 'blocked';
-          blocked = { kind: 'terminal', requestId: null, since: agent.last_activity_at, label: agentStatus.value, tool: tx?.currentTool || null };
-        } else if (agent.state === 'working' || agentStatus?.work === 'running') {
-          phase = 'working';
-        } else {
-          phase = 'idle';
-        }
+    let phase = 'shell';
+    let blocked = null;
+    if (agent) {
+      if (feedDecision) {
+        phase = 'blocked';
+        blocked = describeDecision(feedDecision, tx);
+      } else if (tx?.pendingQuestion) {
+        phase = 'blocked';
+        blocked = { kind: 'question', requestId: null, since: tx.lastAssistantAt, questions: tx.pendingQuestion };
+      } else if (tx?.pendingPlan) {
+        phase = 'blocked';
+        blocked = { kind: 'plan', requestId: null, since: tx.lastAssistantAt, plan: tx.pendingPlan };
+      } else if (/permission|needs input|approval/i.test(agentStatus?.value || '')) {
+        phase = 'blocked';
+        blocked = { kind: 'terminal', requestId: null, since: agent.last_activity_at, label: agentStatus.value, tool: tx?.currentTool || null };
+      } else if (agent.state === 'working' || agentStatus?.work === 'running') {
+        phase = 'working';
+      } else {
+        phase = 'idle';
       }
+    }
 
-      // The transcript knows which prompts a person typed; cmux's workspace copy also counts
-      // injected ones (background-task notices), so it is only the fallback.
-      const wsPrompt = isHumanText(ws.latest_submitted_message) ? ws.latest_submitted_message : null;
-      const lastPromptAt = tx?.lastUserAt || (wsPrompt ? ws.latest_submitted_at : null) || null;
-      const lastPrompt = tx?.lastUserAt ? tx.lastPrompt : wsPrompt;
-      const reply = tx?.lastText ? { text: clip(tx.lastText, 24000), at: tx.lastTextAt } : agent ? lastStop.get(agent.session_id) || null : null;
-      const replyIsCurrent = reply && (!lastPromptAt || Date.parse(reply.at) >= Date.parse(lastPromptAt));
-      const recapIsCurrent = tx?.recap && (!lastPromptAt || Date.parse(tx.recapAt) >= Date.parse(lastPromptAt));
-      const cwd = tx?.cwd || t.cwd || ws.current_directory || null;
+    // The transcript knows which prompts a person typed; cmux's workspace copy also counts
+    // injected ones (background-task notices), so it is only the fallback.
+    const wsPrompt = isHumanText(ws.latest_submitted_message) ? ws.latest_submitted_message : null;
+    const lastPromptAt = tx?.lastUserAt || (wsPrompt ? ws.latest_submitted_at : null) || null;
+    const lastPrompt = tx?.lastUserAt ? tx.lastPrompt : wsPrompt;
+    const reply = tx?.lastText ? { text: clip(tx.lastText, 24000), at: tx.lastTextAt } : agent ? lastStop.get(agent.session_id) || null : null;
+    const replyIsCurrent = reply && (!lastPromptAt || Date.parse(reply.at) >= Date.parse(lastPromptAt));
+    const recapIsCurrent = tx?.recap && (!lastPromptAt || Date.parse(tx.recapAt) >= Date.parse(lastPromptAt));
+    const cwd = tx?.cwd || t.cwd || ws.current_directory || null;
 
-      return {
-        surfaceId: proj.panel_id,
-        workspaceId: proj.workspace_id,
-        workspaceRef: ws.ref || null,
-        order: Number.isInteger(ws.index) ? ws.index : 999,
-        title: ws.title || t.label || 'Terminal',
-        subtitle: t.label && ws.title && t.label !== ws.title ? t.label : null,
-        here: Boolean(ws.selected),
-        cwd,
-        project: cwd ? path.basename(cwd) : null,
-        repo: await repoOf(cwd),
-        branch: tx?.branch && tx.branch !== 'HEAD' ? tx.branch : null,
-        ports: normalizePorts(ws.listening_ports),
-        agent: agent ? { kind: agent.kind, sessionId: agent.session_id, state: agent.state } : null,
-        phase,
-        blocked,
-        statusLabel: agentStatus?.value || null,
-        model: prettyModel(tx?.model),
-        mode: tx?.mode || null,
-        contextTokens: tx?.contextTokens ?? null,
-        lastPrompt: lastPrompt ? clip(lastPrompt, 600) : null,
-        lastPromptAt,
-        reply: replyIsCurrent ? reply : null,
-        recap: recapIsCurrent ? { text: tx.recap, at: tx.recapAt } : null,
-        question: phase === 'idle' && replyIsCurrent ? trailingQuestion(reply.text) : null,
-        now: phase === 'working' ? tx?.currentTool || (programStatus ? { name: null, detail: programStatus } : null) : null,
-        turnStartedAt: phase === 'working' ? lastPromptAt : null,
-        // cmux bumps last_activity_at when it restores sessions after a restart, so a
-        // transcript's own timestamps are the better signal for "when did work last happen".
-        lastActivityAt:
-          tx?.lastAssistantAt || tx?.lastUserAt
-            ? latestIso(tx.lastAssistantAt, tx.lastUserAt, phase === 'working' || phase === 'blocked' ? agent?.last_activity_at : null)
-            : latestIso(agent?.last_activity_at, ended?.last_activity_at),
-        unread: unread.get(proj.panel_id) || 0,
-        activity: agent ? activity.get(agent.session_id) || null : null,
-      };
-    }),
-  );
+    return {
+      surfaceId: proj.panel_id,
+      workspaceId: proj.workspace_id,
+      workspaceRef: ws.ref || null,
+      order: Number.isInteger(ws.index) ? ws.index : 999,
+      title: ws.title || t.label || 'Terminal',
+      subtitle: t.label && ws.title && t.label !== ws.title ? t.label : null,
+      here: Boolean(ws.selected),
+      cwd,
+      project: cwd ? path.basename(cwd) : null,
+      repo: await repoOf(cwd),
+      branch: tx?.branch && tx.branch !== 'HEAD' ? tx.branch : null,
+      ports: normalizePorts(ws.listening_ports),
+      agent: agent ? { kind: agent.kind, sessionId: agent.session_id, state: agent.state } : null,
+      phase,
+      blocked,
+      statusLabel: agentStatus?.value || null,
+      model: prettyModel(tx?.model),
+      mode: tx?.mode || null,
+      contextTokens: tx?.contextTokens ?? null,
+      lastPrompt: lastPrompt ? clip(lastPrompt, 600) : null,
+      lastPromptAt,
+      reply: replyIsCurrent ? reply : null,
+      recap: recapIsCurrent ? { text: tx.recap, at: tx.recapAt } : null,
+      question: phase === 'idle' && replyIsCurrent ? trailingQuestion(reply.text) : null,
+      now: phase === 'working' ? tx?.currentTool || (programStatus ? { name: null, detail: programStatus } : null) : null,
+      turnStartedAt: phase === 'working' ? lastPromptAt : null,
+      // cmux bumps last_activity_at when it restores sessions after a restart, so a
+      // transcript's own timestamps are the better signal for "when did work last happen".
+      lastActivityAt:
+        tx?.lastAssistantAt || tx?.lastUserAt
+          ? latestIso(tx.lastAssistantAt, tx.lastUserAt, phase === 'working' || phase === 'blocked' ? agent?.last_activity_at : null)
+          : latestIso(agent?.last_activity_at, ended?.last_activity_at),
+      unread: unread.get(proj.panel_id) || 0,
+      activity: agent ? activity.get(agent.session_id) || null : null,
+      crew,
+    };
+  });
 
   return {
     generatedAt: new Date(now).toISOString(),
     cmux: { ok: true },
+    // cmux held back part of its list: say so instead of silently showing less.
+    limited: current.truncated ? { total: Number(current.total_observed) || null, read: CURRENT_LIMIT } : null,
     items,
     pulse: { start: new Date(windowStart).toISOString(), binMs, bins: pulse },
   };

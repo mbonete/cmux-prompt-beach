@@ -12,7 +12,7 @@ import { Toasts } from '../ui/toasts';
 import type { World } from '../world/World';
 import { refreshTimes } from './format';
 import { Actions } from './actions';
-import { AppState, type PanelId, type Settings } from './state';
+import { AppState, type PanelId, type Settings, type WorldEvent } from './state';
 
 // Puts the page together: one state, the city (when 3D is available), and the
 // HUD, panels, card, side panel, edge arrows, minimap, toasts and sound around
@@ -25,6 +25,9 @@ const CLOSE_UP_LIMIT = 50;
 export class App {
   readonly state = new AppState();
   private readonly root: HTMLElement;
+  /** Events arriving together become one toast ("6 agents need you"), not a stream of them. */
+  private pendingEvents: WorldEvent[] = [];
+  private eventsTimer = 0;
   private readonly toasts: Toasts;
   private readonly actions: Actions;
   private readonly hud: Hud;
@@ -106,16 +109,7 @@ export class App {
     root.appendChild(this.cut);
 
     this.state.subscribe(() => this.render());
-    this.state.onEvent((e) => {
-      const it = e.row.item;
-      if (e.type === 'needs') {
-        const ask = e.row.ask ?? 'question';
-        this.toasts.show({ tone: 'needs', icon: ASK_ICON[ask], text: `${it.title}: ${ASK_TEXT[ask].toLowerCase()}`, onClick: () => this.selectAgent(it.surfaceId) });
-        this.sound.chime();
-      } else {
-        this.toasts.show({ tone: 'done', icon: 'result', text: `${it.title}: finished`, onClick: () => this.selectAgent(it.surfaceId) });
-      }
-    });
+    this.state.onEvent((e) => this.queueEvent(e));
     this.reduced.addEventListener('change', () => this.applySettings(true));
     this.bindWorld();
     this.bindKeys();
@@ -149,6 +143,34 @@ export class App {
   }
 
   // ------------------------------------------------------------ selection
+
+  private queueEvent(e: WorldEvent) {
+    this.pendingEvents.push(e);
+    if (!this.eventsTimer) this.eventsTimer = window.setTimeout(() => this.flushEvents(), 400);
+  }
+
+  /** At most one toast per kind for whatever arrived together; the chime keeps its own pace. */
+  private flushEvents() {
+    this.eventsTimer = 0;
+    const events = this.pendingEvents;
+    this.pendingEvents = [];
+    const needs = events.filter((e) => e.type === 'needs');
+    const done = events.filter((e) => e.type === 'finished');
+    if (needs.length === 1) {
+      const { row } = needs[0];
+      const ask = row.ask ?? 'question';
+      this.toasts.show({ tone: 'needs', icon: ASK_ICON[ask], text: `${row.item.title}: ${ASK_TEXT[ask].toLowerCase()}`, onClick: () => this.selectAgent(row.item.surfaceId) });
+    } else if (needs.length > 1) {
+      this.toasts.show({ tone: 'needs', icon: 'inbox', text: `${needs.length} agents need you`, detail: 'Open the Inbox', onClick: () => this.state.openPanel('inbox') });
+    }
+    if (needs.length) this.sound.chime();
+    if (done.length === 1) {
+      const it = done[0].row.item;
+      this.toasts.show({ tone: 'done', icon: 'result', text: `${it.title}: finished`, onClick: () => this.selectAgent(it.surfaceId) });
+    } else if (done.length > 1) {
+      this.toasts.show({ tone: 'done', icon: 'result', text: `${done.length} agents finished`, detail: 'Open the Inbox', onClick: () => this.state.openPanel('inbox') });
+    }
+  }
 
   selectAgent(id: string) {
     const row = this.state.row(id);

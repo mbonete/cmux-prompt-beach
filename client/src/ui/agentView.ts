@@ -57,9 +57,21 @@ export function stateTime(row: Row): string {
 
 export function stateLine(row: Row, cls = 'state'): string {
   const t = stateTime(row);
+  const crew = row.item.crew ?? 0;
   return `<p class="${cls} state--${row.lane}${row.ask === 'result' ? ' state--done' : ''}"><span class="state__dot" aria-hidden="true"></span><span>${esc(
     stateText(row),
-  )}</span>${t ? `<span class="state__sep" aria-hidden="true">·</span>${t}` : ''}</p>`;
+  )}</span>${t ? `<span class="state__sep" aria-hidden="true">·</span>${t}` : ''}${
+    crew ? `<span class="state__sep" aria-hidden="true">·</span><span class="state__crew" title="${esc(crewTitle(crew))}">${esc(crewText(crew))}</span>` : ''
+  }</p>`;
+}
+
+/** A session's helpers (subagents, workflow agents): one badge, never people of their own. */
+export function crewText(n: number): string {
+  return `Crew ${n.toLocaleString('en')}`;
+}
+
+export function crewTitle(n: number): string {
+  return `${n.toLocaleString('en')} helper${n === 1 ? '' : 's'} (subagents or workflow agents) active in the last 90 seconds`;
 }
 
 export function whereLine(it: Item): string {

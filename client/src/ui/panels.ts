@@ -155,6 +155,9 @@ export class Panels {
       if (!this.state.snap) return '<p class="empty">Waiting for the first update from cmux…</p>';
       return '<p class="empty">No sessions are running in cmux.</p>';
     }
+    // cmux lists at most 200 current items; when it holds more, say so rather than hide it.
+    const lim = this.state.snap?.limited;
+    if (lim) h = `<p class="panel__note">cmux has ${lim.total ? lim.total.toLocaleString('en') : 'more than ' + lim.read} sessions and terminals open; Switchboard can read the first ${lim.read}.</p>${h}`;
     return h;
   }
 

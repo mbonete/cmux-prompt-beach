@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { resolveStatic, sendStatic } from './server/static.mjs';
 import { DEFAULT_WORLD_FILE, createWorld } from './server/world.mjs';
 import { UUID_RE, parseLooseJSON } from './server/util.mjs';
+import { createTickGate } from './server/budget.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 // SWITCHBOARD_PUBLIC_DIR serves another build folder (the tests use it for fixtures).
@@ -31,7 +32,7 @@ const ALLOWED_ORIGINS = new Set([...ALLOWED_HOSTS].map((h) => `http://${h}`));
 const DEMO = process.argv.includes('--demo') || process.env.SWITCHBOARD_DEMO === '1';
 
 const source = DEMO
-  ? (await import('./server/sources/demo.mjs')).createDemoSource()
+  ? (await import('./server/sources/demo.mjs')).createDemoSource({ swarm: process.argv.includes('--swarm') || process.env.SWITCHBOARD_SWARM === '1' })
   : (await import('./server/sources/cmux.mjs')).createCmuxSource();
 // SWITCHBOARD_WORLD_FILE keeps the world state somewhere else (handy for trying things out).
 const WORLD_FILE = process.env.SWITCHBOARD_WORLD_FILE ? path.resolve(process.env.SWITCHBOARD_WORLD_FILE) : DEFAULT_WORLD_FILE;
@@ -107,6 +108,8 @@ function publish(force = false) {
   lastPayload = key;
   broadcast('snapshot', currentPayload());
 }
+
+const tickGate = createTickGate();
 
 function broadcast(event, data) {
   const frame = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -265,7 +268,8 @@ server.listen(PORT, HOST, () => {
   console.log(`Switchboard is running at http://localhost:${PORT}${DEMO ? ' (demo mode: made-up sessions)' : ''}`);
   source.start({
     changed: (delay = 250) => scheduleRefresh(delay),
-    tick: (event) => broadcast('tick', event),
+    // Tool-call ticks are decoration: under a swarm most are dropped (server/budget.mjs).
+    tick: (event) => tickGate(event) && broadcast('tick', event),
     live: (isLive) => {
       eventsLive = isLive;
       publish(true);

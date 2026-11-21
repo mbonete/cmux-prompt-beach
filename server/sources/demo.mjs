@@ -110,7 +110,33 @@ const NARRATION = [
 // ---------------------------------------------------------------------------
 // Sessions
 
-function seed(now) {
+// Swarm mode (--demo --swarm), for testing the budgets in server/budget.mjs and the
+// page's: the lead session runs a crew of 487 helpers whose tool calls all arrive as
+// its own, 150 more sessions fill every plot, and 25 s in, 40 of them need you at once.
+const SWARM_CREW = 487;
+const SWARM_SESSIONS = 150;
+const SWARM_BURST = { afterMs: 25 * SEC, count: 40 };
+const SWARM_REPOS = ['auth-service', 'billing', 'search-index', 'notifications', 'media-upload', 'admin-console', 'partner-api', 'reporting',
+  'feature-flags', 'checkout-sdk', 'mobile-web', 'status-page', 'data-export', 'webhooks', 'i18n', 'audit-log', 'cdn-config', 'support-bot', 'loyalty', 'sandbox'];
+const SWARM_TASKS = ['Fix lint errors in', 'Add tests for', 'Migrate', 'Type-check', 'Document', 'Refactor', 'Upgrade dependencies in', 'Profile'];
+const SWARM_AREAS = ['sign-in', 'the cart', 'search', 'invoices', 'emails', 'settings', 'onboarding', 'reports', 'uploads', 'retries'];
+
+function swarmSessions(s, ago) {
+  for (const name of SWARM_REPOS) REPOS[name] ??= { kind: 'other', steps: REPOS['api-gateway'].steps };
+  const repos = Object.keys(REPOS).filter((r) => r !== 'brand-site');
+  return Array.from({ length: SWARM_SESSIONS }, (_, i) => {
+    const task = `${SWARM_TASKS[i % SWARM_TASKS.length]} ${SWARM_AREAS[Math.floor(i / SWARM_TASKS.length) % SWARM_AREAS.length]}`;
+    const working = i % 2 === 0;
+    return s({
+      repo: repos[i % repos.length], title: i < 80 ? task : `${task} (part 2)`, model: 'Sonnet 5.5', swarm: true,
+      phase: working ? 'working' : 'idle', lastPrompt: task.toLowerCase(), lastPromptAt: ago((3 + (i % 20)) * MIN),
+      lastActivityAt: ago(working ? (i % 9) * SEC : (2 + (i % 30)) * MIN), doneAt: working ? Date.now() + (60 + (i % 7) * 30) * SEC : null,
+      say: ['Working through it.'], recap: working ? null : 'Done; the checks pass.',
+    });
+  });
+}
+
+function seed(now, swarm = false) {
   const s = (o) => ({
     surfaceId: uuid(),
     workspaceId: uuid(),
@@ -323,6 +349,13 @@ function seed(now) {
     }),
   ];
 
+  if (swarm) {
+    const lead = list.find((x) => x.here);
+    lead.crew = SWARM_CREW;
+    lead.doneAt = null; // the crew keeps it working for as long as the demo runs
+    list.push(...swarmSessions(s, ago));
+  }
+
   list.forEach((x, i) => {
     x.order = i;
     x.cwd = x.repo ? `~/code/${x.repo}` : '~/code';
@@ -358,8 +391,10 @@ function initialWorld(now) {
   };
 }
 
-export function createDemoSource() {
-  const sessions = seed(Date.now());
+export function createDemoSource({ swarm = false } = {}) {
+  const startedAt = Date.now();
+  const sessions = seed(startedAt, swarm);
+  let burst = false;
   let onChange = () => {};
   let onTick = () => {};
 
@@ -419,6 +454,9 @@ export function createDemoSource() {
     let changed = false;
     for (const x of sessions) {
       if (x.phase !== 'working') continue;
+      // Every helper's tool call reaches the server as the lead session's own, as with
+      // real subagents: about a tool call every two seconds each.
+      if (x.crew) for (let n = Math.round(x.crew / 8); n > 0; n--) tick(x, 'PreToolUse', tickTool(pick(x.steps).name));
       if (!x.nextTickAt) scheduleTick(x, now - Math.random() * TICK_MIN_MS);
       if (now < x.nextTickAt) continue;
       let step = pick(x.steps);
@@ -447,6 +485,14 @@ export function createDemoSource() {
         openDecision(x, now);
         changed = true;
       }
+    }
+    if (swarm && !burst && now - startedAt > SWARM_BURST.afterMs) {
+      burst = true;
+      for (const x of sessions.filter((y) => y.swarm && y.phase !== 'blocked').slice(0, SWARM_BURST.count)) {
+        x.decision = { kind: 'permission', tool: { name: 'Bash', command: 'npm run lint -- --fix', detail: 'Fix the lint errors it found' } };
+        openDecision(x, now);
+      }
+      changed = true;
     }
     // Results get read in the terminal after a while, as they would in real use.
     for (const x of sessions) {
@@ -504,6 +550,7 @@ export function createDemoSource() {
         lastActivityAt: iso(x.lastActivityAt),
         unread: x.unread,
         activity: x.phase === 'shell' ? null : x.activity,
+        crew: x.phase === 'working' ? x.crew || 0 : 0,
       })),
       pulse: { start: iso(now - 3 * HOUR), binMs: (3 * HOUR) / BINS, bins: pulse },
     };

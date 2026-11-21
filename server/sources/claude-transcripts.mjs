@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs';
 import { open, readdir, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { mapLimit } from '../budget.mjs';
 import { UUID_RE, clip } from '../util.mjs';
 
 const CLAUDE_PROJECTS = path.join(os.homedir(), '.claude', 'projects');
@@ -45,6 +46,44 @@ async function readTail(file, size, bytes = TRANSCRIPT_TAIL_BYTES) {
   let text = buf.toString('utf8');
   if (start > 0) text = text.slice(text.indexOf('\n') + 1);
   return { text, start };
+}
+
+// A session's helpers (subagents, workflow agents) run inside it and write their
+// own transcripts next to it, in <session>/subagents/. The ones written to in the
+// last 90 seconds are its active crew. Counted at most every few seconds per
+// session, and never more than CREW_MAX_FILES files looked at.
+export const CREW_ACTIVE_MS = 90_000;
+const CREW_RECOUNT_MS = 3000;
+const CREW_MAX_FILES = 10_000;
+const crewCache = new Map(); // sessionId -> { at, n }
+
+/** How many helper transcripts in `dir` were written within `activeMs` of `now`. */
+export async function countActiveHelpers(dir, now = Date.now(), activeMs = CREW_ACTIVE_MS) {
+  let names;
+  try {
+    names = (await readdir(dir)).filter((n) => n.endsWith('.jsonl')).slice(0, CREW_MAX_FILES);
+  } catch {
+    return 0;
+  }
+  const fresh = await mapLimit(names, 32, async (n) => {
+    try {
+      return now - (await stat(path.join(dir, n))).mtimeMs < activeMs;
+    } catch {
+      return false;
+    }
+  });
+  return fresh.filter(Boolean).length;
+}
+
+export async function crewSize(sessionId, now = Date.now()) {
+  if (!UUID_RE.test(sessionId || '')) return 0;
+  const cached = crewCache.get(sessionId);
+  if (cached && now - cached.at < CREW_RECOUNT_MS) return cached.n;
+  const file = await locateTranscript(sessionId);
+  const n = file ? await countActiveHelpers(path.join(file.replace(/\.jsonl$/, ''), 'subagents'), now) : 0;
+  crewCache.set(sessionId, { at: now, n });
+  if (crewCache.size > 2000) for (const [k, v] of crewCache) if (now - v.at > 10 * 60_000) crewCache.delete(k);
+  return n;
 }
 
 export async function readTranscript(sessionId) {

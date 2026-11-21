@@ -59,6 +59,8 @@ export interface Item {
   lastActivityAt: string | null;
   unread: number;
   activity: number[] | null;
+  /** Helpers (subagents, workflow agents) this session ran in the last 90 s. They're never people of their own. */
+  crew?: number;
   plot: PlotRef;
   spot: number | null;
   archived: boolean;
@@ -87,6 +89,8 @@ export interface Snapshot {
   source: 'cmux' | 'demo';
   demo?: boolean;
   cmux: { ok: boolean; eventsLive?: boolean; error?: string };
+  /** cmux held back part of its list: it holds `total` items and Switchboard read the first `read`. */
+  limited?: { total: number | null; read: number } | null;
   items: Item[];
   pulse: { start: string; binMs: number; bins: number[] };
   world: WorldState;

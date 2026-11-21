@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node server.mjs",
     "demo": "node server.mjs --demo",
+    "demo:swarm": "node server.mjs --demo --swarm",
     "dev": "vite",
     "build": "node tools/clean-build.mjs && vite build",
     "watch": "vite build --watch",

@@ -25,7 +25,7 @@ export type Mood = 'work' | 'ask' | 'celebrate' | 'relax' | 'doze';
 
 const FADE = 0.35;
 const LOD_DISTANCE = 42;
-const SHADOW_DISTANCE = 70;
+export const SHADOW_DISTANCE = 70;
 const up = new Vector3(0, 1, 0);
 const tmpV = new Vector3();
 const tmpQ = new Quaternion();
@@ -283,9 +283,19 @@ export class Person {
     this.body.rotation.y = yaw;
   }
 
-  update(dt: number, camera: Camera) {
+  /**
+   * `inView`: whether the camera can see them or their shadow (People decides,
+   * once per frame). Off screen they're neither drawn nor animated; the time
+   * they missed is played on their next visible frame, so they don't freeze.
+   */
+  update(dt: number, camera: Camera, inView = true) {
     if (!this.mixer || !this.model) return;
     this.clock += dt;
+    if (this.root.visible !== inView) this.root.visible = inView;
+    if (!inView) {
+      this.skipAccum = Math.min(this.skipAccum + dt, 2);
+      return;
+    }
     const dist = camera.position.distanceTo(this.root.position);
 
     // Level of detail, and fewer animation updates far away.
