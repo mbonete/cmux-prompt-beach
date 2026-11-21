@@ -5,7 +5,7 @@ import {
   MathUtils,
   Mesh,
   MeshBasicNodeMaterial,
-  PCFShadowMap,
+  VSMShadowMap,
   type PerspectiveCamera,
   RingGeometry,
   Scene,
@@ -132,7 +132,9 @@ export class World {
 
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = PCFShadowMap;
+    // Variance shadow maps: soft edges by blurring, with no per-pixel noise (PCF's
+    // rotated samples needed temporal AA to look smooth, and flickered without it).
+    renderer.shadowMap.type = VSMShadowMap;
 
     this.rig = new CameraRig(canvas, canvas.clientWidth / Math.max(1, canvas.clientHeight));
     this.rig.reducedMotion = this.reducedMotion;

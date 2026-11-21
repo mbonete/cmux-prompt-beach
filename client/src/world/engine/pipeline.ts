@@ -19,19 +19,22 @@ import {
   vec2,
   vec3,
   vec4,
-  velocity,
 } from 'three/tsl';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
-import { traa } from 'three/addons/tsl/display/TRAANode.js';
 import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
+import { smaa } from 'three/addons/tsl/display/SMAANode.js';
+import { denoise } from 'three/addons/tsl/display/DenoiseNode.js';
 import type { Look } from '../env/looks';
 import type { QualityLevel } from './quality';
 
-// Post-processing: ground-truth ambient occlusion, temporal anti-aliasing,
-// bloom, then a colour grade (warmth, split toning, saturation, vignette) in
-// linear light before the renderer's AgX tone mapping. Light quality drops AO
-// and TRAA and uses FXAA on the tone-mapped image instead.
+// Post-processing: ground-truth ambient occlusion (denoised within the frame),
+// bloom, a colour grade (warmth, split toning, saturation, vignette) in linear
+// light, tone mapping, then anti-aliasing within the frame: SMAA, or FXAA on
+// Light. Deliberately no temporal AA: its sub-pixel jitter made every detail
+// smaller than a pixel (bulbs, cables, window edges, surfaces millimetres apart)
+// appear and vanish from frame to frame, which reads as flicker everywhere.
+// Every frame is now computed the same way, so a still view is perfectly still.
 
 export class Pipeline {
   readonly pipeline: RenderPipeline;
@@ -53,19 +56,19 @@ export class Pipeline {
 
     let beauty;
     if (full) {
-      scenePass.setMRT(mrt({ output, normal: packNormalToRGB(normalView), velocity }));
+      scenePass.setMRT(mrt({ output, normal: packNormalToRGB(normalView) }));
       const color = scenePass.getTextureNode('output');
       const depth = scenePass.getTextureNode('depth');
       const normalTex = scenePass.getTextureNode('normal');
-      const velocityTex = scenePass.getTextureNode('velocity');
       const sceneNormal = sample((uv) => unpackRGBToNormal(normalTex.sample(uv)));
       const aoPass = ao(depth, sceneNormal, camera);
       aoPass.resolutionScale = level === 'cinematic' ? 1 : 0.5;
       aoPass.radius.value = 0.6;
       aoPass.thickness.value = 1.2;
-      const occlusion = mix(float(1), aoPass.getTextureNode().r, g.aoStrength);
-      const lit = vec4(color.rgb.mul(occlusion), color.a);
-      beauty = traa(lit, depth, velocityTex, camera);
+      // GTAO's noise used to be averaged away over frames; denoise it here instead.
+      const aoClean = denoise(aoPass.getTextureNode(), depth, sceneNormal, camera) as unknown as ReturnType<typeof vec4>;
+      const occlusion = mix(float(1), aoClean.r, g.aoStrength);
+      beauty = vec4(color.rgb.mul(occlusion), color.a);
     } else {
       beauty = scenePass.getTextureNode('output');
     }
@@ -84,12 +87,9 @@ export class Pipeline {
       return vec4(c, 1);
     })();
 
-    if (full) {
-      this.pipeline.outputNode = graded;
-    } else {
-      this.pipeline.outputColorTransform = false;
-      this.pipeline.outputNode = fxaa(renderOutput(graded));
-    }
+    // Anti-aliasing on the tone-mapped image, within the frame.
+    this.pipeline.outputColorTransform = false;
+    this.pipeline.outputNode = full ? smaa(renderOutput(graded)) : fxaa(renderOutput(graded));
   }
 
   apply(look: Look) {

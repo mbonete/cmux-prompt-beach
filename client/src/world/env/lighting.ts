@@ -61,8 +61,7 @@ export class Lighting {
     this.sun = new DirectionalLight(0xffffff, 3);
     this.sun.castShadow = true;
     this.sun.shadow.bias = -0.0004;
-    // Slightly soft edges: thin shadows spread over a few texels instead of popping.
-    this.sun.shadow.radius = 2.4;
+    this.sun.shadow.radius = 3;
     this.sun.shadow.normalBias = 0.04;
     this.sun.shadow.camera.near = 1;
     this.sun.shadow.camera.far = 700;
