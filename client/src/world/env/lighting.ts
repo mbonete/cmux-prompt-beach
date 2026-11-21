@@ -61,7 +61,9 @@ export class Lighting {
     this.sun = new DirectionalLight(0xffffff, 3);
     this.sun.castShadow = true;
     this.sun.shadow.bias = -0.0004;
-    this.sun.shadow.radius = 3;
+    // Standard (PCF) shadows: hardware-filtered samples; `radius` (in shadow texels)
+    // widens the soft edge. Set from a motion check (see perf notes in the commit).
+    this.sun.shadow.radius = 1;
     this.sun.shadow.normalBias = 0.04;
     this.sun.shadow.camera.near = 1;
     this.sun.shadow.camera.far = 700;

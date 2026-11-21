@@ -6,7 +6,7 @@ import {
   MathUtils,
   Mesh,
   MeshBasicNodeMaterial,
-  VSMShadowMap,
+  PCFShadowMap,
   type PerspectiveCamera,
   RingGeometry,
   Scene,
@@ -136,9 +136,12 @@ export class World {
 
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.shadowMap.enabled = true;
-    // Variance shadow maps: soft edges by blurring, with no per-pixel noise (PCF's
-    // rotated samples needed temporal AA to look smooth, and flickered without it).
-    renderer.shadowMap.type = VSMShadowMap;
+    // Standard (PCF) shadows. Variance shadows looked softer but made three draw
+    // every shadow *receiver* into the shadow map too (209 surfaces on top of 67
+    // casters, plus two blur passes): about 120 draw calls a frame. PCF draws only
+    // casters. Its samples are rotated by a fixed per-pixel pattern, so `radius`
+    // (lighting.ts) stays small to keep edges from crawling while the camera moves.
+    renderer.shadowMap.type = PCFShadowMap;
 
     this.rig = new CameraRig(canvas, canvas.clientWidth / Math.max(1, canvas.clientHeight));
     this.rig.reducedMotion = this.reducedMotion;

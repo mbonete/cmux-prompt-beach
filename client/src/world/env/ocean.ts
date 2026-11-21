@@ -148,11 +148,9 @@ export class Ocean {
     this.mesh = new Mesh(geo, m);
     this.mesh.position.y = SEA_Y;
     this.mesh.name = 'ocean';
-    // No shadows on the water: with variance shadow maps three also draws every
-    // shadow *receiver* into the shadow map, and there this material's depth copy
-    // reads the shadow map's own depth buffer (a format mismatch, an error every
-    // frame) on top of filling the whole map with a sea-sized plane.
-    this.mesh.receiveShadow = false;
+    // Receives shadows (palms near the shore). With standard shadows only casters
+    // are drawn into the shadow map, so this costs nothing there.
+    this.mesh.receiveShadow = true;
     this.mesh.renderOrder = 1;
   }
 
