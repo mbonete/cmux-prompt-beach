@@ -3,7 +3,7 @@ import { uniform } from 'three/tsl';
 import { loadGLTF, loadJSON } from '../engine/assets';
 import { InstancedModel } from '../engine/instancer';
 import { perInstanceEmission } from '../engine/materials';
-import { BAY_EDGE_X, CITY, INLAND_SKYLINE, OVERFLOW, PLOT_Z, SKYLINE, STREETS_NS } from './layout';
+import { INLAND_SKYLINE, SKYLINE, STREETS_NS } from './layout';
 
 // The city around the district: rows of low Deco/MiMo street buildings on the
 // blocks beside and behind the plots, and a skyline of towers across the bay.
@@ -11,7 +11,6 @@ import { BAY_EDGE_X, CITY, INLAND_SKYLINE, OVERFLOW, PLOT_Z, SKYLINE, STREETS_NS
 // light up at dusk, a different share per building.
 
 const BASE = '/assets/buildings/';
-const PASTELS = [0xeea8a2, 0xa6dac4, 0xf4c39c, 0xf1db98, 0xa9c8e2, 0x8fd0cb, 0xee9a84, 0xf4efe6].map((h) => new Color(h));
 const TOWER_TINTS = [0xf4efe6, 0xffffff, 0xe9f0f2, 0xf3e3d3, 0xdfeaf0].map((h) => new Color(h));
 
 function rng(seed: number) {
@@ -34,25 +33,7 @@ export class Background {
     const ids = (kind: string) => Object.entries(manifest.assets).filter(([, a]) => a.kind === kind).map(([id]) => id).sort();
     const r = rng(41);
 
-    // Street buildings: one row per block, facing +Z (toward the usual camera).
-    const lowSpots: Matrix4[] = [];
-    // One ring of blocks around the district; the island ends soon after.
-    const rows = [...PLOT_Z, 112, 138, 164].filter((z) => z < CITY.z1 - 14);
-    const westAvenue = STREETS_NS[0];
-    const eastAvenue = STREETS_NS[STREETS_NS.length - 1];
-    const westStart = westAvenue.x - westAvenue.width / 2 - 2.2 - 11;
-    const eastStart = eastAvenue.x + eastAvenue.width / 2 + 2.2 + 11;
-    const place = (x: number, z: number) => {
-      if (Math.abs(x - OVERFLOW.x) < 22 && Math.abs(z - OVERFLOW.z) < 16) return;
-      const m = new Matrix4().compose(new Vector3(x + (r() - 0.5) * 1.5, 0, z + (r() - 0.5) * 1.2), new Quaternion(), new Vector3(1, 1, 1));
-      lowSpots.push(m);
-    };
-    for (const z of rows) {
-      for (let x = westStart; x > CITY.x0 + 10; x -= 22 + r() * 3) place(x, z);
-      for (let x = eastStart; x < BAY_EDGE_X - 10; x += 22 + r() * 3) place(x, z);
-      if (z > 100) for (let x = -42; x <= 42; x += 26) place(x, z);
-    }
-
+    // No filler blocks: the island is the 32 plots. Only the skylines across the bays remain.
     // Skyline across the bay: taller toward the water's edge, spaced so no two touch.
     const towerSpots: Matrix4[] = [];
     const taken: Vector3[] = [];
@@ -76,13 +57,7 @@ export class Background {
       towerSpots.push(new Matrix4().compose(p, new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.floor(r() * 4) * (Math.PI / 2)), new Vector3(1, s, 1)));
     }
 
-    // Only blocks beside the district cast shadows; further out they'd cost more than they show.
-    const near = (m: Matrix4) => Math.abs(m.elements[12]) < 130 && m.elements[14] < 115;
-    await Promise.all([
-      this.spread(ids('bg'), lowSpots.filter(near), PASTELS, r),
-      this.spread(ids('bg'), lowSpots.filter((m) => !near(m)), PASTELS, r, false),
-      this.spread(ids('tower'), towerSpots, TOWER_TINTS, r, false),
-    ]);
+    await this.spread(ids('tower'), towerSpots, TOWER_TINTS, r, false);
   }
 
   /** Splits placements across the building variants and instances each. */

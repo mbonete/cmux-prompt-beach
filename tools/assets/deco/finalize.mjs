@@ -143,7 +143,7 @@ manifest.conventions = {
   materials: 'stucco base colour is the pastel tint (override per plot); interior, neon_accent and bulb are emissive and meant to be scaled by time of day (bulb: festoon bulbs, sconce and lantern glass, marquee bulbs; warm white, emissiveStrength 6; drive it with a night level and switch it off on vacant plots)',
   lights: 'light_0..light_n (2-4 per plot): the main night light sources. The empty sits at the source; extras.light_radius (metres, 2-6) is the radius of the soft pool to draw on the floor below, extras.light_color a warm hex colour, extras.floor_y the local height of that floor (terrace or deck top). No real lights are intended.',
   palms: 'palm_0..palm_n: base of a palm trunk (soil in a planter, the ground or the sand); extras.palm_height in metres (5-11). The empty yaw is a free per-palm turn. The beach bar palms stand on the sand at origin height: drop them onto the dune surface.',
-  layout: 'layout.plots[i] is the building type for plot index i (row * 4 + col, row 0 nearest the beach); layout.hangout and layout.overflow name the shared beach bar and co-working types',
+  layout: 'layout.plots[i] is the building type for plot index i (0-15: the core, row * 4 + col, row 0 nearest the beach; 16-31: the outer columns); layout.cells[i] is its [column, row] on the eight-column grid; layout.hangout and layout.overflow name the shared beach bar and co-working types',
   textures: 'shared WebP files in textures/, EXT_texture_webp; ORM packed (R occlusion, G roughness, B metalness)',
 };
 manifest.constants = spec.constants;

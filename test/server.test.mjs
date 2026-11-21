@@ -238,7 +238,7 @@ describe('API', () => {
     assert.equal(snap.source, 'demo');
     assert.equal(snap.cmux.ok, true);
     assert.equal(snap.cmux.eventsLive, true);
-    assert.equal(snap.world.plotCount, 16);
+    assert.equal(snap.world.plotCount, 32);
     assert.ok(snap.items.length >= 24);
     for (const it of snap.items) {
       assert.ok('plot' in it && 'spot' in it && 'archived' in it, it.title);

@@ -39,7 +39,7 @@ describe('plots', () => {
     it = byId(out);
     assert.equal(it[4].plot, 2);
     assert.deepEqual(out.world.free, Array.from({ length: PLOT_COUNT - 3 }, (_, i) => i + 3));
-    assert.equal(out.world.plotCount, 16);
+    assert.equal(out.world.plotCount, PLOT_COUNT);
     assert.deepEqual(Object.keys(out.world.plots), [key('a'), key('b'), key('c')]);
     assert.equal(out.world.plots[key('a')].agents, 1, 'agent 3 has gone');
   });
@@ -73,30 +73,31 @@ describe('plots', () => {
     assert.deepEqual(Object.keys(out.world.plots), [key('a')]);
   });
 
-  test('repos beyond 16 share the overflow plot, and move up when a plot frees', () => {
+  test(`repos beyond ${PLOT_COUNT} share the overflow plot, and move up when a plot frees`, () => {
     const w = createWorld({ log: quiet });
-    const items = Array.from({ length: 18 }, (_, i) => agent(i, `r${i}`));
+    const N = PLOT_COUNT;
+    const items = Array.from({ length: N + 2 }, (_, i) => agent(i, `r${i}`));
     let out = w.apply(snap(...items), T0);
     let it = byId(out);
-    assert.equal(it[15].plot, 15);
-    assert.equal(it[16].plot, 'overflow');
-    assert.equal(it[17].plot, 'overflow');
-    assert.equal(it[16].spot, 0, 'overflow has its own spots');
-    assert.equal(it[17].spot, 1);
+    assert.equal(it[N - 1].plot, N - 1);
+    assert.equal(it[N].plot, 'overflow');
+    assert.equal(it[N + 1].plot, 'overflow');
+    assert.equal(it[N].spot, 0, 'overflow has its own spots');
+    assert.equal(it[N + 1].spot, 1);
     assert.deepEqual(out.world.free, []);
     // r0 goes quiet for a week: the earliest overflow repo takes plot 0.
     out = w.apply(snap(...items.slice(1)), T0 + PLOT_TTL_MS + 1);
     it = byId(out);
-    assert.equal(it[16].plot, 0);
-    assert.equal(it[17].plot, 'overflow');
+    assert.equal(it[N].plot, 0);
+    assert.equal(it[N + 1].plot, 'overflow');
   });
 
-  test('movePlot: only an existing repo, only to a free plot from 0 to 15', () => {
+  test(`movePlot: only an existing repo, only to a free plot from 0 to ${PLOT_COUNT - 1}`, () => {
     const w = createWorld({ log: quiet });
     w.apply(snap(agent(1, 'a'), agent(2, 'b'), agent(3, 'a')), T0);
     assert.throws(() => w.movePlot(key('nope'), 5), { status: 404 });
     assert.throws(() => w.movePlot(key('a'), 1), { status: 409 }, 'taken');
-    for (const bad of [-1, 16, 2.5, '5', null, undefined, 'overflow', 'hangout']) assert.throws(() => w.movePlot(key('a'), bad), { status: 400 }, String(bad));
+    for (const bad of [-1, PLOT_COUNT, 2.5, '5', null, undefined, 'overflow', 'hangout']) assert.throws(() => w.movePlot(key('a'), bad), { status: 400 }, String(bad));
     for (const bad of ['', 42, null, 'x'.repeat(5000)]) assert.throws(() => w.movePlot(bad, 5), { status: 400 });
     assert.throws(() => w.movePlot('__proto__', 5), { status: 404 });
     w.movePlot(key('a'), 0); // a no-op move is fine

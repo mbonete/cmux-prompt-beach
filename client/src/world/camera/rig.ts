@@ -229,6 +229,12 @@ export class CameraRig {
     el.addEventListener('pointermove', (e) => {
       const p = this.pointers.get(e.pointerId);
       if (!p) return;
+      // A release we never heard about (it happened over a panel, outside the
+      // window, or capture was lost): no button is down, so this is no drag.
+      if (e.pointerType === 'mouse' && e.buttons === 0) {
+        this.release(e.pointerId);
+        return;
+      }
       const dx = e.clientX - p.x;
       const dy = e.clientY - p.y;
       p.x = e.clientX;
@@ -264,6 +270,10 @@ export class CameraRig {
     };
     el.addEventListener('pointerup', up);
     el.addEventListener('pointercancel', up);
+    el.addEventListener('lostpointercapture', (e) => this.release(e.pointerId));
+    window.addEventListener('blur', () => {
+      for (const id of [...this.pointers.keys()]) this.release(id);
+    });
 
     el.addEventListener('dblclick', (e) => {
       this.touched();
@@ -281,6 +291,11 @@ export class CameraRig {
       },
       { passive: false },
     );
+  }
+
+  private release(id: number) {
+    this.pointers.delete(id);
+    if (this.pointers.size < 2) this.pinchStart = 0;
   }
 
   private pinchDistance() {

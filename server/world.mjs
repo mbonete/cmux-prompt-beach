@@ -14,7 +14,7 @@ import { fail } from './util.mjs';
 const MIN = 60 * 1000;
 const DAY = 24 * 60 * MIN;
 
-export const PLOT_COUNT = 16;
+export const PLOT_COUNT = 32;
 export const SPOTS_PER_PLOT = 6;
 export const HANGOUT = 'hangout';
 export const OVERFLOW = 'overflow';

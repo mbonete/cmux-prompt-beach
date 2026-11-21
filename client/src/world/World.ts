@@ -27,7 +27,7 @@ import { Palms, SHADOW_ONLY_LAYER, wind } from './env/palms';
 import { beachHeight, buildGround } from './env/ground';
 import { Background } from './city/Background';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
-import { CITY, HANGOUT, OVERFLOW, PLOTS, PLOT_D, PLOT_W, PLOT_X, STREETS_EW, STREETS_NS } from './city/layout';
+import { CITY, HANGOUT, OVERFLOW, OVERFLOW_HALF, PLOTS, PLOT_COLUMNS, PLOT_D, PLOT_W, STREETS_EW, STREETS_NS } from './city/layout';
 import { Cast } from './agents/cast';
 import { People } from './agents/People';
 import { Life } from './life/Life';
@@ -497,7 +497,7 @@ export class World {
   private plotAt(x: number, z: number): PlotKey | null {
     for (const p of PLOTS) if (Math.abs(x - p.x) < PLOT_W / 2 && Math.abs(z - p.z) < PLOT_D / 2) return p.index;
     if (Math.abs(x - HANGOUT.x) < 10 && Math.abs(z - HANGOUT.z) < 8) return 'hangout';
-    if (Math.abs(x - OVERFLOW.x) < PLOT_D / 2 && Math.abs(z - OVERFLOW.z) < PLOT_W / 2) return 'overflow';
+    if (Math.abs(x - OVERFLOW.x) < OVERFLOW_HALF.x && Math.abs(z - OVERFLOW.z) < OVERFLOW_HALF.z) return 'overflow';
     return null;
   }
 
@@ -608,10 +608,10 @@ function plantPalms(): Palms {
   const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   const avenue = (x: number) => STREETS_NS.some((a) => Math.abs(x - a.x) < a.width / 2 + 3);
   // Never on a plot: the terraces belong to the people.
-  const onPlot = (x: number) => PLOT_X.some((px) => Math.abs(x - px) < PLOT_W / 2 + 1.5);
+  const onPlot = (x: number) => PLOT_COLUMNS.some((px) => Math.abs(x - px) < PLOT_W / 2 + 1.5);
   for (let x = CITY.x0 - 35; x < 120; x += 9) pts.push(new Vector3(x + (r() - 0.5) * 2, 0.16, -15.5 + (r() - 0.5)));
   for (const st of STREETS_EW) {
-    for (let x = -150; x < 120; x += 7) {
+    for (let x = CITY.x0; x < 120; x += 7) {
       const px = x + (r() - 0.5) * 3;
       if (avenue(px) || onPlot(px)) continue;
       pts.push(new Vector3(px, 0.14, st.z - st.width / 2 - 1.1));

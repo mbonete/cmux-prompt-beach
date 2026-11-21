@@ -1,256 +1,5 @@
 {
   "assets": {
-    "bg_1": {
-      "kind": "bg",
-      "files": [
-        "bg_1.gltf",
-        "bg_1.bin",
-        "textures/stucco_albedo.webp",
-        "textures/stucco_orm.webp",
-        "textures/ao_bg_1.webp",
-        "textures/stucco_normal.webp",
-        "textures/interior_albedo.webp",
-        "textures/interior_emissive.webp",
-        "textures/roof_albedo.webp",
-        "textures/roof_orm.webp",
-        "textures/roof_normal.webp"
-      ],
-      "bytes": 155222,
-      "textureBytes": 887476,
-      "tris": 2292,
-      "bounds": {
-        "min": [
-          -7.9,
-          0,
-          -5.082
-        ],
-        "max": [
-          7.9,
-          11.9,
-          5.9
-        ]
-      },
-      "materials": [
-        "stucco",
-        "interior",
-        "metal",
-        "trim",
-        "roof"
-      ],
-      "look": {
-        "neon": "aqua",
-        "stucco": "peach",
-        "trim": "warm_white"
-      },
-      "empties": {
-        "tag_anchor": [
-          {
-            "position": [
-              0,
-              12.5,
-              0
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ]
-          }
-        ]
-      },
-      "notes": "3-storey apricot corner block with a streamline corner, wrap-around ribbons and a fin trio."
-    },
-    "bg_2": {
-      "kind": "bg",
-      "files": [
-        "bg_2.gltf",
-        "bg_2.bin",
-        "textures/stucco_albedo.webp",
-        "textures/stucco_orm.webp",
-        "textures/ao_bg_2.webp",
-        "textures/stucco_normal.webp",
-        "textures/interior_albedo.webp",
-        "textures/interior_emissive.webp",
-        "textures/roof_albedo.webp",
-        "textures/roof_orm.webp",
-        "textures/roof_normal.webp",
-        "textures/glass_block_albedo.webp",
-        "textures/glass_block_orm.webp",
-        "textures/glass_block_normal.webp"
-      ],
-      "bytes": 211239,
-      "textureBytes": 919938,
-      "tris": 2756,
-      "bounds": {
-        "min": [
-          -9.6,
-          -0.009,
-          -4.4
-        ],
-        "max": [
-          10.303,
-          8.6,
-          5.9
-        ]
-      },
-      "materials": [
-        "stucco",
-        "interior",
-        "metal",
-        "trim",
-        "roof",
-        "glass_block",
-        "neon_accent"
-      ],
-      "look": {
-        "awning": "teal",
-        "neon": "warm_white",
-        "stucco": "powder",
-        "trim": "warm_white"
-      },
-      "empties": {
-        "tag_anchor": [
-          {
-            "position": [
-              0,
-              9.5,
-              0
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ]
-          }
-        ]
-      },
-      "notes": "2-storey powder-blue MiMo motel/office: cantilevered walkway on V columns, floating roof, sign blade."
-    },
-    "bg_3": {
-      "kind": "bg",
-      "files": [
-        "bg_3.gltf",
-        "bg_3.bin",
-        "textures/stucco_albedo.webp",
-        "textures/stucco_orm.webp",
-        "textures/ao_bg_3.webp",
-        "textures/stucco_normal.webp",
-        "textures/interior_albedo.webp",
-        "textures/interior_emissive.webp",
-        "textures/roof_albedo.webp",
-        "textures/roof_orm.webp",
-        "textures/roof_normal.webp"
-      ],
-      "bytes": 273042,
-      "textureBytes": 884582,
-      "tris": 3860,
-      "bounds": {
-        "min": [
-          -6.59,
-          0,
-          -5.082
-        ],
-        "max": [
-          6.59,
-          18.3,
-          6.648
-        ]
-      },
-      "materials": [
-        "stucco",
-        "interior",
-        "metal",
-        "trim",
-        "roof",
-        "neon_accent"
-      ],
-      "look": {
-        "neon": "violet",
-        "stucco": "mint",
-        "trim": "warm_white"
-      },
-      "empties": {
-        "tag_anchor": [
-          {
-            "position": [
-              0,
-              19,
-              0
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ]
-          }
-        ]
-      },
-      "notes": "4-storey mint Deco with a glass-block spine between fins, ziggurat crown, finial and portholes."
-    },
-    "bg_4": {
-      "kind": "bg",
-      "files": [
-        "bg_4.gltf",
-        "bg_4.bin",
-        "textures/stucco_albedo.webp",
-        "textures/stucco_orm.webp",
-        "textures/ao_bg_4.webp",
-        "textures/stucco_normal.webp",
-        "textures/interior_albedo.webp",
-        "textures/interior_emissive.webp",
-        "textures/roof_albedo.webp",
-        "textures/roof_orm.webp",
-        "textures/roof_normal.webp"
-      ],
-      "bytes": 190848,
-      "textureBytes": 878712,
-      "tris": 2828,
-      "bounds": {
-        "min": [
-          -8.04,
-          0,
-          -5.082
-        ],
-        "max": [
-          9.3,
-          11.48,
-          6.45
-        ]
-      },
-      "materials": [
-        "stucco",
-        "interior",
-        "metal",
-        "trim",
-        "roof"
-      ],
-      "look": {
-        "neon": "amber",
-        "stucco": "butter",
-        "trim": "warm_white"
-      },
-      "empties": {
-        "tag_anchor": [
-          {
-            "position": [
-              0,
-              12.2,
-              0
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ]
-          }
-        ]
-      },
-      "notes": "3-storey butter-yellow streamline apartments: stacked round-ended balconies, stair drum with portholes."
-    },
     "plot_beach_bar": {
       "kind": "plot",
       "files": [
@@ -6390,10 +6139,6 @@
     "stool_raise": 0.29
   },
   "textures": {
-    "ao_bg_1.webp": 26734,
-    "ao_bg_2.webp": 20494,
-    "ao_bg_3.webp": 23840,
-    "ao_bg_4.webp": 17970,
     "ao_plot_beach_bar.webp": 53050,
     "ao_plot_beach_cafe.webp": 65752,
     "ao_plot_coworking.webp": 63134,
@@ -6454,7 +6199,153 @@
       "plot_juice_kiosk",
       "plot_beach_cafe",
       "plot_trailer",
-      "plot_diner"
+      "plot_diner",
+      "plot_diner",
+      "plot_juice_kiosk",
+      "plot_beach_cafe",
+      "plot_trailer",
+      "plot_juice_kiosk",
+      "plot_beach_cafe",
+      "plot_record_shop",
+      "plot_motel_court",
+      "plot_motel_court",
+      "plot_record_shop",
+      "plot_surf_shop",
+      "plot_diner",
+      "plot_deco_hotel",
+      "plot_surf_shop",
+      "plot_trailer",
+      "plot_marina_office"
+    ],
+    "cells": [
+      [
+        2,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        5,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        5,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        4,
+        3
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        6,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        7,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        7,
+        2
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        7,
+        3
+      ]
     ]
   }
 }

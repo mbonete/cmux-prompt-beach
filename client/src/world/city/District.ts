@@ -20,7 +20,7 @@ import { loadGLTF, loadJSON } from '../engine/assets';
 import { InstancedModel } from '../engine/instancer';
 import { perInstanceEmission } from '../engine/materials';
 import { Beam, PlotOutline, STATE_COLORS } from './markers';
-import { HANGOUT, OVERFLOW, PLOTS } from './layout';
+import { HANGOUT, OVERFLOW, PLOTS, PLOT_COUNT } from './layout';
 import { beachHeight } from '../env/ground';
 
 // The plots: a fixed building per plot (authored), always present. A vacant
@@ -98,8 +98,8 @@ export function repoColor(key: string): Color {
 }
 
 const BASE = '/assets/buildings/';
-/** 16 plots, the beach bar and the co-working. */
-const SLOTS = 18;
+/** 32 plots, the beach bar and the co-working. */
+const SLOTS = PLOT_COUNT + 2;
 /** Materials whose shadows matter; glass, lights, water and floors don't cast. */
 const CASTS = new Set(['stucco', 'trim', 'concrete', 'roof', 'wood', 'metal', 'awning', 'planter', 'glass_block']);
 
@@ -307,6 +307,37 @@ export class District {
     }
   }
 
+  /** Current light level per plot, and a pending dim (lights dim only once a change holds). */
+  private readonly litNow = new Map<PlotKey, number>();
+  private readonly dimLater = new Map<PlotKey, { value: number; at: number }>();
+
+  /** Lights come on at once; they dim only if the change holds for a few seconds (no flicker on a blip). */
+  private light(key: PlotKey, value: number) {
+    const now = performance.now();
+    const cur = this.litNow.get(key);
+    if (cur === undefined || value >= cur) {
+      this.dimLater.delete(key);
+      if (cur !== value) {
+        this.litNow.set(key, value);
+        this.setLit(key, value);
+      }
+      return;
+    }
+    const pending = this.dimLater.get(key);
+    if (!pending || pending.value !== value) this.dimLater.set(key, { value, at: now + 8000 });
+  }
+
+  private settleLights() {
+    if (!this.dimLater.size) return;
+    const now = performance.now();
+    for (const [key, d] of this.dimLater) {
+      if (now < d.at) continue;
+      this.dimLater.delete(key);
+      this.litNow.set(key, d.value);
+      this.setLit(key, d.value);
+    }
+  }
+
   update(states: PlotState[]) {
     const seen = new Set<PlotKey>();
     for (const s of states) {
@@ -316,17 +347,18 @@ export class District {
       p.outline.group.visible = s.occupied;
       p.outline.setState(s.needs ? STATE_COLORS.needs : s.color, s.needs, s.dormant);
       p.beamFx.set(s.needs && !s.dormant);
-      this.setLit(s.key, s.occupied ? (s.dormant ? 0.25 : 1) : 0.08);
+      this.light(s.key, s.occupied ? (s.dormant ? 0.25 : 1) : 0.08);
     }
     for (const [key, p] of this.plots) {
       if (seen.has(key)) continue;
       p.outline.group.visible = false;
       p.beamFx.set(false);
-      this.setLit(key, 0.08);
+      this.light(key, 0.08);
     }
   }
 
   updateCamera(position: Vector3) {
+    this.settleLights();
     for (const p of this.plots.values()) if (p.beamFx.group.visible) p.beamFx.updateCamera(position.x, position.z);
   }
 

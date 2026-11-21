@@ -19,6 +19,8 @@ import { AppState, type PanelId, type Settings } from './state';
 // it. Every view repaints from state; the city reports clicks and frames back.
 
 const PANEL_GAP = 12;
+/** Zooming out past this (metres from what you look at) closes the agent card. */
+const CLOSE_UP_LIMIT = 50;
 
 export class App {
   readonly state = new AppState();
@@ -244,7 +246,11 @@ export class App {
         w.focusPlot(p.key);
       } else if (this.state.selected && !this.state.expanded) this.deselect();
     };
-    w.rig.onUse = (k) => this.hud.used_(k);
+    w.rig.onUse = (k) => {
+      this.hud.used_(k);
+      // Zooming back out from a close-up puts the card away (the side panel stays: it was asked for).
+      if (k === 'zoom' && this.state.selected && !this.state.expanded && w.rig.desired.distance > CLOSE_UP_LIMIT) this.deselect();
+    };
     w.director.onChange = (on) => this.root.classList.toggle('app--idle', on);
     w.director.onCut = (phase) => this.cut.classList.toggle('cut--dark', phase === 'out');
     const stop = () => w.director.stop();
@@ -387,7 +393,7 @@ export class App {
         this.hud.used_('rotate');
       } else if (k === '+' || k === '=' || k === '-' || k === '_') {
         rig.zoom(k === '-' || k === '_' ? 1.2 : 1 / 1.2);
-        this.hud.used_('zoom');
+        rig.onUse?.('zoom');
       }
     });
   }

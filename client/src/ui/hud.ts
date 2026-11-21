@@ -72,7 +72,10 @@ export class Hud {
         <button type="button" class="hud-btn" data-sound aria-pressed="false" title="Sound">${icon('mute', 'i')}</button>
         <button type="button" class="hud-btn" data-help aria-keyshortcuts="Shift+/" title="Help (?)">${icon('help', 'i')}</button>
       </div>
-      <aside class="hint" aria-label="Controls">${HINTS.map((h) => `<span class="hint__item" data-hint="${h.key}"><kbd>${h.keys}</kbd> ${h.text}</span>`).join('')}</aside>`;
+      <aside class="hint" aria-label="Controls"><button type="button" class="hint__toggle" aria-expanded="false" title="Show the controls">${icon(
+        'help',
+        'i',
+      )}<span>Controls</span></button><div class="hint__items">${HINTS.map((h) => `<span class="hint__item" data-hint="${h.key}"><kbd>${h.keys}</kbd> ${h.text}</span>`).join('')}</div></aside>`;
     parent.appendChild(this.el);
     this.status = this.el.querySelector('.brand__status')!;
     this.rail = this.el.querySelector('.rail')!;
@@ -84,6 +87,13 @@ export class Hud {
 
     this.used = new Set(readUsed());
     this.paintHint();
+    // Once learned, the hint folds into a small Controls button that opens it again.
+    const toggle = this.hint.querySelector<HTMLButtonElement>('.hint__toggle')!;
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      this.hint.classList.toggle('hint--open', open);
+    });
 
     this.rail.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-rail]');

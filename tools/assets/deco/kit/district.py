@@ -1404,13 +1404,22 @@ BUILDERS = {
 # hotel in the front-row centre with a low kiosk in front of it so nothing
 # hides it, the tallest kept off the row nearest the camera, neighbours always
 # different, nothing more than twice except the hero and the marina (once).
+# Plot index -> building type. 0-15 are the first four-by-four core (index =
+# row * 4 + col); 16-31 the four outer columns, nearest first (see PLOTS in
+# client/src/world/city/layout.ts). CELLS gives each index its [column, row] on the
+# eight-column grid so check.mjs can test neighbours.
 LAYOUT = {
     "plots": [
         "plot_surf_shop", "plot_deco_hotel", "plot_beach_cafe", "plot_marina_office",
         "plot_trailer", "plot_juice_kiosk", "plot_record_shop", "plot_motel_court",
         "plot_motel_court", "plot_diner", "plot_surf_shop", "plot_record_shop",
         "plot_juice_kiosk", "plot_beach_cafe", "plot_trailer", "plot_diner",
+        "plot_diner", "plot_juice_kiosk", "plot_beach_cafe", "plot_trailer",
+        "plot_juice_kiosk", "plot_beach_cafe", "plot_record_shop", "plot_motel_court",
+        "plot_motel_court", "plot_record_shop", "plot_surf_shop", "plot_diner",
+        "plot_deco_hotel", "plot_surf_shop", "plot_trailer", "plot_marina_office",
     ],
+    "cells": [[2, 0], [3, 0], [4, 0], [5, 0], [2, 1], [3, 1], [4, 1], [5, 1], [2, 2], [3, 2], [4, 2], [5, 2], [2, 3], [3, 3], [4, 3], [5, 3], [1, 0], [6, 0], [1, 1], [6, 1], [1, 2], [6, 2], [1, 3], [6, 3], [0, 0], [7, 0], [0, 1], [7, 1], [0, 2], [7, 2], [0, 3], [7, 3]],
     "hangout": "plot_beach_bar",
     "overflow": "plot_coworking",
 }

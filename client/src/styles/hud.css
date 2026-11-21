@@ -2139,35 +2139,81 @@ button.toast:hover {
   z-index: 18;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 6px;
   border-radius: 999px;
   background: var(--panel);
   border: 1px solid var(--line);
   backdrop-filter: blur(14px);
   color: var(--ink-2);
   font-size: 12.5px;
-  pointer-events: none;
+}
+
+.hint__items {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 2px 8px;
 }
 
 .hint__item {
-  transition:
-    opacity 0.5s ease,
-    max-width 0.5s var(--ease-out);
   white-space: nowrap;
+  transition: opacity 0.5s ease;
 }
 
 .hint__item--done {
-  opacity: 0.35;
+  opacity: 0.45;
 }
 
+.hint__toggle {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px 5px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: 600 12px/1 var(--font);
+  cursor: pointer;
+}
+
+.hint__toggle .i {
+  width: 16px;
+  height: 16px;
+}
+
+.hint__toggle:hover,
+.hint__toggle[aria-expanded='true'] {
+  color: var(--ink);
+  background: var(--fill-2);
+}
+
+/* Learned: fold into the Controls button; hover or click opens the list again. */
 .hint--done {
-  opacity: 0;
-  translate: 0 8px;
+  gap: 2px;
+}
+
+.hint--done .hint__toggle {
+  display: inline-flex;
+}
+
+.hint--done .hint__items {
+  display: none;
+}
+
+.hint--done:hover .hint__items,
+.hint--done.hint--open .hint__items {
+  display: flex;
+}
+
+.hint--done .hint__item--done {
+  opacity: 1;
 }
 
 .app--expanded .hint {
   opacity: 0;
+  pointer-events: none;
 }
 
 /* -------------------------------------------------------------- the city's pins */

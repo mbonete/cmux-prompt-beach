@@ -179,22 +179,25 @@ for (const file of files) {
   const props = [...nodes.keys()].filter((n) => n.startsWith('prop:')).map((n) => `${n.slice(5)}x${nodes.get(n).length}`);
   summary.push(`${name.padEnd(18)} ${String(tris).padStart(6)} tris  ${root.listMaterials().length} materials${props.length ? '  props: ' + props.join(' ') : ''}`);
 }
-// district layout: 16 plots by index, the hangout and the overflow
+// district layout: 32 plots by index (with their grid cells), the hangout and the overflow
 const lay = manifest.layout;
 if (!lay) errors.push('manifest.json: no layout');
 else {
   const plots = new Set(files.map((f) => f.replace(/\.gltf$/, '')).filter((n) => n.startsWith('plot_')));
-  if (!Array.isArray(lay.plots) || lay.plots.length !== 16) errors.push('layout.plots must list 16 plot types');
+  if (!Array.isArray(lay.plots) || lay.plots.length !== 32) errors.push('layout.plots must list 32 plot types');
+  if (!Array.isArray(lay.cells) || lay.cells.length !== (lay.plots?.length ?? 0)) errors.push('layout.cells must give a [column, row] per plot');
+  const at = new Map((lay.cells ?? []).map(([c, r], i) => [`${c},${r}`, lay.plots?.[i]]));
   const count = {};
   (lay.plots ?? []).forEach((t, i) => {
     if (!plots.has(t)) errors.push(`layout.plots[${i}] = ${t} is not a plot building`);
     count[t] = (count[t] ?? 0) + 1;
     const r = Math.floor(i / 4);
     const c = i % 4;
-    if (c > 0 && lay.plots[i - 1] === t) errors.push(`layout: plots ${i - 1} and ${i} are both ${t}`);
-    if (r > 0 && lay.plots[i - 4] === t) errors.push(`layout: plots ${i - 4} and ${i} are both ${t}`);
+    const [cc, rr] = lay.cells?.[i] ?? [c, r];
+    if (at.get(`${cc + 1},${rr}`) === t) errors.push(`layout: plot ${i} and its right-hand neighbour are both ${t}`);
+    if (at.get(`${cc},${rr + 1}`) === t) errors.push(`layout: plot ${i} and the one behind it are both ${t}`);
   });
-  for (const [t, n] of Object.entries(count)) if (n > 3) errors.push(`layout: ${t} used ${n} times (max 3)`);
+  for (const [t, n] of Object.entries(count)) if (n > 4) errors.push(`layout: ${t} used ${n} times (max 4)`);
   if (!['plot_deco_hotel'].includes(lay.plots?.[1]) && lay.plots?.[2] !== 'plot_deco_hotel') errors.push('layout: the hero plot_deco_hotel belongs on plot 1 or 2');
   for (const k of ['hangout', 'overflow']) if (!plots.has(lay[k])) errors.push(`layout.${k} = ${lay[k]} is not a plot building`);
   summary.push(`layout: ${Object.entries(count).map(([t, n]) => `${t.slice(5)}x${n}`).join(' ')}; hangout ${lay.hangout}, overflow ${lay.overflow}`);

@@ -1,5 +1,5 @@
 import { InstancedMesh, type Object3D, Vector3 } from 'three/webgpu';
-import { HANGOUT, OVERFLOW, PLOTS, PLOT_D, PLOT_W } from '../city/layout';
+import { HANGOUT, OVERFLOW, OVERFLOW_HALF, PLOTS, PLOT_D, PLOT_W } from '../city/layout';
 
 // Shared helpers for background life: a seeded random source, the places
 // nothing may stand (plots, the beach bar), and the palms already planted.
@@ -32,7 +32,7 @@ export function onPlot(x: number, z: number, margin = 1.5): boolean {
     const hz = (turned ? PLOT_W : PLOT_D) / 2 + margin;
     if (Math.abs(x - p.x) < hx && Math.abs(z - p.z) < hz) return true;
   }
-  if (Math.abs(x - OVERFLOW.x) < PLOT_D / 2 + margin && Math.abs(z - OVERFLOW.z) < PLOT_W / 2 + margin) return true;
+  if (Math.abs(x - OVERFLOW.x) < OVERFLOW_HALF.x + margin && Math.abs(z - OVERFLOW.z) < OVERFLOW_HALF.z + margin) return true;
   return false;
 }
 

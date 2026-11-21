@@ -144,7 +144,7 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
   "activity": [ /* 36 bins */ ] | null,
 
   // new for world v2
-  "plot": 0..15 | "hangout" | "overflow" | null,
+  "plot": 0..31 | "hangout" | "overflow" | null,
   "spot": 0..5 | null,
   "archived": false
 }
@@ -166,9 +166,9 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
 #### Plot, spot, archived (new)
 
 - **`plot`:**
-  - `0`–`15`: the repo's own plot.
+  - `0`–`31`: the repo's own plot.
   - `"hangout"`: an agent outside any git repo.
-  - `"overflow"`: the shared co-working building for repos beyond 16.
+  - `"overflow"`: the shared co-working building for repos beyond 32.
   - `null`: a shell in a repo that has no plot.
   - **Shells never claim a plot or a spot.** They show their repo's plot if it has one.
 - **`spot`:** the agent's place on its plot.
@@ -197,11 +197,11 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
 
 ```jsonc
 {
-  "plotCount": 16,
+  "plotCount": 32,
   "spotsPerPlot": 6,
   "plots": {                         // keyed by repo key (item.repo.key); every repo that owns a plot or waits in overflow
     "/Users/…/storefront/.git": {
-      "plot": 0,                     // 0..15 or "overflow"
+      "plot": 0,                     // 0..31 or "overflow"
       "name": "storefront",
       "kind": "web",
       "firstSeen": "<iso>",
@@ -210,14 +210,14 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
       "agents": 8                    // visible (non-archived) agents
     }
   },
-  "free": [12, 13, 14, 15],          // plot numbers nobody owns: targets for movePlot
+  "free": [12, 13, 14, 15, …],          // plot numbers nobody owns: targets for movePlot
   "archived": [{ "sessionId": "<uuid>", "at": "<iso>" }]   // the Archive view; join on item.agent.sessionId
 }
 ```
 
 - **New repos:** a repo with an agent takes the lowest free plot, in the order the repos were first seen, and keeps it.
 - **Dormant repos:** a repo with no sessions shows `active: false` and a `lastSeen` (dim its tag). After 7 days it is dropped and its plot is free again.
-- **Overflow:** when all 16 plots are taken, new repos get `"overflow"`. When a plot frees, the overflow repo seen first moves into it.
+- **Overflow:** when all 32 plots are taken, new repos get `"overflow"`. When a plot frees, the overflow repo seen first moves into it.
 - **Where it is saved:**
   - Real mode: `~/.config/cmux-switchboard/world.json` (folder 0700, file 0600, written atomically), or `SWITCHBOARD_WORLD_FILE`.
   - Demo: kept in memory and never written.
@@ -263,7 +263,7 @@ Needs `X-Switchboard-Token`, `Content-Type: application/json`, a body under 64 K
 | `markRead` | `workspaceId` | Clears that workspace's cmux notifications. |
 | `archive` (new) | `sessionId` | `404` if no running session has that id. |
 | `unarchive` (new) | `sessionId` | Fine if it was not archived. |
-| `movePlot` (new) | `repoKey`, `plot` (integer 0–15) | Only to a free plot (`409` if taken). `404` for an unknown repo. `400` for anything that is not an integer from 0 to 15. |
+| `movePlot` (new) | `repoKey`, `plot` (integer 0–31) | Only to a free plot (`409` if taken). `404` for an unknown repo. `400` for anything that is not an integer from 0 to 31. |
 
 World actions update the snapshot and push it at once.
 

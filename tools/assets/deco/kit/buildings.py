@@ -972,14 +972,12 @@ def tower_3():
     return b
 
 
+# Background blocks (bg_1..bg_4) are no longer built: the island is the 32 plots
+# and the skylines (decision 2026-11-21). Their builders above are kept for reference.
 BUILDERS = {
     "plot_deco_hotel": plot_deco_hotel,
     "plot_beach_cafe": plot_beach_cafe,
     "plot_diner": plot_diner,
-    "bg_1": bg_1,
-    "bg_2": bg_2,
-    "bg_3": bg_3,
-    "bg_4": bg_4,
     "tower_1": tower_1,
     "tower_2": tower_2,
     "tower_3": tower_3,

@@ -1,6 +1,6 @@
 import type { AppState } from '../app/state';
 import type { Lane } from '../data/derive';
-import { BAY_EDGE_X, BEACH, BEACH_ROAD, HANGOUT, OVERFLOW, PLOTS, PLOT_D, PLOT_W, PROMENADE, SKYLINE, STREETS_EW, STREETS_NS } from '../world/city/layout';
+import { BAY_EDGE_X, BEACH, BEACH_ROAD, CAUSEWAY_END, CITY, HANGOUT, INLAND_SKYLINE, OVERFLOW, OVERFLOW_HALF, PLOTS, PLOT_D, PLOT_W, PROMENADE, SKYLINE, STREETS_EW, STREETS_NS, STREET_WEST } from '../world/city/layout';
 import { repoHex } from './panels';
 
 // The round minimap, bottom left. It turns with the camera (what's ahead is
@@ -117,14 +117,17 @@ export class Minimap {
     // Water, sand, land, the bay and the skyline across it.
     rect(-900, BEACH.zShore - 30, BAY_EDGE_X, BEACH.zShore, C.sea);
     rect(-900, BEACH.zShore, BAY_EDGE_X, PROMENADE.z0, C.sand);
-    rect(-900, PROMENADE.z0, BAY_EDGE_X, 600, C.land);
+    rect(-900, BEACH.zShore - 400, 1200, 1200, C.sea);
+    rect(-900, BEACH.zShore, BAY_EDGE_X, PROMENADE.z0, C.sand);
+    rect(-900, PROMENADE.z0, BAY_EDGE_X, CITY.z1 + 6, C.land);
+    rect(INLAND_SKYLINE.x0 - 150, INLAND_SKYLINE.z0, INLAND_SKYLINE.x1 + 150, INLAND_SKYLINE.z1 + 300, C.land);
     rect(-900, PROMENADE.z0, BAY_EDGE_X, PROMENADE.z1, C.promenade);
     rect(BAY_EDGE_X, -400, SKYLINE.x0 - 20, 700, C.sea);
     rect(SKYLINE.x0 - 20, SKYLINE.z0, SKYLINE.x1, SKYLINE.z1, C.land);
     // Streets.
     rect(-900, BEACH_ROAD.z0, BAY_EDGE_X, BEACH_ROAD.z1, C.road);
-    for (const s of STREETS_EW) rect(-900, s.z - s.width / 2, BAY_EDGE_X, s.z + s.width / 2, C.road);
-    for (const s of STREETS_NS) rect(s.x - s.width / 2, BEACH_ROAD.z0, s.x + s.width / 2, 600, C.road);
+    for (const s of STREETS_EW) rect(STREET_WEST, s.z - s.width / 2, BAY_EDGE_X, s.z + s.width / 2, C.road);
+    for (const s of STREETS_NS) rect(s.x - s.width / 2, BEACH_ROAD.z0, s.x + s.width / 2, CAUSEWAY_END, C.road);
 
     // Plots: vacant ones faint, a repo's in its colour, pink while someone there needs you.
     const owner = new Map<number | string, { color: string; dormant: boolean }>();
@@ -146,7 +149,7 @@ export class Minimap {
     };
     for (const p of PLOTS) plotRect(p.index, p.x, p.z, PLOT_W, PLOT_D);
     plotRect('hangout', HANGOUT.x, HANGOUT.z, 16, 12);
-    plotRect('overflow', OVERFLOW.x, OVERFLOW.z, PLOT_D, PLOT_W);
+    plotRect('overflow', OVERFLOW.x, OVERFLOW.z, OVERFLOW_HALF.x * 2, OVERFLOW_HALF.z * 2);
 
     // People, needs-you on top.
     const pulse = 0.5 + 0.5 * Math.sin(now / 260);
