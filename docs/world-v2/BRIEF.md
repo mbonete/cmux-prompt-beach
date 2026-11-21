@@ -112,7 +112,7 @@ Low-rise (1 to 3 storeys) in the district; a pastel skyline of towers beyond.
 ## Asset format (everyone)
 
 - **File format:** glTF 2.0 as `.gltf` + `.bin` with **external WebP textures**, because a CSP that allows only `img-src 'self'` cannot load embedded GLB images.
-- **Allowed:** `KHR_mesh_quantization`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_materials_clearcoat`, `KHR_materials_transmission` and `KHR_materials_ior`.
+- **Allowed:** `EXT_texture_webp` (needed to reference WebP images; no decoder), `KHR_mesh_quantization`, `KHR_texture_transform`, `KHR_materials_emissive_strength`, `KHR_materials_clearcoat`, `KHR_materials_transmission` and `KHR_materials_ior`.
 - **Not allowed:** Draco, `EXT_meshopt_compression`, KTX2/Basis.
 - **Textures:**
   - power of two

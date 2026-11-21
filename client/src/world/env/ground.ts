@@ -11,7 +11,9 @@ import {
   STREETS_EW,
   STREETS_NS,
 } from '../city/layout';
-import { asphaltMaterial, concreteMaterial, grassMaterial, paverMaterial, sandMaterial, stuccoMaterial } from './materials';
+import { Color } from 'three/webgpu';
+import { concreteMaterial, grassMaterial, stuccoMaterial } from './materials';
+import { asphaltTextured, groundMaterial, sandTextured, textureSet } from './textured';
 
 // The land: city lawns, the promenade with its low seawall, the beach sloping
 // under the waterline, roads with markings, and the far shore for the skyline.
@@ -102,9 +104,11 @@ export function buildGround(): Group {
   group.name = 'ground';
 
   // City land (lawns under everything), up to the bay edge.
-  const land = new PlaneGeometry(BAY_EDGE_X + 700, LAND_FAR + 2, 1, 1);
+  // From under the promenade (so no gap ever shows the sea through) to far inland.
+  const landZ0 = PROMENADE.z0;
+  const land = new PlaneGeometry(BAY_EDGE_X + 700, LAND_FAR - landZ0, 1, 1);
   land.rotateX(-Math.PI / 2);
-  land.translate((BAY_EDGE_X - 700) / 2, CITY_Y, LAND_FAR / 2 - 2);
+  land.translate((BAY_EDGE_X - 700) / 2, CITY_Y - 0.005, (LAND_FAR + landZ0) / 2);
   const lawn = new Mesh(land, grassMaterial());
   lawn.receiveShadow = true;
   lawn.name = 'lawns';
@@ -124,7 +128,7 @@ export function buildGround(): Group {
   group.add(farShore);
 
   // Beach.
-  const beach = new Mesh(beachGeometry(), sandMaterial());
+  const beach = new Mesh(beachGeometry(), sandTextured(textureSet('sand_dry', 3, '2k'), textureSet('sand_wet', 1.87)));
   beach.receiveShadow = true;
   beach.name = 'beach';
   group.add(beach);
@@ -133,7 +137,7 @@ export function buildGround(): Group {
   const promH = 0.16;
   const prom = new Mesh(
     box(PROMENADE.x1 - PROMENADE.x0, promH, PROMENADE.z1 - PROMENADE.z0, (PROMENADE.x0 + PROMENADE.x1) / 2, CITY_Y, (PROMENADE.z0 + PROMENADE.z1) / 2),
-    paverMaterial(0xe9c9b4),
+    groundMaterial(textureSet('pavers', 2, '2k'), new Color(0xf6dccb)),
   );
   prom.receiveShadow = true;
   prom.name = 'promenade';
@@ -159,7 +163,7 @@ export function buildGround(): Group {
   roads.push(roadStrip((BEACH_ROAD.x0 + BEACH_ROAD.x1) / 2, (BEACH_ROAD.z0 + BEACH_ROAD.z1) / 2, BEACH_ROAD.x1 - BEACH_ROAD.x0, BEACH_ROAD.z1 - BEACH_ROAD.z0, true));
   for (const s of STREETS_EW) roads.push(roadStrip((-300 + BAY_EDGE_X) / 2, s.z, BAY_EDGE_X + 300, s.width, true));
   for (const s of STREETS_NS) roads.push(roadStrip(s.x, (BEACH_ROAD.z1 + 420) / 2, 420 - BEACH_ROAD.z1, s.width, false));
-  const roadMesh = new Mesh(mergeGeometries(roads), asphaltMaterial());
+  const roadMesh = new Mesh(mergeGeometries(roads), asphaltTextured(textureSet('asphalt', 3, '2k')));
   roadMesh.receiveShadow = true;
   roadMesh.name = 'roads';
   group.add(roadMesh);
@@ -190,7 +194,7 @@ export function buildGround(): Group {
     nsLine(s.x - s.width / 2 - walkW / 2);
     nsLine(s.x + s.width / 2 + walkW / 2);
   }
-  const walkMesh = new Mesh(mergeGeometries(walks), paverMaterial(0xd9d1c5));
+  const walkMesh = new Mesh(mergeGeometries(walks), groundMaterial(textureSet('concrete', 1.8), new Color(0xf0ebe4)));
   walkMesh.receiveShadow = true;
   walkMesh.name = 'sidewalks';
   group.add(walkMesh);
