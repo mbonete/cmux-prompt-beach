@@ -19,6 +19,8 @@ const MIN_PITCH = MathUtils.degToRad(25);
 const MAX_PITCH = MathUtils.degToRad(65);
 /** How steep the camera may rise to see over a building behind it. */
 const RISE_MAX_PITCH = MathUtils.degToRad(78);
+/** The close-up distance the card's room (cardPx) is given for (World.FOCUS_DISTANCE). */
+const CARD_DISTANCE = 17;
 /** Metres beyond the zoom's destination checked for buildings, so rising starts early. */
 const RISE_LOOKAHEAD = 4;
 /** Fastest the camera tilts up over a building (radians a second). */
@@ -39,7 +41,7 @@ export class CameraRig {
   readonly desired: View;
   reducedMotion = false;
   /** Set while a flight is running; cleared by any manual input. */
-  private flight: { from: View; to: View; t: number; dur: number; shiftFrom: number } | null = null;
+  private flight: { from: View; to: View; t: number; dur: number; shiftFrom: number; cardFrom: number } | null = null;
   private follow: (() => Vector3 | null) | null = null;
   private readonly ray = new Raycaster();
   private readonly ground = new Plane(new Vector3(0, 1, 0), 0);
@@ -60,6 +62,15 @@ export class CameraRig {
    */
   shiftPx = 0;
   private shiftCur = 0;
+  /**
+   * Room for an open card beside the person (px, at the close-up distance). It
+   * is held constant in the world, not on screen: zooming out with a card open
+   * then pulls straight back (a fixed pixel offset grows in metres as the camera
+   * backs away, which slid the camera sideways), and the person drifts gently
+   * toward the centre with their card.
+   */
+  cardPx = 0;
+  private cardCur = 0;
   /** Canvas height in CSS pixels, for converting the shift to metres. */
   viewHeight = 1;
   private readonly right = new Vector3();
@@ -120,10 +131,11 @@ export class CameraRig {
       copyView(this.desired, to);
       copyView(this.current, to);
       this.shiftCur = this.shiftPx;
+      this.cardCur = this.cardPx;
       this.flight = null;
       return;
     }
-    this.flight = { from: cloneView(this.current), to, t: 0, dur: seconds, shiftFrom: this.shiftCur };
+    this.flight = { from: cloneView(this.current), to, t: 0, dur: seconds, shiftFrom: this.shiftCur, cardFrom: this.cardCur };
   }
 
   /** Keep the target on a moving point (e.g. a selected agent) until the user pans. */
@@ -140,6 +152,7 @@ export class CameraRig {
       f.t = Math.min(1, f.t + dt / f.dur);
       const k = flightEase(f.t);
       this.shiftCur = MathUtils.lerp(f.shiftFrom, this.shiftPx, k);
+      this.cardCur = MathUtils.lerp(f.cardFrom, this.cardPx, k);
       this.current.target.lerpVectors(f.from.target, f.to.target, k);
       // Distance moves in log space, so zooming in from far feels even, not a rush at the end.
       this.current.distance = Math.exp(MathUtils.lerp(Math.log(f.from.distance), Math.log(f.to.distance), k));
@@ -151,6 +164,7 @@ export class CameraRig {
       }
     } else {
       this.shiftCur += (this.shiftPx - this.shiftCur) * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 7));
+      this.cardCur += (this.cardPx - this.cardCur) * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 7));
       if (this.follow) {
         const p = this.follow();
         if (p) this.desired.target.lerp(p, 1 - Math.exp(-dt * 4));
@@ -167,7 +181,7 @@ export class CameraRig {
   /** True while the camera is still moving noticeably. */
   get moving() {
     if (this.flight) return true;
-    if (Math.abs(this.shiftPx - this.shiftCur) > 0.5) return true;
+    if (Math.abs(this.shiftPx - this.shiftCur) > 0.5 || Math.abs(this.cardPx - this.cardCur) > 0.5) return true;
     const c = this.current;
     const d = this.desired;
     return (
@@ -194,7 +208,7 @@ export class CameraRig {
     const cp = Math.cos(v.pitch);
     // Shift camera and aim sideways together so the target sits left of centre.
     const perPx = (2 * v.distance * Math.tan(MathUtils.degToRad(this.camera.fov / 2))) / Math.max(1, this.viewHeight);
-    this.right.set(Math.cos(v.yaw), 0, -Math.sin(v.yaw)).multiplyScalar(this.shiftCur * perPx);
+    this.right.set(Math.cos(v.yaw), 0, -Math.sin(v.yaw)).multiplyScalar((this.shiftCur + this.cardShown(v.distance)) * perPx);
     this.look.copy(v.target).add(this.right);
     this.camera.position.set(
       this.look.x + Math.sin(v.yaw) * cp * v.distance,
@@ -443,9 +457,13 @@ export class CameraRig {
     this.desired.pitch = MathUtils.clamp(this.desired.pitch + dy * 0.004, MIN_PITCH, MAX_PITCH);
   }
 
-  /** Zoom by a factor; with a cursor, keep the ground point under it fixed. */
+  /**
+   * Zoom by a factor. Zooming in heads for the point under the cursor; zooming
+   * out pulls straight back (anchoring it to the cursor slid the view sideways,
+   * away from wherever the pointer happened to rest).
+   */
   zoomBy(factor: number, ndc: Vector2 | null) {
-    const before = ndc ? this.groundAt(ndc) : null;
+    const before = ndc && factor < 1 ? this.groundAt(ndc) : null;
     const next = MathUtils.clamp(this.desired.distance * factor, MIN_DIST, MAX_DIST);
     const applied = next / this.desired.distance;
     this.desired.distance = next;
@@ -453,6 +471,30 @@ export class CameraRig {
       // Move the target toward the cursor point by the same proportion.
       this.desired.target.lerp(before, 1 - applied);
       clampView(this.desired);
+    }
+  }
+
+  /** The card's room in px at this distance: constant in metres, so it shrinks on screen as you back away. */
+  private cardShown(distance: number) {
+    return this.cardCur * Math.min(1, CARD_DISTANCE / Math.max(1, distance));
+  }
+
+  /**
+   * The card is closing (you moved away): take its room into where the camera
+   * points, so nothing on screen moves.
+   */
+  foldCard() {
+    const px = this.cardShown(this.current.distance);
+    this.cardCur = 0;
+    this.cardPx = 0;
+    if (!px) return;
+    const perPx = (2 * this.current.distance * Math.tan(MathUtils.degToRad(this.camera.fov / 2))) / Math.max(1, this.viewHeight);
+    const yaw = this.current.yaw;
+    const dx = Math.cos(yaw) * px * perPx;
+    const dz = -Math.sin(yaw) * px * perPx;
+    for (const v of [this.current, this.desired]) {
+      v.target.x += dx;
+      v.target.z += dz;
     }
   }
 

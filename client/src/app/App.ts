@@ -192,7 +192,11 @@ export class App {
    * card away. The side panel stays: it was opened on purpose.
    */
   private leaveCloseUp() {
-    if (this.state.selected && !this.state.expanded) this.deselect();
+    if (!this.state.selected || this.state.expanded) return;
+    // The view stays exactly where it is: the card's share of the framing shift
+    // becomes part of where the camera points instead of sliding away.
+    this.world?.rig.foldCard();
+    this.deselect();
   }
 
   private inWorld(it: Item) {
@@ -255,7 +259,8 @@ export class App {
       // card will have once the camera lands (not the current one): computed from
       // the gap at take-off, the framing re-centred a second or two after landing.
       const card = this.card.open ? Math.round((this.card.el.offsetWidth + cardGap(this.world.pxPerMAt(FOCUS_DISTANCE))) / 2) : 0;
-      this.world.rig.shiftPx = (right - PANEL_GAP - (left - base)) / 2 + card;
+      this.world.rig.shiftPx = (right - PANEL_GAP - (left - base)) / 2;
+      this.world.rig.cardPx = card;
     }
   }
 

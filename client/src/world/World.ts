@@ -634,7 +634,7 @@ export class World {
     const points = [0.85, 1.2, 1.45].map((h) => p.clone().setY(p.y + h));
     // Where the camera will really be: the rig shifts it sideways to make room for the card.
     const perPx = (2 * FOCUS_DISTANCE * Math.tan(MathUtils.degToRad(this.rig.camera.fov / 2))) / Math.max(1, this.canvas.clientHeight);
-    const side = this.rig.shiftPx * perPx;
+    const side = (this.rig.shiftPx + this.rig.cardPx) * perPx;
     const pos = new Vector3();
     let best = base;
     let fewest = 4;
