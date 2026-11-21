@@ -17,6 +17,12 @@ export interface View {
 
 const MIN_PITCH = MathUtils.degToRad(25);
 const MAX_PITCH = MathUtils.degToRad(65);
+/** How steep the camera may rise to see over a building behind it. */
+const RISE_MAX_PITCH = MathUtils.degToRad(78);
+/** Metres beyond the zoom's destination checked for buildings, so rising starts early. */
+const RISE_LOOKAHEAD = 4;
+/** Fastest the camera tilts up over a building (radians a second). */
+const RISE_SPEED = MathUtils.degToRad(110);
 const MIN_DIST = 7;
 /** Anything taller than this (metres) is building mass the camera must not pass through. */
 const SOLID = 5;
@@ -56,6 +62,8 @@ export class CameraRig {
   private readonly look = new Vector3();
   /** Eased camera collision: how much of the distance is kept, and how far it is lifted. */
   private keep = 1;
+  /** Extra pitch (radians) that lifts the camera over a building behind it. */
+  private raise = 0;
   private lift = 0;
   /**
    * Collision corrections run only while the user steers the camera; a flight
@@ -91,8 +99,15 @@ export class CameraRig {
     // Land somewhere clear: work out now how close the camera may come to what
     // it looks at, so nothing has to correct it after it arrives.
     this.clearDestination(to);
+    // Start from where the camera visibly is: fold the collision corrections into
+    // the view before dropping them, or the camera would jump as the flight begins.
+    if (this.steering) {
+      this.current.pitch = Math.min(RISE_MAX_PITCH, this.current.pitch + this.raise);
+      this.current.distance *= this.keep;
+    }
     this.keep = 1;
     this.lift = 0;
+    this.raise = 0;
     this.steering = false;
     if (this.reducedMotion) {
       copyView(this.desired, to);
@@ -223,41 +238,71 @@ export class CameraRig {
   }
 
   /**
-   * Camera collision: walk the line from what we look at out to the camera; if a
-   * building is in the way, bring the camera in front of it (same angle, closer).
+   * Camera collision, while you steer. A building behind the camera lifts it:
+   * the camera keeps the distance you asked for and rises just enough for the
+   * line from what it looks at to clear every roof under it, so zooming out
+   * next to a building backs away and up in one move. (Pulling the camera in
+   * front of the wall instead undid every scroll, then let go all at once.)
+   * Only a tower too tall to rise over pulls the camera in.
    */
   private avoidObstacles() {
     const cam = this.camera.position;
     const from = this.look;
-    const dx = cam.x - from.x;
-    const dy = cam.y - from.y;
-    const dz = cam.z - from.z;
-    const len = Math.hypot(dx, dy, dz);
+    const v = this.current;
     // Terrace clutter (umbrellas, string lights) is seen through; only building mass blocks.
     const solid = (x: number, z: number) => {
       const h = this.obstacle!(x, z);
       return h > SOLID ? h : 0;
     };
+    // In quickly, out slowly: the camera glides over a building and settles back after it.
+    const ease = (cur: number, target: number, fast: boolean) =>
+      this.reducedMotion ? target : cur + (target - cur) * (1 - Math.exp(-this.dt * (fast ? 14 : 2.5)));
+
+    // The least pitch from which the line to the camera clears every roof beneath it.
+    const sx = Math.sin(v.yaw);
+    const sz = Math.cos(v.yaw);
+    // Look as far out as the zoom is heading (the camera eases toward it), so the
+    // rise starts before the camera reaches the wall, not after it's inside.
+    const horiz = (Math.max(v.distance, this.desired.distance) + RISE_LOOKAHEAD) * Math.cos(v.pitch);
+    let need = v.pitch;
+    const steps = Math.min(64, Math.ceil(horiz / 1.25));
+    for (let i = 1; i <= steps; i++) {
+      const d = (i / steps) * horiz;
+      if (d < 4.5) continue;
+      const h = solid(from.x + sx * d, from.z + sz * d);
+      if (h) need = Math.max(need, Math.atan2(h + 0.8 - from.y, d));
+    }
+    const raiseTarget = Math.max(0, Math.min(RISE_MAX_PITCH, need) - v.pitch);
+    // Rising is also capped in speed: a wall entering the view tilts the camera up
+    // gently instead of lurching it up in one frame.
+    const eased = ease(this.raise, raiseTarget, raiseTarget > this.raise);
+    this.raise = this.reducedMotion ? eased : Math.min(eased, this.raise + RISE_SPEED * this.dt);
+    const pitch = v.pitch + this.raise;
+    const cp = Math.cos(pitch);
+    const dx = sx * cp * v.distance;
+    const dy = Math.sin(pitch) * v.distance;
+    const dz = sz * cp * v.distance;
+
+    // Too tall to rise over (a tower right behind): come in front of it instead.
     let keepTarget = 1;
-    if (len <= 28) {
-      const steps = Math.min(48, Math.ceil(len / 1.25));
-      for (let i = 1; i <= steps; i++) {
-        const t = i / steps;
+    if (need > RISE_MAX_PITCH) {
+      const len = v.distance;
+      const n = Math.min(48, Math.ceil(len / 1.25));
+      for (let i = 1; i <= n; i++) {
+        const t = i / n;
         const d = t * len;
         if (d < 4.5) continue;
         if (from.y + dy * t < solid(from.x + dx * t, from.z + dz * t) + 0.6) {
-          keepTarget = Math.max((d - 1.5) / len, 7 / len);
+          keepTarget = Math.max((d - 1.5) / len, MIN_DIST / len);
           break;
         }
       }
     }
-    // Ease both corrections (in quickly, out slowly) so the camera glides
-    // around a building instead of snapping to a new distance in one frame.
-    const ease = (cur: number, target: number, fast: boolean) =>
-      this.reducedMotion ? target : cur + (target - cur) * (1 - Math.exp(-this.dt * (fast ? 12 : 3)));
     this.keep = ease(this.keep, keepTarget, keepTarget < this.keep);
-    if (this.keep < 0.999) cam.set(from.x + dx * this.keep, from.y + dy * this.keep, from.z + dz * this.keep);
-    const floor = solid(cam.x, cam.z) + (len > 28 ? 2.5 : 1.2);
+    cam.set(from.x + dx * this.keep, from.y + dy * this.keep, from.z + dz * this.keep);
+
+    // Never inside a roof.
+    const floor = solid(cam.x, cam.z) + (v.distance > 28 ? 2.5 : 1.2);
     const liftTarget = Math.max(0, floor - cam.y);
     this.lift = ease(this.lift, liftTarget, liftTarget > this.lift);
     cam.y += this.lift;
