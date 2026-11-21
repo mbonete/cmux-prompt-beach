@@ -571,7 +571,7 @@ export class World {
   }
 
   /** Flies to a framed close-up of someone and keeps them in frame until the user pans. */
-  focusAgent(id: string, seconds = 1.5): boolean {
+  focusAgent(id: string, seconds = 1.2): boolean {
     const p = this.people?.positionOf(id, new Vector3());
     if (!p) return false;
     this.rig.poke();

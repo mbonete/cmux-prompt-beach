@@ -4,7 +4,7 @@ import { MathUtils, PerspectiveCamera, Plane, Raycaster, Vector2, Vector3 } from
 //   left drag: pan · right drag / two fingers / shift-drag: rotate and tilt
 //   wheel / pinch: zoom toward the cursor · double click: focus (handled by the world)
 // Tilt is limited to 25°–65° so the city always reads as a city, never a map
-// or a street view. Flights ease in and out; reduced motion cuts instead.
+// or a street view. Flights start at once and glide to a stop; reduced motion cuts instead.
 
 export interface View {
   target: Vector3;
@@ -116,7 +116,7 @@ export class CameraRig {
       // ride the same curve and arrive together; nothing settles afterwards.
       const f = this.flight;
       f.t = Math.min(1, f.t + dt / f.dur);
-      const k = easeInOut(f.t);
+      const k = flightEase(f.t);
       this.shiftCur = MathUtils.lerp(f.shiftFrom, this.shiftPx, k);
       this.current.target.lerpVectors(f.from.target, f.to.target, k);
       // Distance moves in log space, so zooming in from far feels even, not a rush at the end.
@@ -447,6 +447,28 @@ function lerpAngle(a: number, b: number, t: number) {
   return a + d * t;
 }
 
-function easeInOut(t: number) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+/**
+ * Flights answer the click at once and glide to a soft stop: cubic-bezier(0.2,
+ * 0.25, 0.25, 1). The ease-in-out used before stood almost still for the first
+ * third (3% of the way after 0.3 s), so a flight seemed to start by itself a
+ * moment after the click.
+ */
+function flightEase(t: number) {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const [x1, y1, x2, y2] = [0.2, 0.25, 0.25, 1];
+  const bx = (u: number) => 3 * (1 - u) * (1 - u) * u * x1 + 3 * (1 - u) * u * u * x2 + u * u * u;
+  const by = (u: number) => 3 * (1 - u) * (1 - u) * u * y1 + 3 * (1 - u) * u * u * y2 + u * u * u;
+  // Solve bx(u) = t (it is monotonic), then read y.
+  let lo = 0;
+  let hi = 1;
+  let u = t;
+  for (let i = 0; i < 24; i++) {
+    const x = bx(u);
+    if (Math.abs(x - t) < 1e-5) break;
+    if (x < t) lo = u;
+    else hi = u;
+    u = (lo + hi) / 2;
+  }
+  return by(u);
 }
