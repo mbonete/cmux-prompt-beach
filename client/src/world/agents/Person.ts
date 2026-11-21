@@ -186,7 +186,8 @@ export class Person {
 
   private loopClip(mood: Mood): string {
     if (this.seated) {
-      if (mood === 'work') return this.table ? 'work_table' : 'sitting_writing';
+      // Rocketbox's work_table is a standing lean; at a desk, forearms on the table reads as typing.
+      if (mood === 'work') return this.table ? 'sit_table_idle' : 'sitting_writing';
       if (mood === 'doze') return this.table ? 'sit_table_relaxed' : 'sit_chair_relaxed';
       return this.table ? 'sit_table_relaxed' : 'sit_chair_relaxed';
     }
@@ -199,7 +200,7 @@ export class Person {
   private variation(): string | null {
     const m = this.mood;
     if (this.seated) {
-      if (m === 'work') return this.table ? 'sit_table_idle' : null;
+      if (m === 'work') return this.table ? 'sit_table_relaxed' : null;
       if (m === 'doze') return this.table ? 'sit_table_yawn' : 'sit_chair_yawn';
       if (m === 'relax') return this.table ? 'sit_table_idle' : null;
       return null;
