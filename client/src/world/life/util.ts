@@ -1,5 +1,5 @@
 import { InstancedMesh, type Object3D, Vector3 } from 'three/webgpu';
-import { HANGOUT, OVERFLOW, OVERFLOW_HALF, PLOTS, PLOT_D, PLOT_W } from '../city/layout';
+import { HANGOUT, PLOTS, PLOT_D, PLOT_W } from '../city/layout';
 
 // Shared helpers for background life: a seeded random source, the places
 // nothing may stand (plots, the beach bar), and the palms already planted.
@@ -24,7 +24,7 @@ export function shuffle<T>(r: Rand, list: T[]): T[] {
   return list;
 }
 
-/** True on any plot's 20 x 16 m footprint grown by `margin` (or on the overflow plot). */
+/** True on any plot's 20 x 16 m footprint grown by `margin`. */
 export function onPlot(x: number, z: number, margin = 1.5): boolean {
   for (const p of PLOTS) {
     const turned = Math.abs(Math.sin(p.rot)) > 0.5;
@@ -32,7 +32,6 @@ export function onPlot(x: number, z: number, margin = 1.5): boolean {
     const hz = (turned ? PLOT_W : PLOT_D) / 2 + margin;
     if (Math.abs(x - p.x) < hx && Math.abs(z - p.z) < hz) return true;
   }
-  if (Math.abs(x - OVERFLOW.x) < OVERFLOW_HALF.x + margin && Math.abs(z - OVERFLOW.z) < OVERFLOW_HALF.z + margin) return true;
   return false;
 }
 

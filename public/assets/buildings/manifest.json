@@ -6182,7 +6182,6 @@
   },
   "layout": {
     "hangout": "plot_beach_bar",
-    "overflow": "plot_coworking",
     "plots": [
       "plot_surf_shop",
       "plot_deco_hotel",

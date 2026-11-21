@@ -246,18 +246,20 @@ export function createWorld({ file = null, initial = null, log = console } = {})
     }
 
     // 5. Plot and archived per item. Shells never claim a plot; they show their repo's if it has one.
+    //    A repo waiting for a plot (all taken) seats its agents at the beach bar.
     const out = items.map((it) => {
       const repo = it.repo?.key ? state.repos[String(it.repo.key)] : null;
+      const repoPlot = repo?.plot === OVERFLOW ? null : (repo?.plot ?? null);
       let plot = null;
-      if (it.agent) plot = it.repo?.key ? (repo?.plot ?? null) : HANGOUT;
-      else if (repo) plot = repo.plot;
+      if (it.agent) plot = it.repo?.key ? (repo?.plot === OVERFLOW ? HANGOUT : repoPlot) : HANGOUT;
+      else if (repo) plot = repoPlot;
       const sid = it.agent?.sessionId ? String(it.agent.sessionId) : null;
       const archived = Boolean(sid && state.archived[sid] != null && !needsYou(it));
       return { ...it, plot, spot: null, archived };
     });
 
     // 6. Spots, per plot. A numbered plot's spots belong to its repo (they move with it);
-    //    hangout and overflow are shared. Visible agents keep their spot; archived ones give
+    //    the hangout is shared (sessions outside a repo, and repos waiting for a plot). Visible agents keep their spot; archived ones give
     //    it up at once; ones that disappear keep it for a short grace period.
     const groupOf = (it) => (Number.isInteger(it.plot) ? `repo:${it.repo.key}` : it.plot);
     const visible = out.filter((it) => it.agent && !it.archived && it.plot !== null);

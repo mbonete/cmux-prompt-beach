@@ -3,7 +3,7 @@
 export type Phase = 'blocked' | 'working' | 'idle' | 'shell';
 export type RepoKind = 'web' | 'mobile' | 'docs' | 'data' | 'other';
 export type ToolCategory = 'edit' | 'command' | 'search' | 'web' | 'read' | 'other';
-export type PlotRef = number | 'hangout' | 'overflow' | null;
+export type PlotRef = number | 'hangout' | null;
 
 export interface ToolCall {
   name: string | null;
@@ -67,6 +67,7 @@ export interface Item {
 }
 
 export interface WorldPlot {
+  /** 'overflow': all plots are taken and it waits for one; its people sit at the beach bar. */
   plot: number | 'overflow';
   name: string;
   kind: RepoKind;

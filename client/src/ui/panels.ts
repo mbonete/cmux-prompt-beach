@@ -11,7 +11,7 @@ import { KIND_ICON, icon } from './icons';
 
 export interface PanelNav {
   focusAgent(id: string): void;
-  focusPlot(plot: number | 'hangout' | 'overflow'): void;
+  focusPlot(plot: number | 'hangout'): void;
   status(): string;
 }
 
@@ -193,7 +193,8 @@ export class Panels {
     for (const p of sorted) {
       const mine = rows.filter((r) => r.item.repo?.key === p.key);
       const counts = countLanes(mine);
-      const where = p.plot === 'overflow' ? 'Co-working' : `Plot ${p.plot + 1}`;
+      // All 32 plots taken: it waits for one, and its people sit at the beach bar.
+      const where = p.plot === 'overflow' ? 'Waiting for a plot · at the beach bar' : `Plot ${p.plot + 1}`;
       const status = p.active ? '' : `<span class="project__dormant">No sessions · plot kept until ${keptUntil(p.lastSeen)}</span>`;
       const canMove = free.length > 0 && this.moving !== p.key;
       h += `<li class="project${p.active ? '' : ' project--dormant'}" data-color="${repoHex(p.key)}"><button type="button" class="project__main" data-plot="${p.plot}">${icon(
@@ -273,7 +274,7 @@ export class Panels {
       const plot = t.closest<HTMLElement>('[data-plot]') ?? (row && !t.closest('button') ? row.querySelector<HTMLElement>('[data-plot]') : null);
       if (plot) {
         const v = plot.dataset.plot!;
-        return this.nav.focusPlot(v === 'hangout' || v === 'overflow' ? v : Number(v));
+        return this.nav.focusPlot(v === 'hangout' || v === 'overflow' ? 'hangout' : Number(v));
       }
       const un = t.closest<HTMLButtonElement>('[data-unarchive]');
       if (un) return void this.actions.run({ action: 'unarchive', sessionId: un.dataset.unarchive! }, 'Back from the archive', un);

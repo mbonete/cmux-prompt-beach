@@ -20,7 +20,7 @@ import { loadGLTF, loadJSON } from '../engine/assets';
 import { InstancedModel } from '../engine/instancer';
 import { perInstanceEmission } from '../engine/materials';
 import { Beam, PlotOutline, STATE_COLORS } from './markers';
-import { HANGOUT, OVERFLOW, PLOTS, PLOT_COUNT } from './layout';
+import { HANGOUT, PLOTS, PLOT_COUNT } from './layout';
 import { beachHeight } from '../env/ground';
 
 // The plots: a fixed building per plot (authored), always present. A vacant
@@ -28,7 +28,7 @@ import { beachHeight } from '../env/ground';
 // on, its outline lights in the repo's colour, and its tag appears. Buildings
 // and props are instanced across plots.
 
-export type PlotKey = number | 'hangout' | 'overflow';
+export type PlotKey = number | 'hangout';
 
 export interface Spot {
   position: Vector3;
@@ -50,7 +50,7 @@ export interface PlotState {
 interface BuildingManifest {
   assets: Record<string, { kind: string; files: string[] }>;
   /** Which building stands where; owned by the buildings kit. Falls back to PLOT_DESIGN. */
-  layout?: { plots?: string[]; hangout?: string; overflow?: string };
+  layout?: { plots?: string[]; hangout?: string };
 }
 
 /** Coarse height map of a building type: max height per 2 m cell over a 24 × 20 m area. */
@@ -83,7 +83,6 @@ const PLOT_DESIGN: string[][] = [
   ['plot_deco_hotel'],
 ];
 const HANGOUT_DESIGN = ['plot_beach_bar', 'plot_beach_cafe', 'plot_deco_hotel'];
-const OVERFLOW_DESIGN = ['plot_coworking', 'plot_deco_hotel'];
 
 /** Pastel stucco tints, cycled across plots so repeated buildings still read as different. */
 const PASTELS = [0xf6c5c0, 0xbfe9dc, 0xfae3a8, 0xc8dcf6, 0xe3cff4, 0xf8d5b2, 0xffffff, 0xd8f0c4].map((h) => new Color(h));
@@ -139,7 +138,6 @@ export class District {
       ...PLOTS.map((p) => ({ key: p.index as PlotKey, x: p.x, y: 0, z: p.z, rot: p.rot, type: prefer(lay.plots?.[p.index], PLOT_DESIGN[p.index % PLOT_DESIGN.length]) })),
       // The beach bar stands on the sand (its deck sits on posts).
       { key: 'hangout', ...HANGOUT, y: beachHeight(HANGOUT.z, HANGOUT.x), type: prefer(lay.hangout, HANGOUT_DESIGN) },
-      { key: 'overflow', ...OVERFLOW, y: 0, type: prefer(lay.overflow, OVERFLOW_DESIGN) },
     ];
 
     // Load each building type once; read its empties (spots, anchors, props).

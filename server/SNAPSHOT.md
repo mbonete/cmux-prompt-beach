@@ -148,7 +148,7 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
   "crew": 0,                         // helpers (subagents, workflow agents) whose transcripts in <session>/subagents/ were written in the last 90 s; never people of their own
 
   // new for world v2
-  "plot": 0..31 | "hangout" | "overflow" | null,
+  "plot": 0..31 | "hangout" | null,
   "spot": 0..5 | null,
   "archived": false
 }
@@ -172,7 +172,7 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
 - **`plot`:**
   - `0`–`31`: the repo's own plot.
   - `"hangout"`: an agent outside any git repo.
-  - `"overflow"`: the shared co-working building for repos beyond 32.
+  - A repo waiting for a plot (all 32 taken) seats its agents at `"hangout"` too; its shells get `null`.
   - `null`: a shell in a repo that has no plot.
   - **Shells never claim a plot or a spot.** They show their repo's plot if it has one.
 - **`spot`:** the agent's place on its plot.
@@ -205,7 +205,7 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
   "spotsPerPlot": 6,
   "plots": {                         // keyed by repo key (item.repo.key); every repo that owns a plot or waits in overflow
     "/Users/…/storefront/.git": {
-      "plot": 0,                     // 0..31 or "overflow"
+      "plot": 0,                     // 0..31, or "overflow" while it waits for a plot
       "name": "storefront",
       "kind": "web",
       "firstSeen": "<iso>",
@@ -221,7 +221,7 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
 
 - **New repos:** a repo with an agent takes the lowest free plot, in the order the repos were first seen, and keeps it.
 - **Dormant repos:** a repo with no sessions shows `active: false` and a `lastSeen` (dim its tag). After 7 days it is dropped and its plot is free again.
-- **Overflow:** when all 32 plots are taken, new repos get `"overflow"`. When a plot frees, the overflow repo seen first moves into it.
+- **Overflow:** when all 32 plots are taken, new repos get `"overflow"` here (waiting) and their agents sit at the beach bar (`item.plot === "hangout"`). When a plot frees, the waiting repo seen first moves into it. There is no overflow building.
 - **Where it is saved:**
   - Real mode: `~/.config/cmux-switchboard/world.json` (folder 0700, file 0600, written atomically), or `SWITCHBOARD_WORLD_FILE`.
   - Demo: kept in memory and never written.

@@ -33,11 +33,11 @@ const OUTER: PlotSlot[] = [0, 1].flatMap((pair) =>
 ).map((p, i) => ({ index: 16 + i, ...p, rot: 0 }));
 export const PLOTS: PlotSlot[] = [...CORE, ...OUTER];
 
-/** Shared plots: the beach bar (sessions outside any repo) and the co-working overflow. */
+/**
+ * The shared plot: the beach bar, for sessions outside any repo and for projects
+ * waiting for a plot (when all 32 are taken).
+ */
 export const HANGOUT = { x: 4, z: -44, rot: 0 } as const;
-export const OVERFLOW = { x: -29, z: 114, rot: Math.PI / 2 } as const;
-/** Half the overflow building's footprint along x and z (it may be turned 90°). */
-export const OVERFLOW_HALF = { x: PLOT_D / 2, z: PLOT_W / 2 };
 
 export interface Rect {
   x0: number;
@@ -68,7 +68,7 @@ export const STREETS_NS: { x: number; width: number; frame?: boolean }[] = [
   { x: 57, width: 9 },
   { x: 117, width: 9, frame: true },
 ];
-export const DISTRICT: Rect = { x0: -110, x1: 110, z0: -2, z1: 122 };
+export const DISTRICT: Rect = { x0: -110, x1: 110, z0: -2, z1: 106 };
 
 /** The city land's east edge drops to the bay; the skyline sits across it. */
 export const BAY_EDGE_X = 128;
@@ -79,7 +79,9 @@ export const SKYLINE: Rect = { x0: 240, x1: 900, z0: -260, z1: 520 };
  * district (x0), and inland (z1) a seawall drops to the bay, crossed by the
  * avenues as causeways to a second skyline on the far shore.
  */
-export const CITY = { x0: -126, z1: 132 } as const;
+// z1: the island ends just behind the last street's far sidewalk (103.5 + 2.2),
+// with a few metres of lawn before the seawall.
+export const CITY = { x0: -126, z1: 106 } as const;
 /** East–west streets run between the frame avenues. */
 export const STREET_WEST = -121.5;
 export const STREET_EAST = 121.5;

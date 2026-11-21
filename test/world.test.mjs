@@ -73,23 +73,24 @@ describe('plots', () => {
     assert.deepEqual(Object.keys(out.world.plots), [key('a')]);
   });
 
-  test(`repos beyond ${PLOT_COUNT} share the overflow plot, and move up when a plot frees`, () => {
+  test(`repos beyond ${PLOT_COUNT} wait for a plot at the beach bar, and move up when a plot frees`, () => {
     const w = createWorld({ log: quiet });
     const N = PLOT_COUNT;
     const items = Array.from({ length: N + 2 }, (_, i) => agent(i, `r${i}`));
     let out = w.apply(snap(...items), T0);
     let it = byId(out);
     assert.equal(it[N - 1].plot, N - 1);
-    assert.equal(it[N].plot, 'overflow');
-    assert.equal(it[N + 1].plot, 'overflow');
-    assert.equal(it[N].spot, 0, 'overflow has its own spots');
+    assert.equal(it[N].plot, 'hangout', 'its agents sit at the beach bar');
+    assert.equal(it[N + 1].plot, 'hangout');
+    assert.equal(it[N].spot, 0, 'on the beach bar\'s seats');
     assert.equal(it[N + 1].spot, 1);
+    assert.equal(out.world.plots[key(`r${N}`)].plot, 'overflow', 'the repo is listed as waiting');
     assert.deepEqual(out.world.free, []);
-    // r0 goes quiet for a week: the earliest overflow repo takes plot 0.
+    // r0 goes quiet for a week: the earliest waiting repo takes plot 0.
     out = w.apply(snap(...items.slice(1)), T0 + PLOT_TTL_MS + 1);
     it = byId(out);
     assert.equal(it[N].plot, 0);
-    assert.equal(it[N + 1].plot, 'overflow');
+    assert.equal(it[N + 1].plot, 'hangout');
   });
 
   test(`movePlot: only an existing repo, only to a free plot from 0 to ${PLOT_COUNT - 1}`, () => {

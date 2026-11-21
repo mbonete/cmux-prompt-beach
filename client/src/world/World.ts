@@ -28,7 +28,7 @@ import { Palms, SHADOW_ONLY_LAYER, wind } from './env/palms';
 import { beachHeight, buildGround } from './env/ground';
 import { Background } from './city/Background';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
-import { BAY_EDGE_X, CITY, HANGOUT, OVERFLOW, OVERFLOW_HALF, PLOTS, PLOT_COLUMNS, PLOT_D, PLOT_W, STREETS_EW, STREETS_NS } from './city/layout';
+import { BAY_EDGE_X, CITY, HANGOUT, PLOTS, PLOT_COLUMNS, PLOT_D, PLOT_W, STREETS_EW, STREETS_NS } from './city/layout';
 import { Cast } from './agents/cast';
 import { People } from './agents/People';
 import { Life } from './life/Life';
@@ -427,12 +427,10 @@ export class World {
     }
     const states: PlotState[] = [];
     for (const [key, p] of Object.entries(snap.world?.plots ?? {})) {
-      if (p.plot === 'overflow') continue;
+      if (p.plot === 'overflow') continue; // waiting for a plot: its people are at the beach bar
       states.push({ key: p.plot, occupied: true, dormant: !p.active, color: repoColor(key), needs: needsOn.has(p.plot) });
     }
-    for (const special of ['hangout', 'overflow'] as const) {
-      if (busy.has(special)) states.push({ key: special, occupied: true, dormant: false, color: repoColor(special), needs: needsOn.has(special) });
-    }
+    if (busy.has('hangout')) states.push({ key: 'hangout', occupied: true, dormant: false, color: repoColor('hangout'), needs: needsOn.has('hangout') });
     this.district.update(states);
     this.syncTags(snap);
     this.people?.sync(snap.items, this.staleMs);
@@ -449,7 +447,6 @@ export class World {
       if (p.plot !== 'overflow') wanted.set(p.plot, { key, name: p.name, kind: p.kind, dormant: !p.active });
     }
     if (snap.items.some((i) => i.plot === 'hangout' && i.phase !== 'shell' && !i.archived)) wanted.set('hangout', { key: 'hangout', name: 'Beach bar', kind: 'other', dormant: false });
-    if (snap.items.some((i) => i.plot === 'overflow' && i.phase !== 'shell' && !i.archived)) wanted.set('overflow', { key: 'overflow', name: 'Co-working', kind: 'other', dormant: false });
 
     for (const [plot, t] of this.plotTags) {
       if (!wanted.has(plot) || wanted.get(plot)!.key !== t.key) {
@@ -530,7 +527,6 @@ export class World {
   private plotAt(x: number, z: number): PlotKey | null {
     for (const p of PLOTS) if (Math.abs(x - p.x) < PLOT_W / 2 && Math.abs(z - p.z) < PLOT_D / 2) return p.index;
     if (Math.abs(x - HANGOUT.x) < 10 && Math.abs(z - HANGOUT.z) < 8) return 'hangout';
-    if (Math.abs(x - OVERFLOW.x) < OVERFLOW_HALF.x && Math.abs(z - OVERFLOW.z) < OVERFLOW_HALF.z) return 'overflow';
     return null;
   }
 
@@ -680,7 +676,7 @@ function plantPalms(): Palms {
 
 /** Where shadows are worth their cost: the district, the promenade and the beach in front of it. */
 export function nearDistrict(p: { x: number; z: number }) {
-  return p.x > -125 && p.x < 130 && p.z > -75 && p.z < 115;
+  return p.x > -125 && p.x < 130 && p.z > -75 && p.z < CITY.z1 + 4;
 }
 
 function localHour() {

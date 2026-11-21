@@ -1,5 +1,5 @@
 import { Color, Group, Matrix4, Quaternion, Vector3 } from 'three/webgpu';
-import { BAY_EDGE_X, BEACH_ROAD, STREETS_EW, STREETS_NS, CITY } from '../city/layout';
+import { BAY_EDGE_X, BEACH_ROAD, CITY, FRAME_END, STREETS_EW, STREETS_NS } from '../city/layout';
 import { beachHeight } from '../env/ground';
 import { type KitModel, StaticBatch, type StreetKit } from './kit';
 import { Pools } from './pools';
@@ -106,7 +106,8 @@ export class Dressing {
     for (const a of STREETS_NS) {
       for (const side of [-1, 1]) {
         const x = a.x + side * (a.width / 2 + 0.45);
-        for (let z = 6 + (side > 0 ? 12 : 0); z < 145; z += 24) {
+        // Frame avenues end at the last street; the others carry on as causeways.
+        for (let z = 6 + (side > 0 ? 12 : 0); z < (a.frame ? FRAME_END - 1 : 145); z += 24) {
           const lz = z + (r() - 0.5) * 2;
           if (streetCut(lz) || !ok(x, lz)) continue;
           street.push({ x, y: 0.14, z: lz, yaw: 0 });

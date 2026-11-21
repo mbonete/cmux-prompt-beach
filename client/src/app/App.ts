@@ -397,7 +397,7 @@ export class App {
       if (tag) {
         const k = tag.dataset.plot!;
         this.leaveCloseUp();
-        this.world?.focusPlot(k === 'hangout' || k === 'overflow' ? k : Number(k));
+        this.world?.focusPlot(k === 'hangout' ? k : Number(k));
       }
     });
   }
