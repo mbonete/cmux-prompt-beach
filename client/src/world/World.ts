@@ -1,4 +1,4 @@
-import { AgXToneMapping, PCFShadowMap, Scene, Timer, Vector3, WebGPURenderer } from 'three/webgpu';
+import { ACESFilmicToneMapping, PCFShadowMap, Scene, Timer, Vector3, WebGPURenderer } from 'three/webgpu';
 import { CameraRig } from './camera/rig';
 import { Pipeline } from './engine/pipeline';
 import { AutoQuality, PRESETS, type QualityLevel, type QualitySetting } from './engine/quality';
@@ -9,7 +9,7 @@ import { Ocean } from './env/ocean';
 import { Sky } from './env/sky';
 import { Palms } from './env/palms';
 import { beachHeight, buildGround } from './env/ground';
-import { buildBackgroundBlocks, buildSkyline, windowsLevel } from './city/blockout';
+import { Background } from './city/Background';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
 import { HANGOUT, PLOTS, PLOT_D, PLOT_W, PLOT_X, STREETS_EW, STREETS_NS } from './city/layout';
 import { Cast } from './agents/cast';
@@ -49,6 +49,7 @@ export class World {
   private level: QualityLevel;
   private readonly auto: AutoQuality;
   readonly district: District;
+  private readonly background: Background;
   private staleMs = DEFAULT_STALE_MS;
   private lastSnapshot: Snapshot | null = null;
   readonly overlay: Overlay;
@@ -80,7 +81,7 @@ export class World {
     this.level = opts.quality === 'auto' ? 'balanced' : opts.quality;
     this.auto = new AutoQuality(this.level);
 
-    renderer.toneMapping = AgXToneMapping;
+    renderer.toneMapping = ACESFilmicToneMapping;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFShadowMap;
 
@@ -90,9 +91,10 @@ export class World {
     this.rig.clearance = (x, z) =>
       PLOTS.some((p) => Math.abs(x - p.x) < PLOT_W / 2 + 3 && Math.abs(z - p.z) < PLOT_D / 2 + 3) ? 21 : 1.5;
 
-    this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), buildBackgroundBlocks(), buildSkyline(), plantPalms().group);
+    this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), plantPalms().group);
     this.lighting = new Lighting(renderer, this.scene, this.sky);
     this.district = new District(this.scene);
+    this.background = new Background(this.scene);
     this.overlay = new Overlay(canvas.parentElement ?? document.body);
 
     this.applyQuality(this.level);
@@ -181,10 +183,11 @@ export class World {
     this.ocean.apply(l);
     this.pipeline?.apply(l);
     this.renderer.toneMappingExposure = l.exposure;
-    windowsLevel.value = l.windows;
     wetness.value = Math.max(0, l.lamps - 0.3) * 0.6;
     this.district.windowsLevel.value = 0.25 + l.windows * 0.9;
     this.district.neonLevel.value = 0.3 + l.neon * 1.2;
+    this.background.windowsLevel.value = 0.1 + l.windows * 1.0;
+    this.background.neonLevel.value = 0.2 + l.neon * 1.1;
     this.district.setNeonLevel(0.55 + l.neon * 0.6);
   }
 
@@ -237,8 +240,9 @@ export class World {
 
   /** Loads the buildings and props. */
   async loadCity() {
-    const [, castOk] = await Promise.all([
+    const [, , castOk] = await Promise.all([
       this.district.load(),
+      this.background.load(),
       this.cast.load().then(
         () => true,
         (err) => (console.warn('No people yet:', err), false),

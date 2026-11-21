@@ -43,7 +43,7 @@ export const BEACH_ROAD: Rect = { x0: -700, x1: 128, z0: -11, z1: -2 };
 export const BEACH = { x0: -700, x1: 128, zTop: -22, zShore: -66, zDeep: -150 } as const;
 
 /** Streets: east–west between plot rows, north–south avenues. Width in metres. */
-export const STREETS_EW = [21, 47, 73, 99].map((z) => ({ z, width: 9 }));
+export const STREETS_EW = [21, 47, 73, 99, 125, 151, 177].map((z) => ({ z, width: 9 }));
 export const STREETS_NS = [
   { x: -57, width: 9 },
   { x: 0, width: 11 },

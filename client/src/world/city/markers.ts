@@ -114,15 +114,15 @@ export class Beam {
 
   constructor(height = 70) {
     const u = this.u;
-    const geo = new CylinderGeometry(0.7, 1.05, height, 32, 1, true);
+    const geo = new CylinderGeometry(0.45, 0.75, height, 24, 1, true);
     geo.translate(0, height / 2, 0);
     const mat = new MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: AdditiveBlending, side: DoubleSide, fog: false });
     const v = uv().y;
     const streaks = mx_noise_float(vec3(uv().x.mul(12), v.mul(6).sub(time.mul(0.35)), 0)).mul(0.5).add(0.5);
-    mat.colorNode = u.color.mul(2.2);
+    mat.colorNode = u.color.mul(1.8);
     mat.opacityNode = Fn(() => {
       const fade = pow(float(1).sub(v), float(1.6)).mul(smoothstep(0.0, 0.03, v));
-      return saturate(fade.mul(streaks.mul(0.5).add(0.5)).mul(0.55).mul(u.near).mul(u.on));
+      return saturate(fade.mul(streaks.mul(0.5).add(0.5)).mul(0.4).mul(u.near).mul(u.on));
     })();
     const beam = new Mesh(geo, mat);
     beam.renderOrder = 3;
