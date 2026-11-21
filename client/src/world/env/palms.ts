@@ -202,15 +202,16 @@ export class Palms {
     this.variants = [0, 1, 2, 3].map((i) => variant(seed * 101 + i * 7));
   }
 
-  /** Places palms at the given ground points (variant and turn picked per point). */
-  plant(points: Vector3[]) {
+  /** Places palms at the given ground points (variant and turn picked per point; optional heights in metres). */
+  plant(points: Vector3[], heights?: number[]) {
     const r = rng(17);
     const byVariant: Matrix4[][] = this.variants.map(() => []);
-    for (const p of points) {
+    points.forEach((p, i) => {
       const v = Math.floor(r() * this.variants.length);
-      const s = 0.85 + r() * 0.35;
+      const jitter = 0.85 + r() * 0.35;
+      const s = heights?.[i] ? heights[i] / this.variants[v].height : jitter;
       byVariant[v].push(new Matrix4().compose(p, new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), r() * Math.PI * 2), new Vector3(s, s, s)));
-    }
+    });
     byVariant.forEach((mats, i) => {
       if (!mats.length) return;
       const v = this.variants[i];

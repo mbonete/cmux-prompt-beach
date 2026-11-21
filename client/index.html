@@ -14,7 +14,7 @@
 
       <section id="loading" class="loading" aria-live="polite">
         <div class="loading__inner">
-          <p class="wordmark">Switchboard</p>
+          <p class="wordmark" aria-label="Switchboard">Switchboard</p>
           <p class="loading__line">Your agents, at golden hour</p>
           <div class="loading__bar" role="progressbar" aria-label="Loading the city" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <span class="loading__fill"></span>
@@ -23,21 +23,6 @@
         </div>
       </section>
 
-      <nav class="lookdev" id="lookdev" aria-label="Look-dev controls" hidden>
-        <div class="seg" role="radiogroup" aria-label="Time of day" id="tod">
-          <button type="button" role="radio" data-tod="day">Day</button>
-          <button type="button" role="radio" data-tod="sunset">Sunset</button>
-          <button type="button" role="radio" data-tod="night">Night</button>
-          <button type="button" role="radio" data-tod="auto">Auto</button>
-        </div>
-        <div class="seg" role="radiogroup" aria-label="Quality" id="quality">
-          <button type="button" role="radio" data-q="auto">Auto</button>
-          <button type="button" role="radio" data-q="cinematic">Cinematic</button>
-          <button type="button" role="radio" data-q="balanced">Balanced</button>
-          <button type="button" role="radio" data-q="light">Light</button>
-        </div>
-        <output class="stats" id="stats">…</output>
-      </nav>
 
       <p class="fatal" id="fatal" hidden></p>
     </main>

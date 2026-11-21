@@ -1,4 +1,4 @@
-import { type Camera, type Scene, Vector3 } from 'three/webgpu';
+import { type Camera, type Scene, Vector2, Vector3 } from 'three/webgpu';
 import { askOf, laneOf, type Ask, type Lane } from '../../data/derive';
 import type { Item, Tick, ToolCategory } from '../../data/types';
 import { icon, type IconName } from '../../ui/icons';
@@ -14,10 +14,18 @@ interface Entry {
   person: Person;
   plot: PlotKey;
   spot: number;
+  /** Badge (needs you) and name label, pinned above the head. */
   badge: Pin;
   ask: Ask | null;
   lane: Lane;
+  title: string;
+  named: boolean;
 }
+
+/** Names show up close; further out only the needs-you badges remain. */
+const NAME_DISTANCE = 58;
+const tmp = new Vector3();
+const ndcV = new Vector3();
 
 const ASK_ICON: Record<Ask, IconName> = { permission: 'permission', question: 'question', plan: 'plan', terminal: 'terminal', result: 'result' };
 const ASK_LABEL: Record<Ask, string> = { permission: 'Wants permission', question: 'Has a question', plan: 'Plan to approve', terminal: 'Waiting in the terminal', result: 'Finished' };
@@ -27,6 +35,8 @@ export class People {
   private readonly entries = new Map<string, Entry>();
   private reducedMotion = false;
   private readonly head = new Vector3();
+  private hovered: string | null = null;
+  private selected: string | null = null;
 
   constructor(
     private readonly scene: Scene,
@@ -65,23 +75,34 @@ export class People {
         person.reducedMotion = this.reducedMotion;
         this.scene.add(person.root);
         const el = document.createElement('div');
-        el.className = 'badge';
+        el.className = 'agent';
+        el.innerHTML = '<span class="badge"></span><span class="agent__name"></span>';
+        el.dataset.id = item.surfaceId;
         const badge = this.overlay.add(el, new Vector3(), { lift: 4, maxDistance: 320 });
-        e = { person, plot: item.plot, spot: item.spot, badge, ask: null, lane };
+        e = { person, plot: item.plot, spot: item.spot, badge, ask: null, lane, title: '', named: false };
         this.entries.set(item.surfaceId, e);
         person.setMood(moodFor(lane, ask, null), true);
       } else {
         const justFinished = e.lane === 'working' && ask === 'result';
         e.person.setMood(moodFor(lane, ask, justFinished ? 'celebrate' : null));
       }
-      e.lane = lane;
+      if (e.lane !== lane) {
+        e.badge.el.classList.remove(`agent--${e.lane}`);
+        e.lane = lane;
+      }
+      e.badge.el.classList.add(`agent--${lane}`);
       if (e.ask !== ask) {
         e.ask = ask;
-        e.badge.el.className = `badge${ask ? ` badge--${ask}` : ''}`;
-        e.badge.el.innerHTML = ask ? `${icon(ASK_ICON[ask], 'i badge__icon')}<span class="sr">${ASK_LABEL[ask]}</span>` : '';
+        const b = e.badge.el.querySelector<HTMLElement>('.badge')!;
+        b.className = `badge${ask ? ` badge--${ask}` : ''}`;
+        b.innerHTML = ask ? `${icon(ASK_ICON[ask], 'i badge__icon')}<span class="sr">${ASK_LABEL[ask]}</span>` : '';
+        e.badge.el.classList.toggle('agent--asking', ask !== null);
       }
-      e.badge.visible = ask !== null;
-      e.badge.el.title = item.title;
+      if (e.title !== item.title) {
+        e.title = item.title;
+        e.badge.el.querySelector('.agent__name')!.textContent = item.title;
+      }
+      this.paintPin(e);
     }
     for (const id of [...this.entries.keys()]) if (!live.has(id)) this.remove(id);
   }
@@ -101,8 +122,75 @@ export class People {
   update(dt: number, camera: Camera) {
     for (const e of this.entries.values()) {
       e.person.update(dt, camera);
+      const near = camera.position.distanceTo(e.person.root.position) < NAME_DISTANCE;
+      if (near !== e.named) {
+        e.named = near;
+        this.paintPin(e);
+      }
       if (e.badge.visible) e.person.headPosition(e.badge.world);
     }
+  }
+
+  /** Badge when they need you; the name when close, hovered or selected. */
+  private paintPin(e: Entry) {
+    const id = e.person.id;
+    const name = e.named || id === this.hovered || id === this.selected;
+    e.badge.el.classList.toggle('agent--named', name);
+    e.badge.el.classList.toggle('agent--selected', id === this.selected);
+    e.badge.visible = e.ask !== null || name;
+  }
+
+  setHover(id: string | null) {
+    if (id === this.hovered) return;
+    const prev = this.hovered;
+    this.hovered = id;
+    for (const k of [prev, id]) {
+      const e = k ? this.entries.get(k) : null;
+      if (e) this.paintPin(e);
+    }
+  }
+
+  setSelected(id: string | null) {
+    if (id === this.selected) return;
+    const prev = this.selected;
+    this.selected = id;
+    for (const k of [prev, id]) {
+      const e = k ? this.entries.get(k) : null;
+      if (e) this.paintPin(e);
+    }
+  }
+
+  /** The person nearest the pointer on screen, if close enough to mean them. */
+  pick(camera: Camera, ndc: Vector2, w: number, h: number): string | null {
+    let best: string | null = null;
+    let bestD = Infinity;
+    for (const [id, e] of this.entries) {
+      tmp.copy(e.person.root.position);
+      tmp.y += 0.95;
+      const dist = camera.position.distanceTo(tmp);
+      ndcV.copy(tmp).project(camera);
+      if (ndcV.z > 1) continue;
+      const dx = ((ndcV.x - ndc.x) * w) / 2;
+      const dy = ((ndcV.y - ndc.y) * h) / 2;
+      const px = Math.hypot(dx, dy);
+      // About a metre around the body, never less than 18 px.
+      const reach = Math.max(18, (h / (2 * Math.tan(0.28) * dist)) * 0.9);
+      if (px < reach && px < bestD) {
+        bestD = px;
+        best = id;
+      }
+    }
+    return best;
+  }
+
+  /** Every person's ground position, for the minimap. */
+  positions(): { id: string; x: number; z: number }[] {
+    return [...this.entries].map(([id, e]) => ({ id, x: e.person.root.position.x, z: e.person.root.position.z }));
+  }
+
+  /** The tag element for an agent (the card and hover use it). */
+  pinOf(id: string) {
+    return this.entries.get(id)?.badge ?? null;
   }
 
   private remove(id: string) {

@@ -1,20 +1,25 @@
 import {
+  AdditiveBlending,
   Color,
   Group,
-  type InstancedBufferAttribute,
-  type InstancedMesh,
+  InstancedBufferAttribute,
+  InstancedMesh,
   Matrix4,
+  MeshBasicNodeMaterial,
   Object3D,
+  PlaneGeometry,
   Quaternion,
+  Raycaster,
   type Scene,
   Vector3,
 } from 'three/webgpu';
-import { uniform } from 'three/tsl';
+import { float, instancedBufferAttribute, pow, smoothstep, uniform, uv, vec2 } from 'three/tsl';
 import { loadGLTF, loadJSON } from '../engine/assets';
 import { InstancedModel } from '../engine/instancer';
 import { perInstanceEmission } from '../engine/materials';
 import { Beam, PlotOutline, STATE_COLORS } from './markers';
 import { HANGOUT, OVERFLOW, PLOTS } from './layout';
+import { beachHeight } from '../env/ground';
 
 // The plots: a fixed building per plot (authored), always present. A vacant
 // plot sits shuttered and dark; when a repo moves in its windows and neon come
@@ -42,12 +47,23 @@ export interface PlotState {
 
 interface BuildingManifest {
   assets: Record<string, { kind: string; files: string[] }>;
+  /** Which building stands where; owned by the buildings kit. Falls back to PLOT_DESIGN. */
+  layout?: { plots?: string[]; hangout?: string; overflow?: string };
 }
+
+/** Coarse height map of a building type: max height per 2 m cell over a 24 × 20 m area. */
+interface HeightGrid {
+  cells: Float32Array;
+}
+const CELL = 2;
+const GRID_W = 12; // 24 m along local X (plot 20 m + 2 m each side)
+const GRID_D = 10; // 20 m along local Z
 
 interface PlotRuntime {
   key: PlotKey;
   type: string;
   world: Matrix4;
+  inverse: Matrix4;
   instance: number;
   spots: Spot[];
   tag: Vector3;
@@ -84,7 +100,13 @@ export class District {
   readonly group = new Group();
   private readonly plots = new Map<PlotKey, PlotRuntime>();
   private readonly models = new Map<string, InstancedModel>();
-  private readonly lit: { attr: InstancedBufferAttribute; type: string; mesh: InstancedMesh }[] = [];
+  private readonly lit: { attr: InstancedBufferAttribute; type: string; mesh: InstancedMesh; kind: 'interior' | 'neon_accent' | 'bulb' }[] = [];
+  /** Terrace string lights and lanterns: 0 by day, about 1.5 at night. */
+  readonly lampsLevel = uniform(0.1);
+  /** Where the plots want palms (from `palm_N` empties), with their heights. */
+  readonly palmSpots: { position: Vector3; height: number }[] = [];
+  private pools: { mesh: InstancedMesh; lit: InstancedBufferAttribute; owner: PlotKey[] } | null = null;
+  private readonly heights = new Map<string, HeightGrid>();
   readonly windowsLevel = uniform(1);
   readonly neonLevel = uniform(1);
 
@@ -98,17 +120,25 @@ export class District {
     const available = new Set(Object.entries(manifest.assets).filter(([, a]) => a.kind === 'plot').map(([id]) => id));
     const pick = (prefs: string[]) => prefs.find((p) => available.has(p)) ?? [...available][0];
 
-    const slots: { key: PlotKey; x: number; z: number; rot: number; type: string }[] = [
-      ...PLOTS.map((p) => ({ key: p.index as PlotKey, x: p.x, z: p.z, rot: p.rot, type: pick(PLOT_DESIGN[p.index % PLOT_DESIGN.length]) })),
-      { key: 'hangout', ...HANGOUT, type: pick(HANGOUT_DESIGN) },
-      { key: 'overflow', ...OVERFLOW, type: pick(OVERFLOW_DESIGN) },
+    const lay = manifest.layout ?? {};
+    const prefer = (first: string | undefined, rest: string[]) => pick(first ? [first, ...rest] : rest);
+    const slots: { key: PlotKey; x: number; y: number; z: number; rot: number; type: string }[] = [
+      ...PLOTS.map((p) => ({ key: p.index as PlotKey, x: p.x, y: 0, z: p.z, rot: p.rot, type: prefer(lay.plots?.[p.index], PLOT_DESIGN[p.index % PLOT_DESIGN.length]) })),
+      // The beach bar stands on the sand (its deck sits on posts).
+      { key: 'hangout', ...HANGOUT, y: beachHeight(HANGOUT.z, HANGOUT.x), type: prefer(lay.hangout, HANGOUT_DESIGN) },
+      { key: 'overflow', ...OVERFLOW, y: 0, type: prefer(lay.overflow, OVERFLOW_DESIGN) },
     ];
 
     // Load each building type once; read its empties (spots, anchors, props).
     const types = [...new Set(slots.map((s) => s.type))];
     const templates = new Map(await Promise.all(types.map(async (t) => [t, (await loadGLTF(`${BASE}${t}.gltf`)).scene] as const)));
 
+    for (const t of types) this.heights.set(t, heightGrid(templates.get(t)!));
+
     const propPlacements = new Map<string, Matrix4[]>();
+    const poolSpots: { m: Matrix4; radius: number; color: Color; key: PlotKey }[] = [];
+    const floors = new Map<string, Map<string, number>>();
+    for (const t of types) floors.set(t, lightFloors(templates.get(t)!));
     for (const t of types) {
       const count = slots.filter((s) => s.type === t).length;
       const model = new InstancedModel(meshOnly(templates.get(t)!), count, { tintable: ['stucco'] });
@@ -118,16 +148,16 @@ export class District {
         const name = (mesh.material as { name?: string }).name;
         // The per-plot pastel comes from the instance colour, so the wall material itself is white.
         if (name === 'stucco') (mesh.material as unknown as { color: Color }).color.set(0xffffff);
-        if (name === 'interior' || name === 'neon_accent') {
-          const level = name === 'interior' ? this.windowsLevel : this.neonLevel;
-          this.lit.push({ attr: perInstanceEmission(mesh, level), type: t, mesh });
+        if (name === 'interior' || name === 'neon_accent' || name === 'bulb') {
+          const level = name === 'interior' ? this.windowsLevel : name === 'bulb' ? this.lampsLevel : this.neonLevel;
+          this.lit.push({ attr: perInstanceEmission(mesh, level), type: t, mesh, kind: name });
         }
       }
     }
 
     slots.forEach((s, i) => {
       const template = templates.get(s.type)!;
-      const world = new Matrix4().compose(new Vector3(s.x, 0, s.z), new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), s.rot), new Vector3(1, 1, 1));
+      const world = new Matrix4().compose(new Vector3(s.x, s.y, s.z), new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), s.rot), new Vector3(1, 1, 1));
       const instance = this.models.get(s.type)!.add(world, PASTELS[i % PASTELS.length]);
       const spots: Spot[] = [];
       let tag = new Vector3(s.x, 14, s.z);
@@ -141,6 +171,17 @@ export class District {
           const q = new Quaternion();
           m.decompose(pos, q, new Vector3());
           spots[e.spot_index ?? Number(o.name.slice(5))] = { position: pos, quaternion: q, kind: e.spot_kind ?? 'standing', seatH: e.seat_h ?? 0.46, tableH: e.table_h ?? 0.74 };
+        } else if (/^light_\d+$/.test(o.name)) {
+          const e = o.userData as { light_radius?: number; light_color?: string };
+          const floor = floors.get(s.type)?.get(o.name) ?? 0.05;
+          const local = new Vector3().setFromMatrixPosition(o.matrixWorld);
+          local.y = floor + 0.04;
+          const at = local.applyMatrix4(world);
+          const r = Math.max(1.5, Math.min(7, e.light_radius ?? 3.5));
+          poolSpots.push({ m: new Matrix4().compose(at, new Quaternion(), new Vector3(r, 1, r)), radius: r, color: new Color(e.light_color ?? '#ffcf96'), key: s.key });
+        } else if (/^palm_\d+$/.test(o.name)) {
+          const e = o.userData as { palm_height?: number };
+          this.palmSpots.push({ position: new Vector3().setFromMatrixPosition(m), height: e.palm_height ?? 8 });
         } else if (o.name === 'tag_anchor') tag = new Vector3().setFromMatrixPosition(m);
         else if (o.name === 'beam_anchor') beam = new Vector3().setFromMatrixPosition(m);
         else if (o.name.startsWith('prop:')) {
@@ -151,18 +192,43 @@ export class District {
       });
 
       const outline = new PlotOutline();
-      outline.group.position.set(s.x, 0, s.z);
+      outline.group.position.set(s.x, s.y, s.z);
       outline.group.rotation.y = s.rot;
       outline.group.visible = false;
       const beamFx = new Beam();
       beamFx.group.position.copy(beam);
       beamFx.setColumnBase(Math.max(4, tag.y - beam.y - 3));
       this.group.add(outline.group, beamFx.group);
-      this.plots.set(s.key, { key: s.key, type: s.type, world, instance, spots, tag, beam, outline, beamFx });
+      this.plots.set(s.key, { key: s.key, type: s.type, world, inverse: world.clone().invert(), instance, spots, tag, beam, outline, beamFx });
       this.setLit(s.key, 0.08);
     });
 
+    this.buildPools(poolSpots);
     await this.placeProps(propPlacements);
+  }
+
+  /** Soft warm pools of light on the terraces at night: additive discs, no real lights. */
+  private buildPools(spots: { m: Matrix4; color: Color; key: PlotKey }[]) {
+    if (!spots.length) return;
+    const geo = new PlaneGeometry(2, 2).rotateX(-Math.PI / 2);
+    const colors = new InstancedBufferAttribute(new Float32Array(spots.length * 3), 3);
+    const lit = new InstancedBufferAttribute(new Float32Array(spots.length), 1);
+    spots.forEach((sp, i) => colors.setXYZ(i, sp.color.r, sp.color.g, sp.color.b));
+    const mat = new MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: AdditiveBlending });
+    const d = uv().sub(vec2(0.5)).length().mul(2);
+    const falloff = pow(float(1).sub(smoothstep(0, 1, d)), float(2.2));
+    const c = instancedBufferAttribute(colors, 'vec3') as unknown as ReturnType<typeof vec2>;
+    const l = instancedBufferAttribute(lit, 'float') as unknown as ReturnType<typeof float>;
+    mat.colorNode = c.mul(falloff).mul(l).mul(this.lampsLevel).mul(0.42) as never;
+    mat.polygonOffset = true;
+    mat.polygonOffsetFactor = -2;
+    const mesh = new InstancedMesh(geo, mat, spots.length);
+    spots.forEach((sp, i) => mesh.setMatrixAt(i, sp.m));
+    mesh.computeBoundingSphere();
+    mesh.renderOrder = 3;
+    mesh.name = 'light-pools';
+    this.group.add(mesh);
+    this.pools = { mesh, lit, owner: spots.map((sp) => sp.key) };
   }
 
   private async placeProps(placements: Map<string, Matrix4[]>) {
@@ -188,10 +254,18 @@ export class District {
   private setLit(key: PlotKey, value: number) {
     const p = this.plots.get(key);
     if (!p) return;
+    // Terrace lights are on where someone lives, low on a dormant plot, off on a vacant one.
+    const bulb = value >= 1 ? 1 : value >= 0.2 ? 0.25 : 0;
     for (const l of this.lit) {
       if (l.type !== p.type) continue;
-      l.attr.setX(p.instance, value);
+      l.attr.setX(p.instance, l.kind === 'bulb' ? bulb : value);
       l.attr.needsUpdate = true;
+    }
+    if (this.pools) {
+      this.pools.owner.forEach((k, i) => {
+        if (k === key) this.pools!.lit.setX(i, bulb);
+      });
+      this.pools.lit.needsUpdate = true;
     }
   }
 
@@ -222,6 +296,29 @@ export class District {
     for (const p of this.plots.values()) p.outline.setLevel(level);
   }
 
+  /** Highest building point near a ground position (metres), for keeping the camera out of buildings. */
+  heightAt(x: number, z: number): number {
+    let h = 0;
+    const v = new Vector3();
+    for (const p of this.plots.values()) {
+      v.set(x, 0, z).applyMatrix4(p.inverse);
+      const gx = Math.floor((v.x + GRID_W) / CELL);
+      const gz = Math.floor((v.z + GRID_D) / CELL);
+      if (gx < -1 || gz < -1 || gx > GRID_W || gz > GRID_D) continue;
+      const grid = this.heights.get(p.type);
+      if (!grid) continue;
+      // One cell of slack all round.
+      for (let dz = -1; dz <= 1; dz++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const cx = gx + dx;
+          const cz = gz + dz;
+          if (cx < 0 || cz < 0 || cx >= GRID_W || cz >= GRID_D) continue;
+          h = Math.max(h, grid.cells[cz * GRID_W + cx] + p.world.elements[13]);
+        }
+    }
+    return h;
+  }
+
   spot(key: PlotKey, index: number): Spot | null {
     return this.plots.get(key)?.spots[index] ?? null;
   }
@@ -242,6 +339,49 @@ export class District {
   dispose() {
     this.scene.remove(this.group);
   }
+}
+
+/** For each `light_N` empty, the height of the floor below it (local space), found by a downward ray. */
+function lightFloors(root: Object3D): Map<string, number> {
+  const out = new Map<string, number>();
+  root.updateMatrixWorld(true);
+  const meshes: Object3D[] = [];
+  root.traverse((o) => {
+    if ((o as InstancedMesh).isMesh) meshes.push(o);
+  });
+  const ray = new Raycaster();
+  const down = new Vector3(0, -1, 0);
+  root.traverse((o) => {
+    if (!/^light_\d+$/.test(o.name)) return;
+    const from = new Vector3().setFromMatrixPosition(o.matrixWorld);
+    ray.set(from, down);
+    const hit = ray
+      .intersectObjects(meshes, false)
+      .find((h) => h.distance > 0.6 && (h.face?.normal.y ?? 0) > 0.7);
+    out.set(o.name, hit ? hit.point.y : 0.05);
+  });
+  return out;
+}
+
+function heightGrid(root: Object3D): HeightGrid {
+  const cells = new Float32Array(GRID_W * GRID_D);
+  const v = new Vector3();
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    const mesh = o as InstancedMesh;
+    if (!mesh.isMesh || !mesh.geometry) return;
+    const pos = mesh.geometry.getAttribute('position');
+    if (!pos) return;
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+      const gx = Math.floor((v.x + GRID_W) / CELL);
+      const gz = Math.floor((v.z + GRID_D) / CELL);
+      if (gx < 0 || gz < 0 || gx >= GRID_W || gz >= GRID_D) continue;
+      const k = gz * GRID_W + gx;
+      if (v.y > cells[k]) cells[k] = v.y;
+    }
+  });
+  return { cells };
 }
 
 /** A copy of the template keeping only meshes (empties are read separately). */

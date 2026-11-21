@@ -39,7 +39,19 @@ export class CameraRig {
   clearance: ((x: number, z: number) => number) | null = null;
   onDoubleClick: ((ndc: Vector2) => void) | null = null;
   onClick: ((ndc: Vector2) => void) | null = null;
+  /** Which control was just used (for the controls hint). */
+  onUse: ((kind: 'pan' | 'rotate' | 'zoom') => void) | null = null;
   private downAt = { x: 0, y: 0, t: 0 };
+  /**
+   * Screen-space framing shift in CSS pixels: positive moves what the camera
+   * looks at to the left, making room for a panel on the right. Eased.
+   */
+  shiftPx = 0;
+  private shiftCur = 0;
+  /** Canvas height in CSS pixels, for converting the shift to metres. */
+  viewHeight = 1;
+  private readonly right = new Vector3();
+  private readonly look = new Vector3();
 
   constructor(
     private readonly dom: HTMLElement,
@@ -80,6 +92,7 @@ export class CameraRig {
   }
 
   update(dt: number) {
+    this.shiftCur += (this.shiftPx - this.shiftCur) * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 7));
     if (this.flight) {
       const f = this.flight;
       f.t = Math.min(1, f.t + dt / f.dur);
@@ -111,6 +124,7 @@ export class CameraRig {
   /** True while the camera is still moving noticeably. */
   get moving() {
     if (this.flight) return true;
+    if (Math.abs(this.shiftPx - this.shiftCur) > 0.5) return true;
     const c = this.current;
     const d = this.desired;
     return (
@@ -135,16 +149,20 @@ export class CameraRig {
   private apply() {
     const v = this.current;
     const cp = Math.cos(v.pitch);
+    // Shift camera and aim sideways together so the target sits left of centre.
+    const perPx = (2 * v.distance * Math.tan(MathUtils.degToRad(this.camera.fov / 2))) / Math.max(1, this.viewHeight);
+    this.right.set(Math.cos(v.yaw), 0, -Math.sin(v.yaw)).multiplyScalar(this.shiftCur * perPx);
+    this.look.copy(v.target).add(this.right);
     this.camera.position.set(
-      v.target.x + Math.sin(v.yaw) * cp * v.distance,
-      v.target.y + Math.sin(v.pitch) * v.distance,
-      v.target.z + Math.cos(v.yaw) * cp * v.distance,
+      this.look.x + Math.sin(v.yaw) * cp * v.distance,
+      this.look.y + Math.sin(v.pitch) * v.distance,
+      this.look.z + Math.cos(v.yaw) * cp * v.distance,
     );
     if (this.clearance) {
       const min = this.clearance(this.camera.position.x, this.camera.position.z);
       if (this.camera.position.y < min) this.camera.position.y = min;
     }
-    this.camera.lookAt(v.target);
+    this.camera.lookAt(this.look);
   }
 
   private ndc(e: { clientX: number; clientY: number }) {
@@ -186,10 +204,16 @@ export class CameraRig {
         if (this.pinchStart > 0) this.zoomBy(this.pinchStart / d, null);
         this.pinchStart = d;
         this.rotateBy(dx * 0.5, dy * 0.5);
+        this.onUse?.('rotate');
         return;
       }
-      if (p.button === 2 || p.shift) this.rotateBy(dx, dy);
-      else this.panBy(e.clientX - dx, e.clientY - dy, e.clientX, e.clientY);
+      if (p.button === 2 || p.shift) {
+        this.rotateBy(dx, dy);
+        this.onUse?.('rotate');
+      } else {
+        this.panBy(e.clientX - dx, e.clientY - dy, e.clientX, e.clientY);
+        this.onUse?.('pan');
+      }
     });
 
     const up = (e: PointerEvent) => {
@@ -215,6 +239,7 @@ export class CameraRig {
         this.touched();
         const factor = Math.exp(e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0012));
         this.zoomBy(factor, this.ndc(e));
+        this.onUse?.('zoom');
       },
       { passive: false },
     );
@@ -251,6 +276,22 @@ export class CameraRig {
       this.desired.target.lerp(before, 1 - applied);
       clampView(this.desired);
     }
+  }
+
+  /** Keyboard turn and zoom. */
+  turn(radians: number) {
+    this.touched();
+    this.desired.yaw += radians;
+  }
+
+  zoom(factor: number) {
+    this.touched();
+    this.zoomBy(factor, null);
+  }
+
+  /** Marks programmatic-but-user-initiated moves (keyboard, lists) as input. */
+  poke() {
+    this.lastInput = performance.now();
   }
 
   /** Keyboard nudges (metres / radians per call, scaled by distance). */

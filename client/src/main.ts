@@ -1,103 +1,63 @@
 import './styles/base.css';
-import { World } from './world/World';
+import './styles/hud.css';
+import { App } from './app/App';
+import { loadSettings } from './app/state';
 import { SwitchboardClient } from './data/client';
 import { loading } from './world/engine/assets';
-import type { TimeOfDay } from './world/env/looks';
-import type { QualitySetting } from './world/engine/quality';
+import { World } from './world/World';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
-const store = {
-  get<T extends string>(key: string, fallback: T): T {
-    try {
-      return (localStorage.getItem(`switchboard.${key}`) as T) || fallback;
-    } catch {
-      return fallback;
-    }
-  },
-  set(key: string, value: string) {
-    try {
-      localStorage.setItem(`switchboard.${key}`, value);
-    } catch {
-      /* private mode: settings just don't persist */
-    }
-  },
-};
-
 async function boot() {
+  const root = $('app');
   const canvas = $<HTMLCanvasElement>('world');
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const tod = store.get<TimeOfDay>('timeOfDay', 'sunset');
-  const quality = store.get<QualitySetting>('quality', 'auto');
+  const settings = loadSettings();
+  const systemReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = settings.motion === 'reduce' || (settings.motion === 'system' && systemReduced);
+  const note = $('loading-note');
 
-  const world = await World.create(canvas, {
-    reducedMotion: reduced.matches,
-    timeOfDay: tod,
-    quality,
-    onStatus: (s) => {
-      $('stats').textContent = `${s.backend === 'webgpu' ? 'WebGPU' : 'WebGL 2'} · ${s.quality} · ${Math.round(s.fps)} fps`;
-    },
-  });
-  reduced.addEventListener('change', () => world.setReducedMotion(reduced.matches));
-  world.start();
+  let world: World | null = null;
+  try {
+    world = await World.create(canvas, { reducedMotion: reduced, timeOfDay: settings.timeOfDay, quality: settings.quality });
+    world.start();
+  } catch (err) {
+    // No WebGPU or WebGL 2 here: the lists, cards and actions still work.
+    console.error(err);
+    canvas.hidden = true;
+    const fatal = $('fatal');
+    fatal.hidden = false;
+    fatal.textContent = `The 3D city couldn't start on this device (${err instanceof Error ? err.message : String(err)}). Everything else works from the lists.`;
+  }
 
-  const fill = document.querySelector<HTMLElement>('.loading__fill');
-  const bar = document.querySelector<HTMLElement>('.loading__bar');
-  loading.onProgress = (_url, done, total) => {
-    const pct = total ? Math.round((done / total) * 100) : 0;
-    bar?.setAttribute('aria-valuenow', String(pct));
-    fill?.classList.add('loading__fill--real');
-    fill?.style.setProperty('--progress', `${pct}%`);
-    const note = document.getElementById('loading-note');
-    if (note) note.textContent = `Building the city… ${pct}%`;
-  };
-  $('loading-note').textContent = 'Building the city…';
-  await world.loadCity();
+  const app = new App(root, new SwitchboardClient(), world);
+  app.connect();
 
-  const client = new SwitchboardClient();
-  client.connect({
-    onSnapshot: (snap) => world.sync(snap),
-    onTick: (t) => world.tick(t),
-    onStatus: (st) => {
-      if (st === 'restarted') location.reload();
-    },
-  });
+  if (world) {
+    const fill = document.querySelector<HTMLElement>('.loading__fill');
+    const bar = document.querySelector<HTMLElement>('.loading__bar');
+    loading.onProgress = (_url, done, total) => {
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      bar?.setAttribute('aria-valuenow', String(pct));
+      fill?.classList.add('loading__fill--real');
+      fill?.style.setProperty('--progress', `${pct}%`);
+      note.textContent = `Building the city… ${pct}%`;
+    };
+    note.textContent = 'Building the city…';
+    await world.loadCity();
+    // People and background life load lazily after this; their progress doesn't belong on the title screen.
+    loading.onProgress = () => {};
+  }
 
-  const lookdev = $('lookdev');
-  lookdev.hidden = false;
-  const pick = (group: HTMLElement, attr: string, value: string) => {
-    for (const b of group.querySelectorAll<HTMLButtonElement>('button')) b.setAttribute('aria-checked', String(b.dataset[attr] === value));
-  };
-  pick($('tod'), 'tod', tod);
-  pick($('quality'), 'q', quality);
-  $('tod').addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-tod]');
-    if (!b) return;
-    const v = b.dataset.tod as TimeOfDay;
-    world.setTimeOfDay(v);
-    store.set('timeOfDay', v);
-    pick($('tod'), 'tod', v);
-  });
-  $('quality').addEventListener('click', (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-q]');
-    if (!b) return;
-    const v = b.dataset.q as QualitySetting;
-    world.setQuality(v);
-    store.set('quality', v);
-    pick($('quality'), 'q', v);
-  });
-
-  // People load lazily after this; their progress no longer belongs on the title screen.
-  loading.onProgress = () => {};
+  root.classList.add('app--ready');
   $('loading').classList.add('loading--done');
-  setTimeout(() => $('loading').remove(), 900);
-  (window as unknown as { world: World }).world = world;
+  setTimeout(() => $('loading').remove(), 1000);
+  (window as unknown as { switchboard: unknown }).switchboard = { app, world };
 }
 
 boot().catch((err) => {
   console.error(err);
   const fatal = $('fatal');
   fatal.hidden = false;
-  fatal.textContent = `The 3D view couldn't start: ${err instanceof Error ? err.message : String(err)}`;
+  fatal.textContent = `Switchboard couldn't start: ${err instanceof Error ? err.message : String(err)}`;
   $('loading').classList.add('loading--done');
 });
