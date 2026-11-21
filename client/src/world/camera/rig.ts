@@ -23,6 +23,10 @@ const RISE_MAX_PITCH = MathUtils.degToRad(78);
 const RISE_LOOKAHEAD = 4;
 /** Fastest the camera tilts up over a building (radians a second). */
 const RISE_SPEED = MathUtils.degToRad(110);
+/** The rise acts fully closer than this (metres from what the camera looks at)... */
+const RISE_FULL = 25;
+/** ...and not at all beyond this. */
+const RISE_NONE = 40;
 const MIN_DIST = 7;
 /** Anything taller than this (metres) is building mass the camera must not pass through. */
 const SOLID = 5;
@@ -64,6 +68,8 @@ export class CameraRig {
   private keep = 1;
   /** Extra pitch (radians) that lifts the camera over a building behind it. */
   private raise = 0;
+  /** The part of it applied at the current distance (it fades out as you zoom out). */
+  private raiseShown = 0;
   private lift = 0;
   /**
    * Collision corrections run only while the user steers the camera; a flight
@@ -102,12 +108,13 @@ export class CameraRig {
     // Start from where the camera visibly is: fold the collision corrections into
     // the view before dropping them, or the camera would jump as the flight begins.
     if (this.steering) {
-      this.current.pitch = Math.min(RISE_MAX_PITCH, this.current.pitch + this.raise);
+      this.current.pitch = Math.min(RISE_MAX_PITCH, this.current.pitch + this.raiseShown);
       this.current.distance *= this.keep;
     }
     this.keep = 1;
     this.lift = 0;
     this.raise = 0;
+    this.raiseShown = 0;
     this.steering = false;
     if (this.reducedMotion) {
       copyView(this.desired, to);
@@ -272,12 +279,20 @@ export class CameraRig {
       const h = solid(from.x + sx * d, from.z + sz * d);
       if (h) need = Math.max(need, Math.atan2(h + 0.8 - from.y, d));
     }
+    // Only close in: up close a building behind would put the camera inside it or
+    // fill the view with a wall. Further out the camera is above the roofs anyway,
+    // and tilting it as buildings pass behind while you pan feels like the camera
+    // has a will of its own. Full within 25 m, fading out by 40 m.
+    // The fade follows the distance directly (not a timer), so the camera settles
+    // exactly as you zoom and is still the moment you stop.
+    const reach = 1 - MathUtils.smoothstep(v.distance, RISE_FULL, RISE_NONE);
     const raiseTarget = Math.max(0, Math.min(RISE_MAX_PITCH, need) - v.pitch);
     // Rising is also capped in speed: a wall entering the view tilts the camera up
     // gently instead of lurching it up in one frame.
     const eased = ease(this.raise, raiseTarget, raiseTarget > this.raise);
     this.raise = this.reducedMotion ? eased : Math.min(eased, this.raise + RISE_SPEED * this.dt);
-    const pitch = v.pitch + this.raise;
+    this.raiseShown = this.raise * reach;
+    const pitch = v.pitch + this.raiseShown;
     const cp = Math.cos(pitch);
     const dx = sx * cp * v.distance;
     const dy = Math.sin(pitch) * v.distance;
@@ -285,7 +300,7 @@ export class CameraRig {
 
     // Too tall to rise over (a tower right behind): come in front of it instead.
     let keepTarget = 1;
-    if (need > RISE_MAX_PITCH) {
+    if (need > RISE_MAX_PITCH && v.distance <= 28) {
       const len = v.distance;
       const n = Math.min(48, Math.ceil(len / 1.25));
       for (let i = 1; i <= n; i++) {
