@@ -8,6 +8,7 @@ import { MeshoptSimplifier } from 'meshoptimizer';
 import sharp from 'sharp';
 import { abs, blender, cleanDir, ENV_DIR, ensureDir, fileBytes, rel, round } from './util.mjs';
 import { downsampleNormal } from './textures.mjs';
+import { separateCoplanar } from '../../coplanar.mjs';
 
 export const ALLOWED_EXTENSIONS = new Set([
   'KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_emissive_strength',
@@ -393,6 +394,8 @@ export async function buildProps(cfg, { only } = {}) {
 
     const outDir = await cleanDir(path.join(outRoot, prop.id));
     const gltfPath = path.join(outDir, `${prop.id}.gltf`);
+    // No two surfaces may lie in the same plane (z-fighting flicker).
+    separateCoplanar(doc);
     await io.write(gltfPath, doc);
 
     // 6. report

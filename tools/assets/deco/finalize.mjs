@@ -11,6 +11,7 @@ import path from 'node:path';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTTextureWebP, KHRMaterialsEmissiveStrength } from '@gltf-transform/extensions';
 import { getBounds } from '@gltf-transform/functions';
+import { separateCoplanar } from '../coplanar.mjs';
 
 const REPO = process.cwd();
 const STAGE = path.join(REPO, 'assets-src/_build/deco');
@@ -90,6 +91,8 @@ async function finalize(name) {
   for (const b of root.listBuffers()) b.setURI(`${name}.bin`);
   root.getAsset().generator = 'Switchboard deco kit (Blender 5.2 + glTF-Transform 4.5)';
   root.getAsset().copyright = 'Switchboard world v2, original work';
+  // No two surfaces of a building may lie in the same plane (z-fighting flicker).
+  separateCoplanar(doc);
   await io.write(path.join(OUT, `${name}.gltf`), doc);
 
   // manifest entry

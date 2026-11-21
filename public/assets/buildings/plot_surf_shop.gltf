@@ -1,6 +1,6 @@
 {
   "asset": {
-    "generator": "Switchboard deco kit (Blender 5.2 + glTF-Transform 4.5)",
+    "generator": "glTF-Transform v4.5.1",
     "version": "2.0",
     "copyright": "Switchboard world v2, original work"
   },
@@ -214,7 +214,7 @@
       ],
       "min": [
         -9.221651077270508,
-        0.03999999910593033,
+        0.03700000047683716,
         -6.679999828338623
       ],
       "bufferView": 4,

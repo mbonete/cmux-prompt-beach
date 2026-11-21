@@ -144,11 +144,13 @@ export function buildGround(): Group {
   group.add(bayWall);
 
   // Inland seawall: the island ends at the bay.
-  const inlandWall = new Mesh(box(BAY_EDGE_X - CITY.x0 + 2, CITY_Y - SEA_Y + 1.5, 2, (BAY_EDGE_X + CITY.x0) / 2, SEA_Y - 1.5, LAND_FAR + 1), concreteMaterial(0xcfc6b8));
+  // It runs over the west wall's end, and the west wall stops where it starts:
+  // two wall tops overlapping in one plane z-fight in the corner.
+  const inlandWall = new Mesh(box(BAY_EDGE_X - CITY.x0 + 3, CITY_Y - SEA_Y + 1.5, 2, (BAY_EDGE_X + CITY.x0 - 1) / 2, SEA_Y - 1.5, LAND_FAR + 1), concreteMaterial(0xcfc6b8));
   inlandWall.receiveShadow = true;
   group.add(inlandWall);
   // West seawall: the island ends just past the last plots.
-  const westWall = new Mesh(box(2, CITY_Y - SEA_Y + 1.5, LAND_FAR - PROMENADE.z0 + 2, CITY.x0 - 1, SEA_Y - 1.5, (LAND_FAR + PROMENADE.z0) / 2), concreteMaterial(0xcfc6b8));
+  const westWall = new Mesh(box(2, CITY_Y - SEA_Y + 1.5, LAND_FAR - PROMENADE.z0 + 1, CITY.x0 - 1, SEA_Y - 1.5, (LAND_FAR + PROMENADE.z0 - 1) / 2), concreteMaterial(0xcfc6b8));
   westWall.receiveShadow = true;
   group.add(westWall);
 
@@ -171,7 +173,8 @@ export function buildGround(): Group {
   // Far shore of the inland bay, under the second skyline.
   const inland = new PlaneGeometry(INLAND_SKYLINE.x1 - INLAND_SKYLINE.x0 + 300, INLAND_SKYLINE.z1 - INLAND_SKYLINE.z0 + 300, 1, 1);
   inland.rotateX(-Math.PI / 2);
-  inland.translate((INLAND_SKYLINE.x0 + INLAND_SKYLINE.x1) / 2, CITY_Y + 0.4, (INLAND_SKYLINE.z0 + INLAND_SKYLINE.z1) / 2 + 140);
+  // 3 cm above the far shore's plane, which it overlaps in the east (same height = z-fighting).
+  inland.translate((INLAND_SKYLINE.x0 + INLAND_SKYLINE.x1) / 2, CITY_Y + 0.43, (INLAND_SKYLINE.z0 + INLAND_SKYLINE.z1) / 2 + 140);
   const inlandShore = new Mesh(inland, grassMaterial());
   inlandShore.receiveShadow = true;
   group.add(inlandShore);

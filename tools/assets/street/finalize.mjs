@@ -12,6 +12,7 @@ import sharp from 'sharp';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTTextureWebP, KHRMaterialsClearcoat, KHRMaterialsEmissiveStrength } from '@gltf-transform/extensions';
 import { getBounds } from '@gltf-transform/functions';
+import { separateCoplanar } from '../coplanar.mjs';
 
 const REPO = process.cwd();
 const STAGE = path.join(REPO, 'assets-src/_build/street');
@@ -216,6 +217,8 @@ async function finalize(name) {
   for (const b of root.listBuffers()) b.setURI(`${name}.bin`);
   root.getAsset().generator = 'Switchboard street kit (Blender 5.2 + glTF-Transform 4.5)';
   root.getAsset().copyright = 'Switchboard world v2, original work';
+  // No two surfaces may lie in the same plane (z-fighting flicker).
+  separateCoplanar(doc);
   await io.write(path.join(OUT, `${name}.gltf`), doc);
 
   let tris = 0;
