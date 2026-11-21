@@ -277,11 +277,13 @@ export class App {
       this.hud.setTour(on);
     };
     w.director.onCut = (phase) => this.cut.classList.toggle('cut--dark', phase === 'out');
-    // Any input hands the camera back (except the tour's own button and key, which toggle it).
+    // Any input anywhere (the city, a panel, a button) is activity for the idle
+    // camera, and hands the camera back; the tour's own button and key toggle it.
     const stop = (e: Event) => {
       const t = e.target as HTMLElement | null;
       if (t?.closest?.('[data-tour]')) return;
       if (e instanceof KeyboardEvent && (e.key === 't' || e.key === 'T')) return;
+      w.rig.poke();
       w.director.stop();
     };
     for (const ev of ['pointerdown', 'wheel', 'keydown', 'touchstart'] as const) window.addEventListener(ev, stop, { passive: true, capture: true });

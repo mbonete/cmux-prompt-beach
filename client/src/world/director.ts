@@ -73,6 +73,9 @@ export class Director {
   /** Any input: give the camera back. */
   stop() {
     if (!this.active) return;
+    // Stopping is activity: without this the idle timer was still past two
+    // minutes and the tour began again on the very next frame.
+    this.rig.poke();
     this.active = false;
     this.pendingCut = null;
     this.onChange?.(false);
