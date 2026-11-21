@@ -280,6 +280,8 @@ export class CameraRig {
     el.addEventListener('contextmenu', (e) => e.preventDefault());
 
     el.addEventListener('pointerdown', (e) => {
+      // Clicking the map puts away any text selection (the canvas doesn't by itself).
+      if (!document.getSelection()?.isCollapsed) document.getSelection()?.removeAllRanges();
       el.setPointerCapture(e.pointerId);
       this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button, shift: e.shiftKey });
       this.downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
