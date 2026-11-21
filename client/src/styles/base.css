@@ -121,6 +121,12 @@ body {
   }
 }
 
+.loading__fill--real {
+  width: var(--progress, 0%);
+  animation: none;
+  transition: width 0.25s ease;
+}
+
 .loading__note {
   margin: 0;
   color: var(--ink-3);
@@ -205,5 +211,148 @@ body {
   .loading__fill {
     animation: none;
     width: 100%;
+  }
+}
+
+/* World overlay: tags and badges pinned to 3D points */
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.overlay > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  transition: opacity 0.25s ease;
+}
+
+.pin--hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.i {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 9px;
+  border-radius: 10px;
+  background: rgb(14 9 26 / 0.78);
+  border: 1px solid color-mix(in srgb, var(--repo, #fff) 75%, transparent);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25), 0 0 18px color-mix(in srgb, var(--repo, #fff) 45%, transparent), 0 6px 18px rgb(0 0 0 / 0.35);
+  color: #fff;
+  font: 650 14px/1 var(--font);
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+
+.tag__icon {
+  color: var(--repo, #fff);
+}
+
+.tag--dormant {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Needs-you badge above a person's head */
+.badge {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #ff74ad, var(--needs));
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.85), 0 0 22px rgb(255 63 142 / 0.75), 0 6px 14px rgb(0 0 0 / 0.35);
+  animation: badge-bob 2.4s ease-in-out infinite;
+}
+
+.badge:empty {
+  display: none;
+}
+
+.badge .i {
+  width: 19px;
+  height: 19px;
+}
+
+.badge--result {
+  background: radial-gradient(circle at 35% 30%, #8dffc4, #22c47a);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.85), 0 0 18px rgb(93 255 168 / 0.6), 0 6px 14px rgb(0 0 0 / 0.35);
+  animation: none;
+}
+
+@keyframes badge-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -5px;
+  }
+}
+
+/* Tool-call pop-up: rises and fades */
+.pop {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: #0d1a24;
+  background: var(--working);
+  box-shadow: 0 0 14px rgb(47 216 255 / 0.7);
+  animation: pop-rise 1.6s ease-out forwards;
+}
+
+.pop .i {
+  width: 15px;
+  height: 15px;
+}
+
+@keyframes pop-rise {
+  0% {
+    opacity: 0;
+    translate: 0 6px;
+    scale: 0.6;
+  }
+  15% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge {
+    animation: none;
   }
 }

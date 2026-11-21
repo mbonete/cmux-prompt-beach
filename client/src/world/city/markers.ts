@@ -109,11 +109,12 @@ export class PlotOutline {
 /** A tall translucent column of light with slow rising streaks. */
 export class Beam {
   readonly group = new Group();
-  private readonly u = { color: uniform(new Color(0xff3f8e)), on: uniform(0) };
+  private readonly column: Mesh;
+  private readonly u = { color: uniform(new Color(0xff3f8e)), on: uniform(0), near: uniform(1) };
 
   constructor(height = 70) {
     const u = this.u;
-    const geo = new CylinderGeometry(1.15, 1.6, height, 32, 1, true);
+    const geo = new CylinderGeometry(0.7, 1.05, height, 32, 1, true);
     geo.translate(0, height / 2, 0);
     const mat = new MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: AdditiveBlending, side: DoubleSide, fog: false });
     const v = uv().y;
@@ -121,10 +122,11 @@ export class Beam {
     mat.colorNode = u.color.mul(2.2);
     mat.opacityNode = Fn(() => {
       const fade = pow(float(1).sub(v), float(1.6)).mul(smoothstep(0.0, 0.03, v));
-      return saturate(fade.mul(streaks.mul(0.5).add(0.5)).mul(0.55).mul(u.on));
+      return saturate(fade.mul(streaks.mul(0.5).add(0.5)).mul(0.55).mul(u.near).mul(u.on));
     })();
     const beam = new Mesh(geo, mat);
     beam.renderOrder = 3;
+    this.column = beam;
 
     // A bright ring where the beam meets the ground.
     const ringGeo = new PlaneGeometry(7, 7);
@@ -143,6 +145,22 @@ export class Beam {
 
     this.group.add(beam, ring);
     this.group.visible = false;
+  }
+
+  /**
+   * Up close a beam would be a wall of light across the view, and the person and
+   * their badge already say it all: fade the column by the camera's horizontal distance.
+   */
+  updateCamera(cameraX: number, cameraZ: number) {
+    const p = this.group.position;
+    const d = Math.hypot(cameraX - p.x, cameraZ - p.z);
+    const t = Math.min(1, Math.max(0, (d - 45) / 70));
+    this.u.near.value = t * t * (3 - 2 * t);
+  }
+
+  /** The column starts above the roof so it never hides the people on the terrace. */
+  setColumnBase(y: number) {
+    this.column.position.y = y;
   }
 
   set(on: boolean, color = STATE_COLORS.needs) {

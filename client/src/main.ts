@@ -1,5 +1,7 @@
 import './styles/base.css';
 import { World } from './world/World';
+import { SwitchboardClient } from './data/client';
+import { loading } from './world/engine/assets';
 import type { TimeOfDay } from './world/env/looks';
 import type { QualitySetting } from './world/engine/quality';
 
@@ -38,6 +40,27 @@ async function boot() {
   });
   reduced.addEventListener('change', () => world.setReducedMotion(reduced.matches));
   world.start();
+
+  const fill = document.querySelector<HTMLElement>('.loading__fill');
+  const bar = document.querySelector<HTMLElement>('.loading__bar');
+  loading.onProgress = (_url, done, total) => {
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    bar?.setAttribute('aria-valuenow', String(pct));
+    fill?.classList.add('loading__fill--real');
+    fill?.style.setProperty('--progress', `${pct}%`);
+    $('loading-note').textContent = `Building the city… ${pct}%`;
+  };
+  $('loading-note').textContent = 'Building the city…';
+  await world.loadCity();
+
+  const client = new SwitchboardClient();
+  client.connect({
+    onSnapshot: (snap) => world.sync(snap),
+    onTick: (t) => world.tick(t),
+    onStatus: (st) => {
+      if (st === 'restarted') location.reload();
+    },
+  });
 
   const lookdev = $('lookdev');
   lookdev.hidden = false;

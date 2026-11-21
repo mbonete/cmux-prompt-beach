@@ -9,8 +9,13 @@ import { wetness } from './env/materials';
 import { Ocean } from './env/ocean';
 import { Sky } from './env/sky';
 import { buildBackgroundBlocks, buildSkyline, windowsLevel } from './city/blockout';
-import { Beam, PlotOutline, STATE_COLORS } from './city/markers';
-import { PLOTS } from './city/layout';
+import { District, repoColor, type PlotKey, type PlotState } from './city/District';
+import { Cast } from './agents/cast';
+import { People } from './agents/People';
+import { DEFAULT_STALE_MS, laneOf } from '../data/derive';
+import type { Snapshot, Tick } from '../data/types';
+import { Overlay, type Pin } from '../ui/overlay';
+import { KIND_ICON, icon } from '../ui/icons';
 
 export interface WorldOptions {
   reducedMotion: boolean;
@@ -41,8 +46,13 @@ export class World {
   private qualitySetting: QualitySetting;
   private level: QualityLevel;
   private readonly auto: AutoQuality;
-  private readonly outlines: PlotOutline[] = [];
-  private readonly beams: Beam[] = [];
+  readonly district: District;
+  private staleMs = DEFAULT_STALE_MS;
+  private lastSnapshot: Snapshot | null = null;
+  readonly overlay: Overlay;
+  private readonly cast = new Cast();
+  private people: People | null = null;
+  private readonly plotTags = new Map<PlotKey, { pin: Pin; key: string }>();
   private lastFrame = 0;
   private fpsFrames = 0;
   private fpsSince = performance.now();
@@ -77,7 +87,8 @@ export class World {
 
     this.scene.add(this.sky.mesh, this.ocean.mesh, buildGround(), buildBackgroundBlocks(), buildSkyline());
     this.lighting = new Lighting(renderer, this.scene, this.sky);
-    this.buildLookDevPlots();
+    this.district = new District(this.scene);
+    this.overlay = new Overlay(canvas.parentElement ?? document.body);
 
     this.applyQuality(this.level);
     this.pipeline = new Pipeline(renderer, this.scene, this.rig.camera, this.level);
@@ -132,6 +143,7 @@ export class World {
     this.rig.reducedMotion = on;
     this.sky.setMotion(!on);
     this.ocean.setMotion(!on);
+    this.people?.setReducedMotion(on);
   }
 
   private rebuildPipeline(level: QualityLevel) {
@@ -166,7 +178,9 @@ export class World {
     this.renderer.toneMappingExposure = l.exposure;
     windowsLevel.value = l.windows;
     wetness.value = Math.max(0, l.lamps - 0.3) * 0.6;
-    for (const o of this.outlines) o.setLevel(0.55 + l.neon * 0.6);
+    this.district.windowsLevel.value = 0.25 + l.windows * 0.9;
+    this.district.neonLevel.value = 0.3 + l.neon * 1.2;
+    this.district.setNeonLevel(0.55 + l.neon * 0.6);
   }
 
   private frame(now: number) {
@@ -198,7 +212,10 @@ export class World {
     this.lighting.follow(view.target, view.distance * 0.75);
     this.lighting.updateEnvironment();
 
+    this.people?.update(dt, cam);
+    this.district.updateCamera(cam.position);
     this.pipeline.render();
+    this.overlay.update(cam, this.canvas.clientWidth, this.canvas.clientHeight);
 
     if (busy && this.qualitySetting === 'auto') {
       const next = this.auto.sample(frameMs, now);
@@ -213,24 +230,93 @@ export class World {
     }
   }
 
-  /** Look-dev only: empty plots with outlines in each state, one with a beam. */
-  private buildLookDevPlots() {
-    const states = [STATE_COLORS.working, STATE_COLORS.needs, STATE_COLORS.move, STATE_COLORS.stale];
-    PLOTS.forEach((p, i) => {
-      const o = new PlotOutline();
-      const color = states[i % states.length];
-      o.setState(color, color === STATE_COLORS.needs, color === STATE_COLORS.stale);
-      o.group.position.set(p.x, 0, p.z);
-      this.outlines.push(o);
-      this.scene.add(o.group);
-      if (color === STATE_COLORS.needs && i < 4) {
-        const b = new Beam();
-        b.set(true);
-        b.group.position.set(p.x, 0, p.z);
-        this.beams.push(b);
-        this.scene.add(b.group);
+  /** Loads the buildings and props. */
+  async loadCity() {
+    const [, castOk] = await Promise.all([
+      this.district.load(),
+      this.cast.load().then(
+        () => true,
+        (err) => (console.warn('No people yet:', err), false),
+      ),
+    ]);
+    if (castOk) {
+      this.people = new People(this.scene, this.cast, this.district, this.overlay);
+      this.people.setReducedMotion(this.reducedMotion);
+    }
+    if (this.lastSnapshot) this.sync(this.lastSnapshot);
+    this.lighting.updateEnvironment(true);
+  }
+
+  setStaleAfter(ms: number) {
+    this.staleMs = ms;
+    if (this.lastSnapshot) this.sync(this.lastSnapshot);
+  }
+
+  /** Applies a server snapshot to the city. */
+  sync(snap: Snapshot) {
+    this.lastSnapshot = snap;
+    const now = Date.now();
+    const needsOn = new Set<PlotKey>();
+    const busy = new Set<PlotKey>();
+    for (const item of snap.items) {
+      if (item.phase === 'shell' || item.archived || item.plot === null) continue;
+      busy.add(item.plot);
+      if (laneOf(item, now, this.staleMs) === 'needs') needsOn.add(item.plot);
+    }
+    const states: PlotState[] = [];
+    for (const [key, p] of Object.entries(snap.world?.plots ?? {})) {
+      if (p.plot === 'overflow') continue;
+      states.push({ key: p.plot, occupied: true, dormant: !p.active, color: repoColor(key), needs: needsOn.has(p.plot) });
+    }
+    for (const special of ['hangout', 'overflow'] as const) {
+      if (busy.has(special)) states.push({ key: special, occupied: true, dormant: false, color: repoColor(special), needs: needsOn.has(special) });
+    }
+    this.district.update(states);
+    this.syncTags(snap);
+    this.people?.sync(snap.items, this.staleMs);
+  }
+
+  tick(t: Tick) {
+    this.people?.tick(t, this.rig.camera);
+  }
+
+  /** Floating name tags over occupied plots: repo name and an icon for its kind. */
+  private syncTags(snap: Snapshot) {
+    const wanted = new Map<PlotKey, { key: string; name: string; kind: string; dormant: boolean }>();
+    for (const [key, p] of Object.entries(snap.world?.plots ?? {})) {
+      if (p.plot !== 'overflow') wanted.set(p.plot, { key, name: p.name, kind: p.kind, dormant: !p.active });
+    }
+    if (snap.items.some((i) => i.plot === 'hangout' && i.phase !== 'shell' && !i.archived)) wanted.set('hangout', { key: 'hangout', name: 'Beach bar', kind: 'other', dormant: false });
+    if (snap.items.some((i) => i.plot === 'overflow' && i.phase !== 'shell' && !i.archived)) wanted.set('overflow', { key: 'overflow', name: 'Co-working', kind: 'other', dormant: false });
+
+    for (const [plot, t] of this.plotTags) {
+      if (!wanted.has(plot) || wanted.get(plot)!.key !== t.key) {
+        this.overlay.remove(t.pin);
+        this.plotTags.delete(plot);
       }
-    });
+    }
+    for (const [plot, w] of wanted) {
+      let t = this.plotTags.get(plot);
+      if (!t) {
+        const anchor = this.district.tagAnchor(plot);
+        if (!anchor) continue;
+        const el = document.createElement('div');
+        el.className = 'tag';
+        t = { pin: this.overlay.add(el, anchor, { lift: 6, maxDistance: 520 }), key: w.key };
+        this.plotTags.set(plot, t);
+      }
+      const el = t.pin.el;
+      const color = repoColor(w.key);
+      el.classList.toggle('tag--dormant', w.dormant);
+      el.style.setProperty('--repo', `#${color.getHexString()}`);
+      const iconName = KIND_ICON[w.kind] ?? 'branch';
+      const html = `${icon(iconName, 'i tag__icon')}<span class="tag__name"></span>`;
+      if (el.dataset.kind !== iconName) {
+        el.innerHTML = html;
+        el.dataset.kind = iconName;
+      }
+      el.querySelector('.tag__name')!.textContent = w.name;
+    }
   }
 }
 
