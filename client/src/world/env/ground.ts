@@ -4,6 +4,10 @@ import {
   BAY_EDGE_X,
   BEACH,
   BEACH_ROAD,
+  CAUSEWAY_END,
+  CITY,
+  INLAND_SKYLINE,
+  STREET_WEST,
   CITY_Y,
   PROMENADE,
   SEA_Y,
@@ -18,7 +22,7 @@ import { asphaltTextured, groundMaterial, sandTextured, textureSet } from './tex
 // The land: city lawns, the promenade with its low seawall, the beach sloping
 // under the waterline, roads with markings, and the far shore for the skyline.
 
-const LAND_FAR = 900;
+const LAND_FAR = CITY.z1 + 6;
 
 /** Beach height at a given z (metres): gentle dunes down to the waterline, then deeper. */
 export function beachHeight(z: number, x = 0) {
@@ -119,6 +123,34 @@ export function buildGround(): Group {
   bayWall.receiveShadow = true;
   group.add(bayWall);
 
+  // Inland seawall: the island ends at the bay.
+  const inlandWall = new Mesh(box(BAY_EDGE_X + 702, CITY_Y - SEA_Y + 1.5, 2, (BAY_EDGE_X - 700) / 2, SEA_Y - 1.5, LAND_FAR + 1), concreteMaterial(0xcfc6b8));
+  inlandWall.receiveShadow = true;
+  group.add(inlandWall);
+
+  // Causeways: the avenues carry on over the bay to the far shore.
+  const decks: BufferGeometry[] = [];
+  const deckLen = CAUSEWAY_END - LAND_FAR + 10;
+  const deckZ = LAND_FAR + deckLen / 2 - 2;
+  for (const a of STREETS_NS) {
+    decks.push(box(a.width + 1.6, 0.7, deckLen, a.x, CITY_Y - 0.69, deckZ));
+    for (const side of [-1, 1]) decks.push(box(0.35, 0.9, deckLen, a.x + side * (a.width / 2 + 0.6), CITY_Y, deckZ));
+    for (let z = LAND_FAR + 14; z < CAUSEWAY_END; z += 24) decks.push(box(a.width * 0.6, CITY_Y - SEA_Y + 2, 1.4, a.x, SEA_Y - 2, z));
+  }
+  const causeways = new Mesh(mergeGeometries(decks), concreteMaterial(0xd9d2c6));
+  causeways.receiveShadow = true;
+  causeways.castShadow = true;
+  causeways.name = 'causeways';
+  group.add(causeways);
+
+  // Far shore of the inland bay, under the second skyline.
+  const inland = new PlaneGeometry(INLAND_SKYLINE.x1 - INLAND_SKYLINE.x0 + 300, INLAND_SKYLINE.z1 - INLAND_SKYLINE.z0 + 300, 1, 1);
+  inland.rotateX(-Math.PI / 2);
+  inland.translate((INLAND_SKYLINE.x0 + INLAND_SKYLINE.x1) / 2, CITY_Y + 0.4, (INLAND_SKYLINE.z0 + INLAND_SKYLINE.z1) / 2 + 140);
+  const inlandShore = new Mesh(inland, grassMaterial());
+  inlandShore.receiveShadow = true;
+  group.add(inlandShore);
+
   // Far shore for the skyline.
   const far = new PlaneGeometry(SKYLINE.x1 - SKYLINE.x0 + 400, SKYLINE.z1 - SKYLINE.z0 + 400, 1, 1);
   far.rotateX(-Math.PI / 2);
@@ -161,8 +193,14 @@ export function buildGround(): Group {
   // Roads.
   const roads: BufferGeometry[] = [];
   roads.push(roadStrip((BEACH_ROAD.x0 + BEACH_ROAD.x1) / 2, (BEACH_ROAD.z0 + BEACH_ROAD.z1) / 2, BEACH_ROAD.x1 - BEACH_ROAD.x0, BEACH_ROAD.z1 - BEACH_ROAD.z0, true));
-  for (const s of STREETS_EW) roads.push(roadStrip((-300 + BAY_EDGE_X) / 2, s.z, BAY_EDGE_X + 300, s.width, true));
-  for (const s of STREETS_NS) roads.push(roadStrip(s.x, (BEACH_ROAD.z1 + 420) / 2, 420 - BEACH_ROAD.z1, s.width, false));
+  for (const s of STREETS_EW) roads.push(roadStrip((STREET_WEST + BAY_EDGE_X) / 2, s.z, BAY_EDGE_X - STREET_WEST, s.width, true));
+  // Avenues stop at each cross street (which carries the crossing), so no two road
+  // surfaces overlap and their lane markings never fight; north of the island they
+  // carry on as causeways.
+  const crossings = STREETS_EW.map((e) => [e.z - e.width / 2, e.z + e.width / 2] as const);
+  for (const s of STREETS_NS) {
+    for (const [a, b] of spans(BEACH_ROAD.z1, CAUSEWAY_END, crossings)) roads.push(roadStrip(s.x, (a + b) / 2, b - a, s.width, false));
+  }
   const roadMesh = new Mesh(mergeGeometries(roads), asphaltTextured(textureSet('asphalt', 3, '2k')));
   roadMesh.receiveShadow = true;
   roadMesh.name = 'roads';
@@ -172,8 +210,8 @@ export function buildGround(): Group {
   const walks: BufferGeometry[] = [];
   const walkW = 2.2;
   const curbH = 0.14;
-  const xMin = -300;
-  const zMax = 420;
+  const xMin = CITY.x0;
+  const zMax = CITY.z1;
   const nsCuts = STREETS_NS.map((s) => [s.x - s.width / 2 - walkW, s.x + s.width / 2 + walkW] as const);
   const ewCuts = [
     [BEACH_ROAD.z0 - walkW, BEACH_ROAD.z1 + walkW] as const,

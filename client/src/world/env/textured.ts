@@ -15,12 +15,13 @@ import {
   color,
   float,
   fract,
+  fwidth,
+  max,
   mix,
   mx_noise_float,
   normalMap,
   positionWorld,
   smoothstep,
-  step,
   texture,
   uv,
   vec2,
@@ -118,8 +119,13 @@ export function asphaltTextured(set: TextureSet) {
   const u = uv().x;
   const v = uv().y;
   const halfW = attribute('aHalfW', 'float');
-  const centre = step(abs(v), float(0.08)).mul(step(fract(u.div(6)), float(0.55)));
-  const edge = step(abs(abs(v).sub(halfW.sub(0.45))), float(0.07));
+  // Painted lines with soft, pixel-width edges (hard steps shimmer as you zoom).
+  const aaV = max(fwidth(v), float(0.002));
+  const dash = fract(u.div(6));
+  const aaU = max(fwidth(u.div(6)), float(0.002));
+  const along = smoothstep(float(0.55).add(aaU), float(0.55).sub(aaU), dash).mul(smoothstep(float(0).sub(aaU), aaU, dash));
+  const centre = smoothstep(float(0.08).add(aaV), float(0.08).sub(aaV), abs(v)).mul(along);
+  const edge = smoothstep(float(0.07).add(aaV), float(0.07).sub(aaV), abs(abs(v).sub(halfW.sub(0.45))));
   const worn = mx_noise_float(vec3(positionWorld.x.mul(1.3), positionWorld.z.mul(1.3), 9)).mul(0.5).add(0.5).mul(0.35).add(0.65);
   const base = t.albedo.mul(0.82);
   const painted = mix(mix(base, vec3(0.75, 0.62, 0.22), centre.mul(worn)), vec3(0.8, 0.8, 0.78), edge.mul(worn));

@@ -37,6 +37,8 @@ export class App {
   private applied: Partial<Settings> = {};
   private insets: Insets = { left: 96, top: 72, right: 16, bottom: 16 };
   private readonly scratch = { x: 0, y: 0, behind: false };
+  /** Where the card is anchored on screen, eased so it never trembles. */
+  private cardAnchor: { x: number; y: number; id: string; at: number } | null = null;
   private needsIds: string[] = [];
   /** Screen areas edge arrows keep off: the minimap and the controls hint. */
   private avoid: DOMRect[] = [];
@@ -253,7 +255,22 @@ export class App {
       const sel = this.state.selected;
       if (this.card.open && sel) {
         const ok = w.screenOf(sel, this.scratch) && !this.scratch.behind;
-        this.card.place(ok ? this.scratch : null, view, this.insets);
+        if (!ok) this.cardAnchor = null;
+        else {
+          const a = this.cardAnchor;
+          const dt = a ? Math.min(0.1, (now - a.at) / 1000) : 0;
+          if (!a || a.id !== sel) this.cardAnchor = { x: this.scratch.x, y: this.scratch.y, id: sel, at: now };
+          else {
+            // Follow the camera's moves smoothly; ignore sub-pixel wobble.
+            const dx = this.scratch.x - a.x;
+            const dy = this.scratch.y - a.y;
+            const k = 1 - Math.exp(-dt * 14);
+            if (Math.abs(dx) > 0.75) a.x += dx * k;
+            if (Math.abs(dy) > 0.75) a.y += dy * k;
+            a.at = now;
+          }
+        }
+        this.card.place(this.cardAnchor, view, this.insets);
       }
       if (this.edges) {
         const targets: EdgeTarget[] = [];
@@ -268,8 +285,34 @@ export class App {
     };
   }
 
+  /**
+   * The page itself never zooms: a trackpad pinch arrives as ctrl+wheel, and over
+   * a label or panel the browser would zoom the whole page (leaving the HUD off
+   * screen with no way back). Over the city's labels and arrows, wheel and pinch
+   * drive the camera instead; over panels they do nothing.
+   */
+  private bindZoomGuard() {
+    const canvas = this.world?.renderer.domElement as HTMLCanvasElement | undefined;
+    window.addEventListener(
+      'wheel',
+      (e) => {
+        const t = e.target as HTMLElement;
+        if (canvas && t !== canvas && t.closest('.overlay, .edges')) {
+          e.preventDefault();
+          canvas.dispatchEvent(
+            new WheelEvent('wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, clientX: e.clientX, clientY: e.clientY, ctrlKey: e.ctrlKey, bubbles: true, cancelable: true }),
+          );
+        } else if (e.ctrlKey) e.preventDefault();
+      },
+      { passive: false },
+    );
+    // Safari's pinch.
+    for (const type of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+  }
+
   /** People's name tags and badges, and plot tags, are clickable too. */
   private bindOverlay() {
+    this.bindZoomGuard();
     const root = this.world?.overlay.root;
     if (!root) return;
     root.addEventListener('click', (e) => {

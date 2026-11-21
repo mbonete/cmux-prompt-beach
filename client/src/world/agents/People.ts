@@ -214,6 +214,15 @@ export class People {
     return e ? out.copy(e.person.root.position) : null;
   }
 
+  /**
+   * A steady point above someone (their spot, not their head bone), for HTML that
+   * should follow them without picking up every breath and gesture.
+   */
+  anchorOf(surfaceId: string, out: Vector3): Vector3 | null {
+    const e = this.entries.get(surfaceId);
+    return e ? out.copy(e.person.root.position).setY(e.person.root.position.y + 1.7) : null;
+  }
+
   headOf(surfaceId: string): Vector3 | null {
     const e = this.entries.get(surfaceId);
     return e ? e.person.headPosition(this.head) : null;

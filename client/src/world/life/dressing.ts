@@ -1,5 +1,5 @@
 import { Color, Group, Matrix4, Quaternion, Vector3 } from 'three/webgpu';
-import { BAY_EDGE_X, BEACH_ROAD, STREETS_EW, STREETS_NS } from '../city/layout';
+import { BAY_EDGE_X, BEACH_ROAD, STREETS_EW, STREETS_NS, CITY } from '../city/layout';
 import { beachHeight } from '../env/ground';
 import { type KitModel, StaticBatch, type StreetKit } from './kit';
 import { Pools } from './pools';
@@ -71,7 +71,7 @@ export class Dressing {
 
     // Promenade: midway between promenade palms, every other gap.
     const promZ = -15.5;
-    const promPalms = this.palms.filter((pt) => Math.abs(pt.z - promZ) < 1.5 && pt.x > -280 && pt.x < BAY_EDGE_X - 4).sort((a, b) => a.x - b.x);
+    const promPalms = this.palms.filter((pt) => Math.abs(pt.z - promZ) < 1.5 && pt.x > CITY.x0 - 40 && pt.x < BAY_EDGE_X - 4).sort((a, b) => a.x - b.x);
     for (let i = 0; i + 1 < promPalms.length; i += 2) {
       const a = promPalms[i];
       const b = promPalms[i + 1];
@@ -160,7 +160,7 @@ export class Dressing {
       const spread = r() < 0.65 ? 150 : 260;
       const x = -40 + (r() - 0.5) * 2 * spread;
       const z = -26.5 - r() * 20;
-      if (x > BAY_EDGE_X - 20 || x < -280) continue;
+      if (x > BAY_EDGE_X - 20 || x < CITY.x0 - 30) continue;
       if (!clear(x, z, 4.2)) continue;
       const canvas = pick(r, CANVAS);
       const yaw = Math.PI + (r() - 0.5) * 0.5;

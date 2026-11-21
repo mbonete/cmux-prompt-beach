@@ -1,5 +1,5 @@
 import { Color, Group, Matrix4, Quaternion, Vector3 } from 'three/webgpu';
-import { BAY_EDGE_X, BEACH_ROAD, STREETS_EW, STREETS_NS } from '../city/layout';
+import { BAY_EDGE_X, BEACH_ROAD, STREETS_EW, STREETS_NS, CAUSEWAY_END, STREET_WEST } from '../city/layout';
 import { Fleet, type StreetKit } from './kit';
 import { Pools } from './pools';
 import { pick, rng, shuffle, type Rand } from './util';
@@ -13,8 +13,10 @@ import { pick, rng, shuffle, type Rand } from './util';
 // avenue. The dead-end stubs toward the bay hold parked cars instead.
 
 const ROAD_Y = 0.02;
-const WEST = -250;
-const NORTH = 235;
+// Cars come and go out of sight: at the far west end of the streets, and across
+// the causeways at the far end of each avenue.
+const WEST = STREET_WEST + 6;
+const NORTH = CAUSEWAY_END - 8;
 const DX = [1, 0, -1, 0];
 const DZ = [0, 1, 0, -1];
 

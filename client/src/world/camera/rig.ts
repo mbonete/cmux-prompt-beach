@@ -20,8 +20,8 @@ const MAX_PITCH = MathUtils.degToRad(65);
 const MIN_DIST = 7;
 /** Anything taller than this (metres) is building mass the camera must not pass through. */
 const SOLID = 5;
-const MAX_DIST = 420;
-const BOUNDS = { x0: -170, x1: 175, z0: -110, z1: 230 };
+const MAX_DIST = 270;
+const BOUNDS = { x0: -150, x1: 165, z0: -100, z1: 160 };
 
 export class CameraRig {
   readonly camera: PerspectiveCamera;

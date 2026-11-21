@@ -3,7 +3,7 @@ import { uniform } from 'three/tsl';
 import { loadGLTF, loadJSON } from '../engine/assets';
 import { InstancedModel } from '../engine/instancer';
 import { perInstanceEmission } from '../engine/materials';
-import { BAY_EDGE_X, OVERFLOW, PLOT_Z, SKYLINE, STREETS_NS } from './layout';
+import { BAY_EDGE_X, CITY, INLAND_SKYLINE, OVERFLOW, PLOT_Z, SKYLINE, STREETS_NS } from './layout';
 
 // The city around the district: rows of low Deco/MiMo street buildings on the
 // blocks beside and behind the plots, and a skyline of towers across the bay.
@@ -36,7 +36,8 @@ export class Background {
 
     // Street buildings: one row per block, facing +Z (toward the usual camera).
     const lowSpots: Matrix4[] = [];
-    const rows = [...PLOT_Z, 112, 138, 164, 190];
+    // One ring of blocks around the district; the island ends soon after.
+    const rows = [...PLOT_Z, 112, 138, 164].filter((z) => z < CITY.z1 - 14);
     const westAvenue = STREETS_NS[0];
     const eastAvenue = STREETS_NS[STREETS_NS.length - 1];
     const westStart = westAvenue.x - westAvenue.width / 2 - 2.2 - 11;
@@ -47,7 +48,7 @@ export class Background {
       lowSpots.push(m);
     };
     for (const z of rows) {
-      for (let x = westStart; x > -280; x -= 22 + r() * 3) place(x, z);
+      for (let x = westStart; x > CITY.x0 + 10; x -= 22 + r() * 3) place(x, z);
       for (let x = eastStart; x < BAY_EDGE_X - 10; x += 22 + r() * 3) place(x, z);
       if (z > 100) for (let x = -42; x <= 42; x += 26) place(x, z);
     }
@@ -55,7 +56,18 @@ export class Background {
     // Skyline across the bay: taller toward the water's edge, spaced so no two touch.
     const towerSpots: Matrix4[] = [];
     const taken: Vector3[] = [];
-    for (let i = 0; i < 400 && towerSpots.length < 46; i++) {
+    // And a second one across the inland bay, beyond the causeways.
+    for (let i = 0; i < 300 && taken.length < 30; i++) {
+      const p = new Vector3(INLAND_SKYLINE.x0 + 30 + r() * (INLAND_SKYLINE.x1 - INLAND_SKYLINE.x0 - 60), 0.4, INLAND_SKYLINE.z0 + 25 + r() * (INLAND_SKYLINE.z1 - INLAND_SKYLINE.z0 - 50));
+      if (taken.some((q) => q.distanceTo(p) < 36)) continue;
+      // Leave the causeway landings clear.
+      if (STREETS_NS.some((a) => Math.abs(p.x - a.x) < 22) && p.z < INLAND_SKYLINE.z0 + 60) continue;
+      taken.push(p);
+      const near = 1 - (p.z - INLAND_SKYLINE.z0) / (INLAND_SKYLINE.z1 - INLAND_SKYLINE.z0);
+      const s = 0.7 + r() * 0.35 + near * 0.2;
+      towerSpots.push(new Matrix4().compose(p, new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.floor(r() * 4) * (Math.PI / 2)), new Vector3(1, s, 1)));
+    }
+    for (let i = 0; i < 400 && towerSpots.length < 76; i++) {
       const p = new Vector3(SKYLINE.x0 + 25 + r() * 340, 0.4, SKYLINE.z0 + 40 + r() * (SKYLINE.z1 - SKYLINE.z0 - 80));
       if (taken.some((q) => q.distanceTo(p) < 34)) continue;
       taken.push(p);

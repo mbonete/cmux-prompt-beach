@@ -1502,6 +1502,12 @@ code,
   padding: 10px 12px 12px;
   border-radius: 13px;
   background: var(--fill);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.project:hover {
+  background: var(--fill-2);
 }
 
 .project--dormant {
@@ -1522,11 +1528,7 @@ code,
   cursor: pointer;
 }
 
-.project__main:hover .project__name {
-  text-decoration: underline;
-  text-decoration-color: rgb(255 255 255 / 0.35);
-  text-underline-offset: 3px;
-}
+
 
 .project__icon {
   width: 18px;

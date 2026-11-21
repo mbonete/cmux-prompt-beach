@@ -220,8 +220,8 @@ export class Panels {
 
   private settingsHTML(): string {
     const s = this.state.settings;
-    const seg = (name: string, label: string, value: string, options: [string, string][]) =>
-      `<div class="field"><span class="field__label" id="lbl-${name}">${label}</span><div class="seg" role="radiogroup" aria-labelledby="lbl-${name}">${options
+    const seg = (name: string, label: string, value: string, options: [string, string][], hint = '') =>
+      `<div class="field"><span class="field__text"><span class="field__label" id="lbl-${name}">${label}</span>${hint ? `<span class="field__hint">${hint}</span>` : ''}</span><div class="seg" role="radiogroup" aria-labelledby="lbl-${name}">${options
         .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === value}" data-setting="${name}" data-value="${v}">${l}</button>`)
         .join('')}</div></div>`;
     const toggle = (name: keyof typeof s, label: string, hint: string) =>
@@ -244,11 +244,17 @@ export class Panels {
       'idleCamera',
       'Idle camera',
       'After 2 minutes without input, slow shots of the city that cut to whoever needs you.',
-    )}${seg('motion', 'Reduced motion', s.motion, [
-      ['system', 'System'],
-      ['reduce', 'On'],
-      ['full', 'Off'],
-    ])}</div>`;
+    )}${seg(
+      'motion',
+      'Reduced motion',
+      s.motion,
+      [
+        ['system', 'System'],
+        ['reduce', 'On'],
+        ['full', 'Off'],
+      ],
+      'For anyone sensitive to motion: the camera cuts instead of flying, and the water, palms, traffic and idle camera hold still. System follows your Mac’s accessibility setting.',
+    )}</div>`;
   }
 
   // ------------------------------------------------------------ input
@@ -259,7 +265,9 @@ export class Panels {
       if (t.closest('[data-panel-close]')) return this.state.openPanel(null);
       const pick = t.closest<HTMLElement>('[data-pick]');
       if (pick) return this.nav.focusAgent(pick.dataset.pick!);
-      const plot = t.closest<HTMLElement>('[data-plot]');
+      // A whole project row is one target (its title button stays the keyboard focus).
+      const row = t.closest<HTMLElement>('.project');
+      const plot = t.closest<HTMLElement>('[data-plot]') ?? (row && !t.closest('button') ? row.querySelector<HTMLElement>('[data-plot]') : null);
       if (plot) {
         const v = plot.dataset.plot!;
         return this.nav.focusPlot(v === 'hangout' || v === 'overflow' ? v : Number(v));
@@ -347,7 +355,7 @@ export function repoHex(key: string): string {
 function helpHTML(): string {
   const keys: [string, string][] = [
     ['Drag', 'Move around'],
-    ['Right-drag · Shift-drag · two fingers', 'Turn and tilt'],
+    ['⇧ Shift + drag · right-drag', 'Turn and tilt'],
     ['Scroll · pinch', 'Zoom toward the pointer'],
     ['Click someone', 'Their card'],
     ['Double-click · F', 'Focus there'],

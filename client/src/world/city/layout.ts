@@ -54,3 +54,14 @@ export const DISTRICT: Rect = { x0: -62, x1: 62, z0: -2, z1: 104 };
 /** The city land's east edge drops to the bay; the skyline sits across it. */
 export const BAY_EDGE_X = 128;
 export const SKYLINE: Rect = { x0: 240, x1: 900, z0: -260, z1: 520 };
+
+/**
+ * The island is small on purpose: city blocks stop one ring out from the
+ * district (x0), and inland (z1) a seawall drops to the bay, crossed by the
+ * avenues as causeways to a second skyline on the far shore.
+ */
+export const CITY = { x0: -185, z1: 200 } as const;
+/** Streets run a little past the last blocks so traffic can leave out of sight. */
+export const STREET_WEST = -265;
+export const CAUSEWAY_END = 335;
+export const INLAND_SKYLINE: Rect = { x0: -620, x1: 230, z0: 345, z1: 560 };

@@ -27,7 +27,7 @@ import { Palms, SHADOW_ONLY_LAYER, wind } from './env/palms';
 import { beachHeight, buildGround } from './env/ground';
 import { Background } from './city/Background';
 import { District, repoColor, type PlotKey, type PlotState } from './city/District';
-import { HANGOUT, OVERFLOW, PLOTS, PLOT_D, PLOT_W, PLOT_X, STREETS_EW, STREETS_NS } from './city/layout';
+import { CITY, HANGOUT, OVERFLOW, PLOTS, PLOT_D, PLOT_W, PLOT_X, STREETS_EW, STREETS_NS } from './city/layout';
 import { Cast } from './agents/cast';
 import { People } from './agents/People';
 import { Life } from './life/Life';
@@ -279,9 +279,14 @@ export class World {
     this.timer.update(now);
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
 
-    // Throttle to ~30 fps while nothing moves and the user is idle.
+    // Throttle while nothing moves and the user is idle: ~30 fps, and ~20 fps when
+    // the window isn't focused (glanced at beside a terminal, it needs no more, and
+    // the GPU and battery are someone else's then).
     const busy = this.rig.moving || this.blend !== null || this.rig.idleMs < 2500;
-    if (!busy && now - this.lastFrame < (this.reducedMotion ? 95 : 31)) return;
+    if (!busy) {
+      const interval = this.reducedMotion ? 95 : !document.hasFocus() && !this.director.running ? 48 : 31;
+      if (now - this.lastFrame < interval) return;
+    }
     const frameMs = now - this.lastFrame;
     this.lastFrame = now;
 
@@ -559,11 +564,13 @@ export class World {
     this.rig.flyTo({ target: new Vector3(0, 0, 30), distance: 165, pitch: MathUtils.degToRad(40), yaw: 0 }, 1.6);
   }
 
-  /** Screen position (CSS px) of someone's head, and whether it's in front of the camera. */
+  private readonly anchorTmp = new Vector3();
+
+  /** Screen position (CSS px) of a steady point above someone, and whether it's in front of the camera. */
   screenOf(id: string, out: { x: number; y: number; behind: boolean }): boolean {
-    const head = this.people?.headOf(id);
-    if (!head) return false;
-    const v = head.clone().project(this.rig.camera);
+    const at = this.people?.anchorOf(id, this.anchorTmp);
+    if (!at) return false;
+    const v = at.project(this.rig.camera);
     out.behind = v.z > 1;
     out.x = (v.x * 0.5 + 0.5) * this.canvas.clientWidth;
     out.y = (-v.y * 0.5 + 0.5) * this.canvas.clientHeight;
@@ -602,7 +609,7 @@ function plantPalms(): Palms {
   const avenue = (x: number) => STREETS_NS.some((a) => Math.abs(x - a.x) < a.width / 2 + 3);
   // Never on a plot: the terraces belong to the people.
   const onPlot = (x: number) => PLOT_X.some((px) => Math.abs(x - px) < PLOT_W / 2 + 1.5);
-  for (let x = -300; x < 120; x += 9) pts.push(new Vector3(x + (r() - 0.5) * 2, 0.16, -15.5 + (r() - 0.5)));
+  for (let x = CITY.x0 - 35; x < 120; x += 9) pts.push(new Vector3(x + (r() - 0.5) * 2, 0.16, -15.5 + (r() - 0.5)));
   for (const st of STREETS_EW) {
     for (let x = -150; x < 120; x += 7) {
       const px = x + (r() - 0.5) * 3;
@@ -611,8 +618,8 @@ function plantPalms(): Palms {
       if (!onPlot(px + 8) && !avenue(px + 8)) pts.push(new Vector3(px + 8, 0.14, st.z + st.width / 2 + 1.1));
     }
   }
-  for (let i = 0; i < 36; i++) {
-    const x = -220 + r() * 330;
+  for (let i = 0; i < 30; i++) {
+    const x = CITY.x0 - 20 + r() * 290;
     const z = -26 - r() * 22;
     if (Math.abs(x - HANGOUT.x) < 14 && Math.abs(z - HANGOUT.z) < 12) continue;
     pts.push(new Vector3(x, beachHeight(z, x), z));

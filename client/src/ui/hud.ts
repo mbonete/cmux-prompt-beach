@@ -24,10 +24,10 @@ const TOD: { id: TimeOfDay; label: string; icon: IconName }[] = [
 
 export type HintKey = 'pan' | 'rotate' | 'zoom' | 'pick';
 const HINTS: { key: HintKey; keys: string; text: string }[] = [
-  { key: 'pan', keys: 'Drag', text: 'move' },
-  { key: 'rotate', keys: 'Right-drag', text: 'turn' },
-  { key: 'zoom', keys: 'Scroll', text: 'zoom' },
-  { key: 'pick', keys: 'Click someone', text: 'see what they need' },
+  { key: 'pan', keys: 'Drag', text: 'to move around' },
+  { key: 'rotate', keys: '⇧ Shift + drag', text: 'to turn' },
+  { key: 'zoom', keys: 'Scroll or pinch', text: 'to zoom' },
+  { key: 'pick', keys: 'Click a person', text: 'for their card' },
 ];
 
 export interface HudHooks {
