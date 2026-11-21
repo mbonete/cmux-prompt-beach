@@ -39,12 +39,52 @@ export interface MergedPart {
   mesh: Mesh;
   /** Material name from the kit (stucco, interior, bulb…). */
   name: string;
+  /**
+   * Fine detail split off its material (triangles with no texture area, like the
+   * string-light cables pinned to one spot of the wood texture). Too thin to cast
+   * a shadow that doesn't flicker.
+   */
+  detail: boolean;
 }
 
 interface Bucket {
   name: string;
   source: MeshStandardMaterial;
   geos: BufferGeometry[];
+  detail: boolean;
+}
+
+/** Splits a geometry into triangles with texture area and those without (pinned UVs). */
+function splitDetail(g: BufferGeometry): { main: BufferGeometry | null; detail: BufferGeometry | null } {
+  const uv = g.attributes.uv;
+  if (!uv) return { main: g, detail: null };
+  const src = g.index ? g.toNonIndexed() : g;
+  const u = src.attributes.uv;
+  const tri = src.attributes.position.count / 3;
+  const keepMain: number[] = [];
+  const keepDetail: number[] = [];
+  for (let t = 0; t < tri; t++) {
+    const a = t * 3;
+    const area = Math.abs((u.getX(a + 1) - u.getX(a)) * (u.getY(a + 2) - u.getY(a)) - (u.getX(a + 2) - u.getX(a)) * (u.getY(a + 1) - u.getY(a)));
+    (area < 1e-9 ? keepDetail : keepMain).push(t);
+  }
+  if (!keepDetail.length) return { main: g, detail: null };
+  const pick = (tris: number[]) => {
+    if (!tris.length) return null;
+    const out = src.clone();
+    for (const name of Object.keys(out.attributes)) {
+      const attr = src.attributes[name];
+      const size = attr.itemSize;
+      const arr = new Float32Array(tris.length * 3 * size);
+      tris.forEach((t, i) => {
+        for (let v = 0; v < 3; v++) for (let c = 0; c < size; c++) arr[(i * 3 + v) * size + c] = attr.getComponent(t * 3 + v, c);
+      });
+      out.setAttribute(name, new BufferAttribute(arr, size));
+    }
+    out.setIndex(null);
+    return out;
+  };
+  return { main: pick(keepMain), detail: pick(keepDetail) };
 }
 
 /** Material identity, ignoring the AO map (which goes into the atlas). */
@@ -120,12 +160,18 @@ export function mergeStatic(
       const mesh = o as Mesh;
       if (!mesh.isMesh) return;
       const mat = mesh.material as MeshStandardMaterial;
-      const key = signature(mat);
+      const parts = splitDetail(mesh.geometry);
+      for (const [geometry, detail] of [
+        [parts.main, false],
+        [parts.detail, true],
+      ] as const) {
+      if (!geometry) continue;
+      const key = signature(mat) + (detail ? '|detail' : '');
       let b = buckets.get(key);
-      if (!b) buckets.set(key, (b = { name: mat.name, source: mat, geos: [] }));
+      if (!b) buckets.set(key, (b = { name: mat.name, source: mat, geos: [], detail }));
       for (const p of src.placements) {
         world.multiplyMatrices(p.matrix, mesh.matrixWorld);
-        const g = mesh.geometry.clone();
+        const g = geometry.clone();
         for (const name of Object.keys(g.attributes)) if (!KEEP.includes(name)) g.deleteAttribute(name);
         g.morphAttributes = {};
         g.applyMatrix4(world);
@@ -153,6 +199,7 @@ export function mergeStatic(
         g.setAttribute('aSlot', new BufferAttribute(new Float32Array(n).fill(p.slot ?? 0), 1));
         b.geos.push(g);
       }
+      }
     });
   }
 
@@ -170,6 +217,7 @@ export function mergeStatic(
     }
     const indexed = b.geos.every((g) => g.index);
     const geos = indexed ? b.geos : b.geos.map((g) => (g.index ? g.toNonIndexed() : g));
+    // (mergeGeometries needs all indexed or none; detail splits are non-indexed.)
     const merged = mergeGeometries(geos, false);
     for (const g of b.geos) g.dispose();
     if (!merged) continue;
@@ -184,7 +232,7 @@ export function mergeStatic(
     const mesh = new Mesh(merged, mat);
     mesh.name = `merged/${b.name}`;
     mesh.matrixAutoUpdate = false;
-    parts.push({ mesh, name: b.name });
+    parts.push({ mesh, name: b.name, detail: b.detail });
     if (!materials.has(b.name)) materials.set(b.name, []);
     materials.get(b.name)!.push(mat);
   }

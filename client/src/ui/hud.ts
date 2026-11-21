@@ -3,8 +3,8 @@ import type { TimeOfDay } from '../world/env/looks';
 import { icon, type IconName } from './icons';
 
 // The fixed frame around the city: the wordmark (top left), the rail of views
-// (left), the counts, time of day, sound and help (top right), and the
-// controls hint (bottom right) that bows out once each control has been used.
+// (left), the counts, time of day, tour, sound and help (top right), and the
+// controls bar (bottom right).
 
 export const RAIL: { id: PanelId | null; label: string; icon: IconName; key: string }[] = [
   { id: null, label: 'Map', icon: 'map', key: '1' },
@@ -23,11 +23,11 @@ const TOD: { id: TimeOfDay; label: string; icon: IconName }[] = [
 ];
 
 export type HintKey = 'pan' | 'rotate' | 'zoom' | 'pick';
-const HINTS: { key: HintKey; keys: string; text: string }[] = [
-  { key: 'pan', keys: 'Drag', text: 'to move around' },
-  { key: 'rotate', keys: '⇧ Shift + drag', text: 'to turn' },
-  { key: 'zoom', keys: 'Scroll or pinch', text: 'to zoom' },
-  { key: 'pick', keys: 'Click a person', text: 'for their card' },
+const HINTS: { keys: string; text: string }[] = [
+  { keys: 'Drag', text: 'to move around' },
+  { keys: '⇧ Shift + drag', text: 'to turn' },
+  { keys: 'Scroll or pinch', text: 'to zoom' },
+  { keys: 'Click a person', text: 'for their card' },
 ];
 
 export interface HudHooks {
@@ -36,6 +36,7 @@ export interface HudHooks {
   onTimeOfDay(t: TimeOfDay): void;
   onSound(): void;
   onHelp(): void;
+  onTour(): void;
 }
 
 export class Hud {
@@ -46,8 +47,6 @@ export class Hud {
   private readonly tod: HTMLElement;
   private readonly clock: HTMLElement;
   private readonly sound: HTMLButtonElement;
-  private readonly hint: HTMLElement;
-  private used: Set<HintKey>;
 
   constructor(
     parent: HTMLElement,
@@ -69,13 +68,11 @@ export class Hud {
         <div class="tod" role="radiogroup" aria-label="Time of day">${TOD.map(
           (t) => `<button type="button" role="radio" class="tod__btn" data-tod="${t.id}" aria-checked="false" title="${t.label}" aria-label="${t.label}">${icon(t.icon, 'i')}</button>`,
         ).join('')}<span class="tod__clock" aria-label="Local time"></span></div>
+        <button type="button" class="hud-btn" data-tour aria-pressed="false" aria-keyshortcuts="T" title="Cinematic tour (T)">${icon('film', 'i')}</button>
         <button type="button" class="hud-btn" data-sound aria-pressed="false" title="Sound">${icon('mute', 'i')}</button>
         <button type="button" class="hud-btn" data-help aria-keyshortcuts="Shift+/" title="Help (?)">${icon('help', 'i')}</button>
       </div>
-      <aside class="hint" aria-label="Controls"><button type="button" class="hint__toggle" aria-expanded="false" title="Show the controls">${icon(
-        'help',
-        'i',
-      )}<span>Controls</span></button><div class="hint__items">${HINTS.map((h) => `<span class="hint__item" data-hint="${h.key}"><kbd>${h.keys}</kbd> ${h.text}</span>`).join('')}</div></aside>`;
+      <aside class="hint" aria-label="Controls"><div class="hint__items">${HINTS.map((h) => `<span class="hint__item"><kbd>${h.keys}</kbd> ${h.text}</span>`).join('')}</div></aside>`;
     parent.appendChild(this.el);
     this.status = this.el.querySelector('.brand__status')!;
     this.rail = this.el.querySelector('.rail')!;
@@ -83,17 +80,6 @@ export class Hud {
     this.tod = this.el.querySelector('.tod')!;
     this.clock = this.el.querySelector('.tod__clock')!;
     this.sound = this.el.querySelector('[data-sound]')!;
-    this.hint = this.el.querySelector('.hint')!;
-
-    this.used = new Set(readUsed());
-    this.paintHint();
-    // Once learned, the hint folds into a small Controls button that opens it again.
-    const toggle = this.hint.querySelector<HTMLButtonElement>('.hint__toggle')!;
-    toggle.addEventListener('click', () => {
-      const open = toggle.getAttribute('aria-expanded') !== 'true';
-      toggle.setAttribute('aria-expanded', String(open));
-      this.hint.classList.toggle('hint--open', open);
-    });
 
     this.rail.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-rail]');
@@ -108,6 +94,7 @@ export class Hud {
       if (b) hooks.onTimeOfDay(b.dataset.tod as TimeOfDay);
     });
     this.sound.addEventListener('click', () => hooks.onSound());
+    this.el.querySelector('[data-tour]')!.addEventListener('click', () => hooks.onTour());
     this.el.querySelector('[data-help]')!.addEventListener('click', () => hooks.onHelp());
     this.tickClock();
     window.setInterval(() => this.tickClock(), 15000);
@@ -154,21 +141,13 @@ export class Hud {
     document.title = c.needs ? `(${c.needs}) Switchboard` : 'Switchboard';
   }
 
-  /** Marks a control as learned; the hint fades once all four are. */
-  used_(key: HintKey) {
-    if (this.used.has(key)) return;
-    this.used.add(key);
-    try {
-      localStorage.setItem('switchboard.hint', JSON.stringify([...this.used]));
-    } catch {
-      /* fine */
-    }
-    this.paintHint();
-  }
+  /** The controls bar is permanent; kept so callers can still report use. */
+  used_(_key: HintKey) {}
 
-  private paintHint() {
-    for (const el of this.hint.querySelectorAll<HTMLElement>('[data-hint]')) el.classList.toggle('hint__item--done', this.used.has(el.dataset.hint as HintKey));
-    this.hint.classList.toggle('hint--done', HINTS.every((h) => this.used.has(h.key)));
+  /** Shows whether the cinematic tour is running. */
+  setTour(on: boolean) {
+    const b = this.el.querySelector<HTMLElement>('[data-tour]')!;
+    b.setAttribute('aria-pressed', String(on));
   }
 
   private tickClock() {
@@ -179,13 +158,5 @@ export class Hud {
   /** The rail button for a panel, to return focus to when it closes. */
   railButton(id: PanelId | null) {
     return this.rail.querySelector<HTMLElement>(`[data-rail="${id ?? 'map'}"]`);
-  }
-}
-
-function readUsed(): HintKey[] {
-  try {
-    return JSON.parse(localStorage.getItem('switchboard.hint') ?? '[]');
-  } catch {
-    return [];
   }
 }

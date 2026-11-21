@@ -65,6 +65,11 @@ export class Director {
     if (this.t > SHOT_S) this.cut();
   }
 
+  /** Start the tour now (the Tour button), without waiting to be idle. */
+  start() {
+    if (!this.active && !this.rig.reducedMotion) this.begin();
+  }
+
   /** Any input: give the camera back. */
   stop() {
     if (!this.active) return;

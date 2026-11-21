@@ -61,6 +61,8 @@ export class Lighting {
     this.sun = new DirectionalLight(0xffffff, 3);
     this.sun.castShadow = true;
     this.sun.shadow.bias = -0.0004;
+    // Slightly soft edges: thin shadows spread over a few texels instead of popping.
+    this.sun.shadow.radius = 2.4;
     this.sun.shadow.normalBias = 0.04;
     this.sun.shadow.camera.near = 1;
     this.sun.shadow.camera.far = 700;
@@ -125,7 +127,15 @@ export class Lighting {
 
   /** Keep the shadow box on the area the camera looks at. */
   follow(focus: Vector3, viewRadius: number) {
-    this.shadowRadius = Math.min(260, Math.max(30, viewRadius));
+    // The shadow box size moves in steps (×1.3) with slack, not with every zoom:
+    // a size that changes each frame changes the texel size, and every shadow
+    // edge in view shimmers.
+    const want = Math.min(260, Math.max(30, viewRadius));
+    const cur = this.shadowRadius;
+    if (!cur || want > cur * 1.12 || want < cur / 1.45) {
+      const step = Math.round(Math.log(want / 30) / Math.log(1.3));
+      this.shadowRadius = Math.min(260, 30 * Math.pow(1.3, Math.max(0, step)));
+    }
     const r = this.shadowRadius;
     const cam = this.sun.shadow.camera;
     cam.left = -r;

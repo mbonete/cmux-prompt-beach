@@ -101,7 +101,9 @@ const BASE = '/assets/buildings/';
 /** 32 plots, the beach bar and the co-working. */
 const SLOTS = PLOT_COUNT + 2;
 /** Materials whose shadows matter; glass, lights, water and floors don't cast. */
-const CASTS = new Set(['stucco', 'trim', 'concrete', 'roof', 'wood', 'metal', 'awning', 'planter', 'glass_block']);
+// Metal is mostly thin (stool rings, rails, ribs): its shadows were finer than a
+// shadow texel and flickered, so it doesn't cast.
+const CASTS = new Set(['stucco', 'trim', 'concrete', 'roof', 'wood', 'awning', 'planter', 'glass_block']);
 
 export class District {
   readonly group = new Group();
@@ -222,8 +224,8 @@ export class District {
   private buildMerged(sources: MergeSource[]) {
     const atlas = aoAtlas(sources);
     const { parts } = mergeStatic(sources, { tintable: new Set(['stucco']), atlas });
-    for (const { mesh, name } of parts) {
-      mesh.castShadow = CASTS.has(name);
+    for (const { mesh, name, detail } of parts) {
+      mesh.castShadow = CASTS.has(name) && !detail;
       mesh.receiveShadow = true;
       if (name === 'interior' || name === 'neon_accent' || name === 'bulb') {
         const mat = mesh.material as MeshStandardNodeMaterial;

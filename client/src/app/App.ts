@@ -78,6 +78,7 @@ export class App {
         this.state.setSettings({ sound: on, chime: on ? true : this.state.settings.chime });
       },
       onHelp: () => this.state.openPanel('help'),
+      onTour: () => this.toggleTour(),
     });
     this.panels = new Panels(root, this.state, this.actions, {
       focusAgent: (id) => this.selectAgent(id),
@@ -270,9 +271,18 @@ export class App {
       this.hud.used_(k);
       if (k === 'pan' || (k === 'zoom' && w.rig.desired.distance > CLOSE_UP_LIMIT)) this.leaveCloseUp();
     };
-    w.director.onChange = (on) => this.root.classList.toggle('app--idle', on);
+    w.director.onChange = (on) => {
+      this.root.classList.toggle('app--idle', on);
+      this.hud.setTour(on);
+    };
     w.director.onCut = (phase) => this.cut.classList.toggle('cut--dark', phase === 'out');
-    const stop = () => w.director.stop();
+    // Any input hands the camera back (except the tour's own button and key, which toggle it).
+    const stop = (e: Event) => {
+      const t = e.target as HTMLElement | null;
+      if (t?.closest?.('[data-tour]')) return;
+      if (e instanceof KeyboardEvent && (e.key === 't' || e.key === 'T')) return;
+      w.director.stop();
+    };
     for (const ev of ['pointerdown', 'wheel', 'keydown', 'touchstart'] as const) window.addEventListener(ev, stop, { passive: true, capture: true });
 
     w.onFrame = (_cam, width, height, now) => {
@@ -335,6 +345,19 @@ export class App {
     for (const type of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
   }
 
+  /** The cinematic tour: the idle camera's shots, on demand. */
+  private toggleTour() {
+    const w = this.world;
+    if (!w) return;
+    if (w.director.running) return w.director.stop();
+    if (w.rig.reducedMotion) {
+      this.toasts.show({ tone: 'info', icon: 'film', text: 'The tour is off while reduced motion is on.' });
+      return;
+    }
+    if (this.state.selected && !this.state.expanded) this.deselect();
+    w.director.start();
+  }
+
   /** People's name tags and badges, and plot tags, are clickable too. */
   private bindOverlay() {
     this.bindZoomGuard();
@@ -385,6 +408,9 @@ export class App {
           return;
         case '?':
           return this.state.openPanel('help');
+        case 't':
+        case 'T':
+          return this.toggleTour();
         case 'n':
         case 'N': {
           const ids = this.needsIds;

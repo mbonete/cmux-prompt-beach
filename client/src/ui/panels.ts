@@ -360,6 +360,7 @@ function helpHTML(): string {
     ['Click someone', 'Their card'],
     ['Double-click · F', 'Focus there'],
     ['N', 'Next one who needs you'],
+    ['T', 'Cinematic tour (any input ends it)'],
     ['W A S D · arrows', 'Move'],
     ['Q · E', 'Turn'],
     ['+ · −', 'Zoom'],
