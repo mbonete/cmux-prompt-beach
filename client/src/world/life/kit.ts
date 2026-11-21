@@ -21,6 +21,7 @@ import { attribute, color, float, instancedBufferAttribute, mix, texture, unifor
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { loadGLTF, loadJSON } from '../engine/assets';
 import { toNodeMaterial } from '../engine/materials';
+import { seeThrough } from '../engine/seeThrough';
 
 // The street kit (tools/assets/street → public/assets/street). Each asset is
 // merged into as few draw calls as possible: every untextured surface goes
@@ -214,6 +215,7 @@ function uberMaterial(levels: Levels, tint: InterleavedBufferAttribute, lit: Int
   const w = attribute('aEmitW', 'vec3') as unknown as { x: AnyNode; y: AnyNode; z: AnyNode };
   const level = w.x.mul(levels.lamp).add(w.y.mul(levels.head)).add(w.z.mul(levels.tail));
   m.emissiveNode = (attribute('aEmit', 'vec3') as unknown as AnyNode).mul(level).mul(iLit);
+  seeThrough(m);
   return m;
 }
 
@@ -227,6 +229,7 @@ function texturedMaterial(src: MeshStandardMaterial, tint: InterleavedBufferAttr
     const iTint = instancedBufferAttribute(tint, 'vec3') as unknown as AnyNode;
     m.colorNode = vec3(texture(src.map, uv()).rgb).mul(color(src.color)).mul(iTint);
   }
+  seeThrough(m);
   return m;
 }
 

@@ -22,6 +22,7 @@ import { perInstanceEmission } from '../engine/materials';
 import { Beam, PlotOutline, STATE_COLORS } from './markers';
 import { HANGOUT, PLOTS, PLOT_COUNT } from './layout';
 import { beachHeight } from '../env/ground';
+import { seeThrough } from '../engine/seeThrough';
 
 // The plots: a fixed building per plot (authored), always present. A vacant
 // plot sits shuttered and dark; when a repo moves in its windows and neon come
@@ -103,6 +104,13 @@ const SLOTS = PLOT_COUNT + 2;
 // Metal is mostly thin (stool rings, rails, ribs): its shadows were finer than a
 // shadow texel and flickered, so it doesn't cast.
 const CASTS = new Set(['stucco', 'trim', 'concrete', 'roof', 'wood', 'awning', 'planter', 'glass_block']);
+/**
+ * What can hide a seated person from the camera above: parasols and awnings,
+ * canopies, pergola slats, posts and rails. Only these get the see-through mask:
+ * a mask can discard pixels, which costs Apple GPUs their hidden-surface removal,
+ * so walls, floors and glass (most of the scene) keep the fast path.
+ */
+const SEE_THROUGH = new Set(['awning', 'roof', 'wood', 'metal']);
 
 export class District {
   readonly group = new Group();
@@ -235,6 +243,7 @@ export class District {
         const level = name === 'interior' ? this.windowsLevel : name === 'bulb' ? this.lampsLevel : this.neonLevel;
         mat.emissiveNode = vec3(materialEmissive).mul(map).mul(lit).mul(level);
       }
+      if (SEE_THROUGH.has(name)) seeThrough(mesh.material as MeshStandardNodeMaterial);
       this.group.add(mesh);
     }
   }

@@ -36,6 +36,7 @@ import {
   uv,
   vec3,
 } from 'three/tsl';
+import { seeThrough } from '../engine/seeThrough';
 
 // Procedural coconut palms: a tapered, gently curved trunk with growth rings,
 // and a crown of drooping fronds whose leaflets are cut out in the shader.
@@ -197,6 +198,7 @@ function trunkMaterial() {
   const base = mix(vec3(0.36, 0.29, 0.21), vec3(0.55, 0.47, 0.37), n.mul(0.6).add(0.2));
   m.colorNode = base.mul(mix(float(1), float(0.62), rings));
   m.positionNode = swayNode();
+  seeThrough(m);
   return m;
 }
 
@@ -211,6 +213,7 @@ function frondMaterial() {
   const ragged = mx_noise_float(vec3(u.mul(40), v.mul(3), 1)).mul(0.5).add(0.5);
   const edge = step(abs(v), float(0.78).add(ragged.mul(0.22)).mul(float(1).sub(pow(u, float(4)).mul(0.6))));
   m.opacityNode = leaflet.mul(edge).max(rachis).mul(nearFade());
+  seeThrough(m);
   const green = mix(color(0x2f6b22), color(0x7ea83a), u.mul(0.7).add(abs(v).mul(0.25)));
   const dry = mix(green, vec3(0.62, 0.55, 0.27), smoothstep(0.85, 1, u).mul(0.6));
   m.colorNode = dry.mul(ragged.mul(0.2).add(0.88));

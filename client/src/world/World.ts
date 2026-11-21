@@ -37,6 +37,7 @@ import { DEFAULT_STALE_MS, laneOf, type Lane } from '../data/derive';
 import type { Snapshot, Tick } from '../data/types';
 import { Overlay, type Pin } from '../ui/overlay';
 import { KIND_ICON, icon } from '../ui/icons';
+import { updateSeeThrough } from './engine/seeThrough';
 
 export interface WorldOptions {
   reducedMotion: boolean;
@@ -331,6 +332,10 @@ export class World {
 
     this.people?.update(dt, cam);
     this.life?.update(dt, cam);
+    // Nothing may stand between the camera and the person whose card is open.
+    const chest = this.selected ? this.people?.positionOf(this.selected, this.seeTmp) : null;
+    const feetY = chest ? chest.y : 0;
+    updateSeeThrough(cam, chest ? chest.setY(chest.y + 1.0) : null, feetY, (cam as PerspectiveCamera).fov, dt);
     this.district.updateCamera(cam.position);
     this.updateRing();
     this.updateHover();
@@ -548,6 +553,7 @@ export class World {
   }
 
   private hoverAt = 0;
+  private readonly seeTmp = new Vector3();
   private updateHover() {
     if (!this.people || !this.hoverNdc) return;
     const now = performance.now();
