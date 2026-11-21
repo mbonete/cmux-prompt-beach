@@ -1,4 +1,5 @@
 import type { Actions } from '../app/actions';
+import { morph } from './morph';
 import { esc, fmtTokens, inlineMd, md, MODE_LABELS, refreshTimes, shortPath, timeTag } from '../app/format';
 import type { AppState, Row } from '../app/state';
 import type { Conversation } from '../data/types';
@@ -110,7 +111,8 @@ export class Inspector {
 
   private set(el: HTMLElement, html: string) {
     if (this.html.get(el) === html) return;
-    el.innerHTML = html;
+    // Patched, not replaced: answers being chosen, focus and scroll survive updates.
+    morph(el, html);
     this.html.set(el, html);
   }
 

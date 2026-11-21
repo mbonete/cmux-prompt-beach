@@ -1,4 +1,5 @@
 import type { Actions } from '../app/actions';
+import { morph } from './morph';
 import { esc, refreshTimes } from '../app/format';
 import { STALE_CHOICES, type AppState, type PanelId, type Row } from '../app/state';
 import type { Lane } from '../data/derive';
@@ -91,7 +92,9 @@ export class Panels {
     }
     const html = this.bodyHTML(p);
     if (html !== this.html) {
-      this.body.innerHTML = html;
+      // Patched, not replaced: the list keeps its scroll, focus and any input.
+      if (this.html === '') this.body.innerHTML = html;
+      else morph(this.body, html);
       this.html = html;
     }
     refreshTimes(this.body);

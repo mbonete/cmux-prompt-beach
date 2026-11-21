@@ -1,4 +1,5 @@
 import type { Actions } from '../app/actions';
+import { morph } from './morph';
 import { esc, refreshTimes } from '../app/format';
 import type { AppState } from '../app/state';
 import { askBlock, bindAgentActions, btn, stateLine, whereLine, type AgentHooks } from './agentView';
@@ -63,7 +64,10 @@ export class AgentCard {
     this.el.dataset.id = it.surfaceId;
     this.el.dataset.lane = row.lane;
     if (html !== this.html) {
-      this.el.innerHTML = html;
+      // Another agent: start fresh. The same one: patch, so scroll, a chosen
+      // option, typed text and focus survive the update.
+      if (entering) this.el.innerHTML = html;
+      else morph(this.el, html);
       this.html = html;
     }
     if (entering) {
