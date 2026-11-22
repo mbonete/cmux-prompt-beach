@@ -2265,6 +2265,31 @@ button.toast:hover {
 .tag {
   pointer-events: auto;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+/* The pointer on the tag, or on its building in the city: the tag answers. */
+.tag--hot {
+  background: rgb(28 19 50 / 0.92);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25), 0 0 28px color-mix(in srgb, var(--repo, #fff) 75%, transparent), 0 6px 18px rgb(0 0 0 / 0.35);
+}
+
+.tag--dormant.tag--hot {
+  opacity: 0.85;
+}
+
+@media (hover: hover) {
+  .tag:hover {
+    background: rgb(28 19 50 / 0.92);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25), 0 0 28px color-mix(in srgb, var(--repo, #fff) 75%, transparent), 0 6px 18px rgb(0 0 0 / 0.35);
+  }
+
+  .tag--dormant:hover {
+    opacity: 0.85;
+  }
 }
 
 .tag__more {

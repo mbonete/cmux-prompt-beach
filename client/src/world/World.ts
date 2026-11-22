@@ -82,6 +82,8 @@ const VIEW_CANDIDATES: [number, number][] = (() => {
 })();
 /** Closer than this (metres from what the camera looks at), only the focused plot keeps its label. */
 const CLOSE_UP_TAGS = 55;
+/** How far a plot's own view stands back (focusPlot). */
+const PLOT_VIEW_DISTANCE = 46;
 
 export class World {
   readonly scene = new Scene();
@@ -200,6 +202,7 @@ export class World {
     canvas.addEventListener('pointerleave', () => {
       this.hoverNdc = null;
       this.people?.setHover(null);
+      this.setHotPlot(null);
       canvas.classList.remove('is-pointing');
     });
 
@@ -604,6 +607,10 @@ export class World {
     const h = this.canvas.clientHeight;
     const id = this.people?.pick(this.rig.camera, ndc, w, h);
     if (id) return { kind: 'agent', id };
+    // A wall or a roof is that building's plot. (Through the ground alone, a
+    // click on a building landed behind it: on the street, or the next plot.)
+    const building = this.district.buildingOn(this.rig.rayAt(ndc));
+    if (building !== null) return { kind: 'plot', key: building };
     const g = this.rig.groundAt(ndc);
     if (!g) return null;
     const key = this.plotAt(g.x, g.z);
@@ -641,15 +648,38 @@ export class World {
     for (const [plot, t] of this.plotTags) t.pin.visible = !closeUp || plot === here;
   }
 
+  /**
+   * Is the view already on this plot? Then a click on its building keeps the
+   * view (it closes a card, nothing more) instead of pulling back to the plot's
+   * overview: you were clicking beside someone, not asking to go there.
+   */
+  looksAt(key: PlotKey): boolean {
+    const v = this.rig.desired;
+    return v.distance <= PLOT_VIEW_DISTANCE + 10 && this.plotAt(v.target.x, v.target.z) === key;
+  }
+
   private hoverAt = 0;
+  private hotPlot: PlotKey | null = null;
   private updateHover() {
     if (!this.people || !this.hoverNdc) return;
     const now = performance.now();
     if (now - this.hoverAt < 60) return;
     this.hoverAt = now;
-    const id = this.rig.moving ? null : this.people.pick(this.rig.camera, this.hoverNdc, this.canvas.clientWidth, this.canvas.clientHeight);
+    const still = !this.rig.moving;
+    const id = still ? this.people.pick(this.rig.camera, this.hoverNdc, this.canvas.clientWidth, this.canvas.clientHeight) : null;
+    // A building you could click to go to: the hand, and its project's tag lights up.
+    let plot = still && !id ? this.district.buildingOn(this.rig.rayAt(this.hoverNdc)) : null;
+    if (plot !== null && this.looksAt(plot)) plot = null;
     this.people.setHover(id);
-    this.canvas.classList.toggle('is-pointing', Boolean(id));
+    this.setHotPlot(plot);
+    this.canvas.classList.toggle('is-pointing', Boolean(id) || plot !== null);
+  }
+
+  private setHotPlot(plot: PlotKey | null) {
+    if (plot === this.hotPlot) return;
+    if (this.hotPlot !== null) this.plotTags.get(this.hotPlot)?.pin.el.classList.remove('tag--hot');
+    this.hotPlot = plot;
+    if (plot !== null) this.plotTags.get(plot)?.pin.el.classList.add('tag--hot');
   }
 
   /** Selects a person in the world: their ring, their name, and the camera follows. */
@@ -733,7 +763,7 @@ export class World {
     if (!c) return;
     this.rig.poke();
     this.rig.setFollow(null);
-    this.rig.flyTo({ target: c.setY(0), distance: 46, pitch: MathUtils.degToRad(42) }, 1.4);
+    this.rig.flyTo({ target: c.setY(0), distance: PLOT_VIEW_DISTANCE, pitch: MathUtils.degToRad(42) }, 1.4);
   }
 
   flyToGround(x: number, z: number) {

@@ -167,6 +167,12 @@ export class CameraRig {
     this.camera.updateProjectionMatrix();
   }
 
+  /** The ray from the lens through normalised device coordinates (shared: use it before the next call). */
+  rayAt(ndc: Vector2) {
+    this.ray.setFromCamera(ndc, this.camera);
+    return this.ray.ray;
+  }
+
   /** Point on the ground under normalised device coordinates. */
   groundAt(ndc: Vector2, out = new Vector3()): Vector3 | null {
     this.ray.setFromCamera(ndc, this.camera);

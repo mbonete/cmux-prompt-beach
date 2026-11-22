@@ -325,6 +325,88 @@ async function main() {
     return `shot drift ${r.drift.toFixed(2)} m`;
   });
 
+  // Buildings: a click on a wall or a roof is that building's (the ground behind it is another plot, or the street).
+  const BUILDINGS = `const D = W.district; const V = () => R.desired.target.clone(); const wait = (ms) => new Promise((x) => setTimeout(x, ms));
+    const rect = W.canvas.getBoundingClientRect();
+    const merged = []; D.group.traverse((o) => { if (o.isMesh && o.geometry?.getAttribute('aSlot')) merged.push(o); });
+    const slotKey = new Map([...D.plots.values()].map((p) => [p.slot, p.key])); const ray = new R.ray.constructor();
+    // The plot whose building really is under a screen point: every triangle, the slow way (80 ms).
+    const exact = (ndc) => { ray.setFromCamera(ndc, R.camera); const h = ray.intersectObjects(merged, false)[0]; return h ? slotKey.get(Math.round(h.object.geometry.getAttribute('aSlot').getX(h.face.a))) : undefined; };
+    const ndcAt = (x, y) => R.ndc({ clientX: x, clientY: y });
+    const view = async (tx, tz, distance, pitch, yaw) => { R.flyTo({ target: V().set(tx, 0, tz), distance, pitch: pitch * Math.PI / 180, yaw }, 0.01); await wait(900); R.camera.updateMatrixWorld(); };
+    let seed = 11; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);`;
+  const click = async (x, y) => {
+    await page.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y });
+    await page.send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 });
+    await page.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 });
+  };
+  await check('a click on a wall or a roof goes to that building, not the ground behind it', async () => {
+    const r = await page.run(`${SETUP} ${BUILDINGS} sb.app.state.select(null);
+      let n = 0, right = 0, ground = 0, ms = 0;
+      for (const v of [[0, 30, 165, 50, 0], [-20, 10, 80, 40, 0.8], [0, 0, 60, 25, 2.4], [30, 20, 120, 25, 3.6]]) {
+        await view(...v);
+        for (let i = 0; i < 300; i++) {
+          const ndc = ndcAt(rect.left + rnd() * rect.width, rect.top + rnd() * rect.height);
+          const want = exact(ndc); if (want === undefined) continue;
+          const t = performance.now(); const p = W.ndcToPick(ndc); ms += performance.now() - t;
+          if (p?.kind === 'agent') continue;
+          n++; if (p?.kind === 'plot' && p.key === want) right++;
+          const g = R.groundAt(ndc); if (g && W.plotAt(g.x, g.z) === want) ground++;
+        }
+      }
+      return { n, right, ground, ms: ms / Math.max(1, n) };`);
+    expect(r.n > 300, `only ${r.n} points on buildings sampled`);
+    expect(r.right / r.n >= 0.98, `${r.right}/${r.n} clicks on a building went to it`);
+    return `${r.right}/${r.n} went to the building under the pointer (by the ground alone: ${r.ground}); ${r.ms.toFixed(2)} ms a pick`;
+  });
+  await check('pointing at a building shows the hand and lights its tag; a click flies there', async () => {
+    const found = await page.run(`${SETUP} ${BUILDINGS} sb.app.state.select(null); await view(0, 0, 60, 25, 2.4);
+      // A wall or roof of a building with a tag, where the ground under the pointer is somewhere else.
+      for (let i = 0; i < 4000; i++) {
+        const x = rect.left + rnd() * rect.width, y = rect.top + rnd() * rect.height; const ndc = ndcAt(x, y);
+        const want = exact(ndc); if (want === undefined || !W.plotTags.has(want) || document.elementFromPoint(x, y) !== W.canvas) continue;
+        const g = R.groundAt(ndc); if (g && W.plotAt(g.x, g.z) === want) continue;
+        const p = W.ndcToPick(ndc); if (p?.kind !== 'plot' || p.key !== want) continue;
+        return { x, y, key: want };
+      }
+      return null;`);
+    expect(found, 'found no wall of a tagged building with the ground behind it elsewhere');
+    await page.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: found.x, y: found.y });
+    await sleep(400);
+    const key = JSON.stringify(found.key);
+    const hover = await page.run(`const W = window.switchboard.world; return { hand: W.canvas.classList.contains('is-pointing'), hot: W.plotTags.get(${key})?.pin.el.classList.contains('tag--hot') };`);
+    expect(hover.hand, 'no hand over the building');
+    expect(hover.hot, 'its tag did not light up');
+    await click(found.x, found.y);
+    await sleep(2200);
+    const after = await page.run(`const W = window.switchboard.world; const R = W.rig; const c = W.district.center(${key}); return { off: Math.hypot(R.desired.target.x - c.x, R.desired.target.z - c.z), distance: R.desired.distance };`);
+    expect(after.off < 0.5 && Math.abs(after.distance - 46) < 0.5, `the click did not fly to that building (${after.off.toFixed(1)} m off, at ${after.distance.toFixed(0)} m)`);
+    return `plot ${found.key}`;
+  });
+  await check('a click on the building you are already looking at keeps the view (and closes the card)', async () => {
+    const found = await page.run(`${SETUP} ${BUILDINGS} const row = ${AGENT}; sb.app.selectAgent(row.item.surfaceId); await wait(3500);
+      const key = row.item.plot; if (!W.looksAt(key)) return { notLooking: key };
+      for (let i = 0; i < 4000; i++) {
+        const x = rect.left + rnd() * rect.width, y = rect.top + rnd() * rect.height; const ndc = ndcAt(x, y);
+        if (document.elementFromPoint(x, y) !== W.canvas) continue;
+        const p = W.ndcToPick(ndc); if (p?.kind !== 'plot' || p.key !== key || exact(ndc) !== key) continue;
+        return { x, y, key };
+      }
+      return null;`);
+    expect(found && found.notLooking === undefined, found ? `the close-up is not on the person's plot ${found.notLooking}` : 'found no point on their building');
+    await page.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: found.x, y: found.y });
+    await sleep(400);
+    const before = await page.run(`const W = window.switchboard.world; const p = W.rig.camera.position; return { pos: [p.x, p.y, p.z], hand: W.canvas.classList.contains('is-pointing') };`);
+    expect(!before.hand, 'a hand over the building you are already at (clicking it does not go anywhere)');
+    await click(found.x, found.y);
+    await sleep(1500);
+    const after = await page.run(`const sb = window.switchboard; const p = sb.world.rig.camera.position; return { pos: [p.x, p.y, p.z], selected: sb.app.state.selected, card: !document.querySelector('.card').hidden };`);
+    const moved = Math.hypot(...after.pos.map((v, i) => v - before.pos[i]));
+    expect(!after.selected && !after.card, 'the card is still open');
+    expect(moved < 0.05, `the camera moved ${moved.toFixed(2)} m`);
+    return `camera moved ${moved.toFixed(3)} m, card closed`;
+  });
+
   console.log('\nInterface');
   await check('a list that reorders keeps the keyboard focus', async () => {
     const r = await page.run(`${SETUP} sb.app.state.openPanel('agents'); await new Promise((x) => setTimeout(x, 600));

@@ -302,7 +302,8 @@ export class App {
       if (p.kind === 'agent') this.selectAgent(p.id);
       else if (p.kind === 'plot') {
         this.leaveCloseUp();
-        w.focusPlot(p.key);
+        // A building (or the ground) of the plot you're already looking at keeps the view.
+        if (!w.looksAt(p.key)) w.focusPlot(p.key);
       } else this.leaveCloseUp();
     };
     w.rig.onUse = (k) => {

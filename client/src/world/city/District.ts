@@ -11,6 +11,7 @@ import {
   Quaternion,
   Raycaster,
   type Camera,
+  type Ray,
   type Material,
   type Mesh,
   type Scene,
@@ -78,10 +79,25 @@ interface BuildingManifest {
 /** Coarse height map of a building type: max height per 2 m cell over a 24 × 20 m area. */
 interface HeightGrid {
   cells: Float32Array;
+  /**
+   * The same area at 0.5 m, from the building's faces (roofs between their
+   * corners, the tops of walls) rather than its corners alone: what a click on
+   * a wall or a roof lands on. -Infinity where there is no building.
+   */
+  fine: Float32Array;
+  /** The highest point (local metres). */
+  top: number;
 }
 const CELL = 2;
 const GRID_W = 12; // 24 m along local X (plot 20 m + 2 m each side)
 const GRID_D = 10; // 20 m along local Z
+const HALF_W = (GRID_W * CELL) / 2;
+const HALF_D = (GRID_D * CELL) / 2;
+/** What a click on a building lands on: its solid parts and floors (not bulbs, rails, neon or water). */
+const BODY = new Set(['stucco', 'trim', 'roof', 'awning', 'wood', 'concrete', 'planter', 'glass_block', 'glass', 'interior', 'terrazzo']);
+const FINE = 0.5;
+const FINE_W = (GRID_W * CELL) / FINE;
+const FINE_D = (GRID_D * CELL) / FINE;
 
 interface PlotRuntime {
   key: PlotKey;
@@ -142,6 +158,8 @@ export class District {
   readonly screensLevel = uniform(0.6);
   private readonly screens: { attr: InstancedBufferAttribute; owner: PlotKey[] }[] = [];
   private readonly heights = new Map<string, HeightGrid>();
+  /** The highest roof in the district (world metres): a pick ray starts looking below it. */
+  private tallest = 0;
   /**
    * Per plot (slot): 0 solid … 1 gone, while the camera's lens is inside its
    * building or right against it. The camera never tilts or stops for a
@@ -186,6 +204,7 @@ export class District {
     const t0 = performance.now();
 
     for (const t of types) this.heights.set(t, heightGrid(templates.get(t)!));
+    for (const s of slots) this.tallest = Math.max(this.tallest, s.y + this.heights.get(s.type)!.top);
 
     const propPlacements = new Map<string, { m: Matrix4; key: PlotKey }[]>();
     const poolSpots: { m: Matrix4; radius: number; color: Color; key: PlotKey }[] = [];
@@ -360,6 +379,57 @@ export class District {
     if (gx < 0 || gz < 0 || gx >= GRID_W || gz >= GRID_D) return 0;
     const grid = this.heights.get(p.type);
     return grid ? grid.cells[gz * GRID_W + gx] + e[13] : 0;
+  }
+
+  /**
+   * The building a ray from the lens meets first (a click or the pointer on a
+   * wall or a roof), or null. Walks the ray in quarter-cell steps through each
+   * plot's fine height map, from the tallest roof down to the ground, testing
+   * only plots whose area the ray crosses: a fraction of a millisecond, where
+   * testing the 565k triangles took 80. A building the lens is inside has
+   * faded away and doesn't count: the click goes to what you see through it.
+   */
+  buildingOn(ray: Ray): PlotKey | null {
+    const o = ray.origin;
+    const d = ray.direction;
+    if (d.y > -1e-3) return null;
+    const t0 = Math.max(0, (o.y - this.tallest) / -d.y);
+    const t1 = o.y / -d.y;
+    if (t1 <= t0) return null;
+    const fade = this.fade.array as number[];
+    const near: PlotRuntime[] = [];
+    for (const p of this.plots.values()) {
+      if (fade[p.slot] > 0.5) continue;
+      const e = p.world.elements;
+      // Does the segment cross the plot's 30 × 30 m square? (The grid fits inside it at any rotation.)
+      const [ax, bx] = slab(o.x, d.x, e[12]);
+      const [az, bz] = slab(o.z, d.z, e[14]);
+      if (Math.max(t0, ax, az) <= Math.min(t1, bx, bz)) near.push(p);
+    }
+    if (!near.length) return null;
+    // The last step lands exactly on the ground, so a terrace floor a few
+    // centimetres up (thinner than a step) is still its plot's.
+    for (let t = t0, last = false; !last; t += FINE / 2) {
+      last = t >= t1;
+      if (last) t = t1;
+      const x = o.x + d.x * t;
+      const y = o.y + d.y * t;
+      const z = o.z + d.z * t;
+      for (const p of near) if (this.surfaceAt(p, x, z) > y) return p.key;
+    }
+    return null;
+  }
+
+  /** Top of the building over this ground point by the fine map (world metres), or -Infinity. */
+  private surfaceAt(p: PlotRuntime, x: number, z: number): number {
+    const e = p.world.elements;
+    if (Math.abs(x - e[12]) > 15 || Math.abs(z - e[14]) > 15) return -Infinity;
+    fadeLocal.set(x, 0, z).applyMatrix4(p.inverse);
+    const gx = Math.floor((fadeLocal.x + HALF_W) / FINE);
+    const gz = Math.floor((fadeLocal.z + HALF_D) / FINE);
+    if (gx < 0 || gz < 0 || gx >= FINE_W || gz >= FINE_D) return -Infinity;
+    const grid = this.heights.get(p.type);
+    return grid ? grid.fine[gz * FINE_W + gx] + e[13] : -Infinity;
   }
 
   /** Soft warm pools of light on the terraces at night: additive discs, no real lights. */
@@ -570,9 +640,35 @@ const fadeDir = new Vector3();
 const fadeAt = new Vector3();
 const fadeLocal = new Vector3();
 
+/** The stretch of a ray (in its own distance) that lies within 15 m of c along one axis. */
+const slabOut: [number, number] = [0, 0];
+function slab(origin: number, dir: number, c: number): [number, number] {
+  if (Math.abs(dir) < 1e-9) {
+    const inside = Math.abs(origin - c) <= 15;
+    slabOut[0] = inside ? -Infinity : Infinity;
+    slabOut[1] = inside ? Infinity : -Infinity;
+    return slabOut;
+  }
+  const a = (c - 15 - origin) / dir;
+  const b = (c + 15 - origin) / dir;
+  slabOut[0] = Math.min(a, b);
+  slabOut[1] = Math.max(a, b);
+  return slabOut;
+}
+
 function heightGrid(root: Object3D): HeightGrid {
   const cells = new Float32Array(GRID_W * GRID_D);
+  const fine = new Float32Array(FINE_W * FINE_D).fill(-Infinity);
+  let top = 0;
   const v = new Vector3();
+  const tri = [new Vector3(), new Vector3(), new Vector3()];
+  const raise = (x: number, y: number, z: number) => {
+    const gx = Math.floor((x + HALF_W) / FINE);
+    const gz = Math.floor((z + HALF_D) / FINE);
+    if (gx < 0 || gz < 0 || gx >= FINE_W || gz >= FINE_D) return;
+    const k = gz * FINE_W + gx;
+    if (y > fine[k]) fine[k] = y;
+  };
   root.updateMatrixWorld(true);
   root.traverse((o) => {
     const mesh = o as InstancedMesh;
@@ -581,14 +677,55 @@ function heightGrid(root: Object3D): HeightGrid {
     if (!pos) return;
     for (let i = 0; i < pos.count; i++) {
       v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+      top = Math.max(top, v.y);
       const gx = Math.floor((v.x + GRID_W) / CELL);
       const gz = Math.floor((v.z + GRID_D) / CELL);
       if (gx < 0 || gz < 0 || gx >= GRID_W || gz >= GRID_D) continue;
       const k = gz * GRID_W + gx;
       if (v.y > cells[k]) cells[k] = v.y;
     }
+    // The fine map, face by face: along each edge (a wall's top runs between
+    // two corners), and across each face at the centres of the cells it covers
+    // (a flat roof is mostly empty between its corners). Only the building's
+    // body: a string of bulbs or a mast's lines would stand as a solid column
+    // down to the pavement under them.
+    const material = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as Material | undefined;
+    if (!BODY.has(material?.name ?? '')) return;
+    const index = mesh.geometry.index;
+    const faces = (index ? index.count : pos.count) / 3;
+    for (let f = 0; f < faces; f++) {
+      for (let c = 0; c < 3; c++) tri[c].fromBufferAttribute(pos, index ? index.getX(f * 3 + c) : f * 3 + c).applyMatrix4(mesh.matrixWorld);
+      for (let c = 0; c < 3; c++) {
+        const a = tri[c];
+        const b = tri[(c + 1) % 3];
+        const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / (FINE / 2)));
+        for (let s = 0; s <= steps; s++) {
+          const u = s / steps;
+          raise(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, a.z + (b.z - a.z) * u);
+        }
+      }
+      const [a, b, c] = tri;
+      const area = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
+      if (Math.abs(area) < 1e-6) continue; // a wall seen from above: its edges did it
+      const x0 = Math.max(0, Math.floor((Math.min(a.x, b.x, c.x) + HALF_W) / FINE));
+      const x1 = Math.min(FINE_W - 1, Math.floor((Math.max(a.x, b.x, c.x) + HALF_W) / FINE));
+      const z0 = Math.max(0, Math.floor((Math.min(a.z, b.z, c.z) + HALF_D) / FINE));
+      const z1 = Math.min(FINE_D - 1, Math.floor((Math.max(a.z, b.z, c.z) + HALF_D) / FINE));
+      for (let gz = z0; gz <= z1; gz++) {
+        const pz = (gz + 0.5) * FINE - HALF_D;
+        for (let gx = x0; gx <= x1; gx++) {
+          const px = (gx + 0.5) * FINE - HALF_W;
+          const wb = ((px - a.x) * (c.z - a.z) - (c.x - a.x) * (pz - a.z)) / area;
+          const wc = ((b.x - a.x) * (pz - a.z) - (px - a.x) * (b.z - a.z)) / area;
+          if (wb < 0 || wc < 0 || wb + wc > 1) continue;
+          const y = a.y + (b.y - a.y) * wb + (c.y - a.y) * wc;
+          const k = gz * FINE_W + gx;
+          if (y > fine[k]) fine[k] = y;
+        }
+      }
+    }
   });
-  return { cells };
+  return { cells, fine, top };
 }
 
 /** A copy of the template keeping only meshes (empties are read separately). */
