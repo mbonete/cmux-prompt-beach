@@ -23,6 +23,13 @@ const RISE_MAX_PITCH = MathUtils.degToRad(78);
 const CARD_DISTANCE = 17;
 /** Metres beyond the zoom's destination checked for buildings, so rising starts early. */
 const RISE_LOOKAHEAD = 4;
+/**
+ * Metres in front of the camera that still count: only what the camera itself
+ * would hit (or have pressed against its lens). Anything further in front is
+ * just in view, as with any camera (the building lookup adds a few metres of
+ * slack around every footprint on top of this).
+ */
+const RISE_NEAR = 1.5;
 /** Fastest the camera tilts up over a building (radians a second). */
 const RISE_SPEED = MathUtils.degToRad(110);
 /** The rise acts fully closer than this (metres from what the camera looks at)... */
@@ -34,6 +41,8 @@ const MIN_DIST = 7;
 const SOLID = 5;
 const MAX_DIST = 270;
 const BOUNDS = { x0: -130, x1: 135, z0: -90, z1: 118 };
+/** Scratch for the zoom's collision check. */
+const zoomTarget = new Vector3();
 
 export class CameraRig {
   readonly camera: PerspectiveCamera;
@@ -265,47 +274,104 @@ export class CameraRig {
       const x = from.x + Math.sin(v.yaw) * cp * v.distance;
       const z = from.z + Math.cos(v.yaw) * cp * v.distance;
       const y = from.y + Math.sin(v.pitch) * v.distance;
-      const floor = solid(x, z) + (v.distance > 28 ? 2.5 : 1.2);
+      const floor = solid(x, z) + roofGap(v.distance);
       if (y >= floor || v.pitch >= MAX_PITCH) break;
       v.pitch = Math.min(MAX_PITCH, v.pitch + MathUtils.degToRad(3));
     }
   }
 
+  /** Building mass under a ground point (terrace clutter, umbrellas and string lights, is seen through). */
+  private solid(x: number, z: number) {
+    const h = this.obstacle!(x, z);
+    return h > SOLID ? h : 0;
+  }
+
+  /**
+   * The least pitch from which the camera clears the roofs at it: under it, just
+   * in front of it, and as far behind it as the zoom is heading (the camera eases
+   * toward that, so the rise starts before the camera reaches a wall, not after
+   * it's inside).
+   */
+  private riseNeed(from: Vector3, distance: number, heading: number, pitch: number, yaw: number) {
+    const sx = Math.sin(yaw);
+    const sz = Math.cos(yaw);
+    const horiz = (Math.max(distance, heading) + RISE_LOOKAHEAD) * Math.cos(pitch);
+    const near = Math.max(4.5, distance * Math.cos(pitch) - RISE_NEAR);
+    let need = pitch;
+    const steps = Math.min(64, Math.ceil(horiz / 1.25));
+    for (let i = 1; i <= steps; i++) {
+      const d = (i / steps) * horiz;
+      if (d < near) continue;
+      const h = this.solid(from.x + sx * d, from.z + sz * d);
+      if (h) need = Math.max(need, Math.atan2(h + 0.8 - from.y, d));
+    }
+    return need;
+  }
+
+  /**
+   * How much the collision would have to correct the camera at this view: the
+   * extra tilt (radians) and the lift (metres). Both 0 when it sits clear.
+   */
+  private correctionAt(target: Vector3, distance: number, pitch: number, yaw: number) {
+    zoomTarget.copy(target).add(this.right);
+    const tilt = distance < RISE_NONE ? Math.max(0, this.riseNeed(zoomTarget, distance, distance, pitch, yaw) - pitch) : 0;
+    const cp = Math.cos(pitch);
+    const x = zoomTarget.x + Math.sin(yaw) * cp * distance;
+    const z = zoomTarget.z + Math.cos(yaw) * cp * distance;
+    const lift = Math.max(0, this.solid(x, z) + roofGap(distance) - (zoomTarget.y + Math.sin(pitch) * distance));
+    return { tilt, lift };
+  }
+
+  /**
+   * How far in a zoom may go: it stops just short of a roof rather than tilting
+   * over it. Zooming toward something tall aims at the ground behind it, so the
+   * camera's straight path runs into its roof; climbing over it instead made a
+   * steady zoom tilt the view on its own.
+   */
+  private zoomStop(toward: Vector3 | null, next: number) {
+    const v = this.desired;
+    const target = v.target.clone();
+    // Each step in may not need more correcting than where the zoom starts (none,
+    // usually; if the camera is already hemmed in, zooming in may still free it).
+    const start = this.correctionAt(target, v.distance, v.pitch, v.yaw);
+    const clear = (d: number) => {
+      if (toward) target.copy(v.target).lerp(toward, 1 - d / v.distance);
+      const c = this.correctionAt(target, d, v.pitch, v.yaw);
+      return c.tilt <= start.tilt + 1e-3 && c.lift <= start.lift + 0.01;
+    };
+    let ok = v.distance;
+    for (let d = v.distance; d > next; ) {
+      d = Math.max(next, d - Math.max(0.25, d * 0.02));
+      if (!clear(d)) break;
+      ok = d;
+    }
+    return ok;
+  }
+
   /**
    * Camera collision, while you steer. A building behind the camera lifts it:
-   * the camera keeps the distance you asked for and rises just enough for the
-   * line from what it looks at to clear every roof under it, so zooming out
-   * next to a building backs away and up in one move. (Pulling the camera in
-   * front of the wall instead undid every scroll, then let go all at once.)
-   * Only a tower too tall to rise over pulls the camera in.
+   * the camera keeps the distance you asked for and rises just enough to clear
+   * the roof, so zooming out next to a building backs away and up in one move.
+   * (Pulling the camera in front of the wall instead undid every scroll, then
+   * let go all at once.) Only a tower too tall to rise over pulls the camera in.
+   *
+   * Only buildings at the camera count, not everything between it and what it
+   * looks at: zooming toward a kiosk aims at the ground behind its roof, and
+   * clearing the whole line made the camera climb over the very kiosk you were
+   * zooming toward (tilting it on its own as you zoomed).
    */
   private avoidObstacles() {
     const cam = this.camera.position;
     const from = this.look;
     const v = this.current;
-    // Terrace clutter (umbrellas, string lights) is seen through; only building mass blocks.
-    const solid = (x: number, z: number) => {
-      const h = this.obstacle!(x, z);
-      return h > SOLID ? h : 0;
-    };
+    const solid = (x: number, z: number) => this.solid(x, z);
     // In quickly, out slowly: the camera glides over a building and settles back after it.
     const ease = (cur: number, target: number, fast: boolean) =>
       this.reducedMotion ? target : cur + (target - cur) * (1 - Math.exp(-this.dt * (fast ? 14 : 2.5)));
 
-    // The least pitch from which the line to the camera clears every roof beneath it.
     const sx = Math.sin(v.yaw);
     const sz = Math.cos(v.yaw);
-    // Look as far out as the zoom is heading (the camera eases toward it), so the
-    // rise starts before the camera reaches the wall, not after it's inside.
-    const horiz = (Math.max(v.distance, this.desired.distance) + RISE_LOOKAHEAD) * Math.cos(v.pitch);
-    let need = v.pitch;
-    const steps = Math.min(64, Math.ceil(horiz / 1.25));
-    for (let i = 1; i <= steps; i++) {
-      const d = (i / steps) * horiz;
-      if (d < 4.5) continue;
-      const h = solid(from.x + sx * d, from.z + sz * d);
-      if (h) need = Math.max(need, Math.atan2(h + 0.8 - from.y, d));
-    }
+    const need = this.riseNeed(from, v.distance, this.desired.distance, v.pitch, v.yaw);
     // Only close in: up close a building behind would put the camera inside it or
     // fill the view with a wall. Further out the camera is above the roofs anyway,
     // and tilting it as buildings pass behind while you pan feels like the camera
@@ -344,7 +410,7 @@ export class CameraRig {
     cam.set(from.x + dx * this.keep, from.y + dy * this.keep, from.z + dz * this.keep);
 
     // Never inside a roof.
-    const floor = solid(cam.x, cam.z) + (v.distance > 28 ? 2.5 : 1.2);
+    const floor = solid(cam.x, cam.z) + roofGap(v.distance);
     const liftTarget = Math.max(0, floor - cam.y);
     this.lift = ease(this.lift, liftTarget, liftTarget > this.lift);
     cam.y += this.lift;
@@ -483,7 +549,8 @@ export class CameraRig {
    */
   zoomBy(factor: number, ndc: Vector2 | null) {
     const before = ndc && factor < 1 ? this.groundAt(ndc) : null;
-    const next = MathUtils.clamp(this.desired.distance * factor, MIN_DIST, MAX_DIST);
+    let next = MathUtils.clamp(this.desired.distance * factor, MIN_DIST, MAX_DIST);
+    if (next < this.desired.distance && this.obstacle) next = this.zoomStop(before, next);
     const applied = next / this.desired.distance;
     this.desired.distance = next;
     if (before) {
@@ -543,6 +610,11 @@ export class CameraRig {
     this.desired.target.z += (-Math.cos(yaw) * forward - Math.sin(yaw) * right) * s;
     clampView(this.desired);
   }
+}
+
+/** How far above a roof the camera keeps (more from further out, where it moves faster). */
+function roofGap(distance: number) {
+  return distance > 28 ? 2.5 : 1.2;
 }
 
 function cloneView(v: View): View {

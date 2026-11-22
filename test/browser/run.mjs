@@ -228,6 +228,42 @@ async function main() {
     return `tilt varied ${worst.toFixed(2)}° at most`;
   });
 
+  // Shared by the two collision checks: a camera recorder and wheel ticks.
+  const COLLIDE = `${SETUP} sb.app.state.select(null); await new Promise((x) => setTimeout(x, 300));
+    const D = W.district; const wait = (ms) => new Promise((x) => setTimeout(x, ms)); const V = () => R.desired.target.clone();
+    const canvas = document.querySelector('canvas'); const rect = canvas.getBoundingClientRect();
+    // The real height under a point (the rig's lookup adds slack around footprints).
+    const trueH = (x, z) => { let h = 0; const v = V(); for (const p of D.plots.values()) { v.set(x, 0, z).applyMatrix4(p.inverse); const gx = Math.floor((v.x + 12) / 2), gz = Math.floor((v.z + 10) / 2); if (gx < 0 || gz < 0 || gx >= 12 || gz >= 10) continue; h = Math.max(h, D.heights.get(p.type).cells[gz * 12 + gx] + p.world.elements[13]); } return h; };
+    const record = () => { const log = []; let on = true; const f = () => { if (!on) return; const c = R.camera.position, l = R.look; log.push({ dist: R.current.distance, tilt: Math.asin((c.y - l.y) / c.distanceTo(l)) * 180 / Math.PI, above: c.y - trueH(c.x, c.z) }); requestAnimationFrame(f); }; requestAnimationFrame(f); return () => { on = false; return log; }; };
+    const wheel = async (n, dy, x, y) => { for (let i = 0; i < n; i++) { canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: dy, clientX: x, clientY: y, bubbles: true, cancelable: true })); await wait(70); } };`;
+
+  await check('zooming in toward a kiosk keeps the tilt (stops short of its roof)', async () => {
+    const r = await page.run(`${COLLIDE}
+      const kiosk = [...D.plots.entries()].find(([, p]) => p.type === 'plot_juice_kiosk'); if (!kiosk) return { missing: true };
+      // Its roof (the only part over 5 m), and a view across the plot toward it like the one it was reported from.
+      const g = D.heights.get(kiosk[1].type).cells; let k = 0; for (let i = 0; i < g.length; i++) if (g[i] > g[k]) k = i;
+      const roof = V().set((k % 12) * 2 - 11, g[k] - 0.5, Math.floor(k / 12) * 2 - 9).applyMatrix4(kiosk[1].world);
+      R.flyTo({ target: V().set(roof.x + 4, 0, roof.z + 7), distance: 46, pitch: 48 * Math.PI / 180, yaw: 0.12 }, 0.01); await wait(800);
+      const s = roof.clone().project(R.camera); const stop = record();
+      await wheel(40, -40, rect.left + (s.x + 1) / 2 * rect.width, rect.top + (1 - s.y) / 2 * rect.height); await wait(1200); const log = stop();
+      const t = log.map((f) => f.tilt); return { swing: Math.max(...t) - Math.min(...t), end: log.at(-1).dist, above: Math.min(...log.map((f) => f.above)) };`);
+    expect(!r.missing, 'no juice kiosk in the city');
+    expect(r.swing < 0.5, `the camera tilted ${r.swing.toFixed(1)}° on its own while zooming in`);
+    expect(r.above > 0.5, `the camera went within ${r.above.toFixed(1)} m of a roof`);
+    return `tilt held within ${r.swing.toFixed(2)}°, stopped at ${r.end.toFixed(1)} m`;
+  });
+  await check('zooming out into a tall building lifts the camera over it, never through it', async () => {
+    const r = await page.run(`${COLLIDE}
+      let best = null; for (const [key, p] of D.plots) { const g = D.heights.get(p.type).cells; for (let k = 0; k < g.length; k++) if (!best || g[k] > best.h) best = { key, p, k, h: g[k] }; }
+      const B = V().set((best.k % 12) * 2 - 11, 0, Math.floor(best.k / 12) * 2 - 9).applyMatrix4(best.p.world); const C = D.center(best.key);
+      const away = V().set(C.x - B.x, 0, C.z - B.z).normalize(); const target = B.clone().addScaledVector(away, 14);
+      R.flyTo({ target, distance: 8, pitch: 30 * Math.PI / 180, yaw: Math.atan2(B.x - target.x, B.z - target.z) }, 0.01); await wait(800);
+      const stop = record(); await wheel(25, 40, rect.left + rect.width / 2, rect.top + rect.height / 2); await wait(1500); const log = stop();
+      return { height: best.h, to: log.at(-1).dist, above: Math.min(...log.map((f) => f.above)), rose: Math.max(...log.map((f) => f.tilt)) - 30 };`);
+    expect(r.to > 20, `the zoom out stopped at ${r.to.toFixed(0)} m`);
+    expect(r.above > 0.5, `the camera went within ${r.above.toFixed(1)} m of the ${r.height.toFixed(0)} m roof (or inside it)`);
+    return `${r.height.toFixed(0)} m building: rose ${r.rose.toFixed(0)}°, kept ${r.above.toFixed(1)} m above its roofs`;
+  });
   await check('scrolling during a flight takes over from where the camera is', async () => {
     const r = await page.run(`${SETUP} sb.app.state.select(null); W.overview(); await new Promise((x) => setTimeout(x, 2500));
       const row = ${AGENT}; sb.app.selectAgent(row.item.surfaceId); await new Promise((x) => setTimeout(x, 500));
