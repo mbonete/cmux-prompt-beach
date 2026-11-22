@@ -1,6 +1,6 @@
 import {
   type AnimationAction,
-  type AnimationClip,
+  AnimationClip,
   AnimationMixer,
   type Bone,
   type Camera,
@@ -24,6 +24,12 @@ import type { Cast, Skeleton } from './cast';
 export type Mood = 'work' | 'ask' | 'celebrate' | 'relax' | 'doze';
 
 const FADE = 0.35;
+/**
+ * The seated wave blends over the seated pose with normalised weights: this
+ * much heavier, it owns the bones it has (arm, neck, head), and the seated
+ * clip keeps the rest.
+ */
+const OVERLAY_WEIGHT = 40;
 const LOD_DISTANCE = 42;
 export const SHADOW_DISTANCE = 70;
 const up = new Vector3(0, 1, 0);
@@ -42,6 +48,9 @@ export class Person {
   private mixer: AnimationMixer | null = null;
   private clips = new Map<string, AnimationClip>();
   private current: AnimationAction | null = null;
+  /** The wave from the waist up, playing over a seated pose (someone who needs you but has no room to stand). */
+  private overlay: AnimationAction | null = null;
+  private waveUpper: AnimationClip | null | undefined;
   private onDone: (() => void) | null = null;
   private seated: boolean;
   private mood: Mood | null = null;
@@ -160,6 +169,7 @@ export class Person {
     // Turning toward the camera is for someone standing; seated, it swung them off the seat.
     this.faceCamera = mood === 'ask' && stand;
 
+    this.setOverlay(false);
     if (stand && this.seated) {
       const clip = this.table ? 'stand_up_table' : 'stand_up_chair';
       if (instant || !this.clips.has(clip)) {
@@ -208,7 +218,45 @@ export class Person {
       return;
     }
     this.loop(this.loopClip(mood ?? 'relax'), instant);
+    this.setOverlay(this.seated && mood === 'ask');
     this.variationAt = this.clock + 6 + Math.random() * 8;
+  }
+
+  /** The wave, from the waist up: the waving arm, neck and head only (the seated pose keeps the rest). */
+  private seatedWave(): AnimationClip | null {
+    if (this.waveUpper !== undefined) return this.waveUpper;
+    const wave = this.clips.get('wave');
+    if (!wave) return (this.waveUpper = null);
+    // The waving arm is the upper arm that turns the most.
+    const swing = (side: string) => {
+      const v = wave.tracks.find((t) => t.name === `Bip01_${side}_UpperArm.quaternion`)?.values;
+      if (!v) return 0;
+      let least = 1;
+      for (let i = 4; i < v.length; i += 4) least = Math.min(least, Math.abs(v[0] * v[i] + v[1] * v[i + 1] + v[2] * v[i + 2] + v[3] * v[i + 3]));
+      return 1 - least;
+    };
+    const side = swing('R') >= swing('L') ? 'R' : 'L';
+    const keep = new RegExp(`^Bip01_(Neck|Head|${side}_(Clavicle|UpperArm|Forearm|Hand|Finger\\d*))\\.`);
+    this.waveUpper = new AnimationClip('wave_seated', wave.duration, wave.tracks.filter((t) => keep.test(t.name)));
+    return this.waveUpper;
+  }
+
+  private setOverlay(on: boolean) {
+    if (!this.mixer || on === Boolean(this.overlay)) return;
+    if (!on) {
+      this.overlay!.fadeOut(FADE);
+      this.overlay = null;
+      return;
+    }
+    const clip = this.seatedWave();
+    if (!clip) return;
+    const a = this.mixer.clipAction(clip);
+    a.reset();
+    a.setLoop(LoopRepeat, Infinity);
+    a.setEffectiveWeight(OVERLAY_WEIGHT);
+    a.fadeIn(FADE);
+    a.play();
+    this.overlay = a;
   }
 
   private loopClip(mood: Mood): string {

@@ -100,6 +100,7 @@ export class People {
         person.reducedMotion = this.reducedMotion;
         const standAt = person.standPoint(new Vector3());
         if (standAt) person.roomToStand = this.district.roomToStand(item.plot, standAt.x, standAt.z, spot.position.y);
+        this.district.setDeskItem(item.plot, item.spot, true);
         this.scene.add(person.root);
         const el = document.createElement('div');
         el.className = 'agent';
@@ -255,6 +256,7 @@ export class People {
     const e = this.entries.get(id);
     if (!e) return;
     e.person.dispose();
+    if (e.plot !== null && e.spot !== null) this.district.setDeskItem(e.plot, e.spot, false);
     if (e.pop) this.dropPop(e, e.pop);
     this.overlay.remove(e.badge);
     this.entries.delete(id);

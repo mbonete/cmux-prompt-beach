@@ -1,11 +1,14 @@
 import {
   AdditiveBlending,
+  BoxGeometry,
   Color,
+  CylinderGeometry,
   Group,
   InstancedBufferAttribute,
   InstancedMesh,
   Matrix4,
   MeshBasicNodeMaterial,
+  MeshStandardNodeMaterial as StandardMaterial,
   Object3D,
   PlaneGeometry,
   Quaternion,
@@ -165,6 +168,13 @@ export class District {
   readonly screensLevel = uniform(0.6);
   private readonly screens: { attr: InstancedBufferAttribute; owner: PlotKey[] }[] = [];
   private readonly heights = new Map<string, HeightGrid>();
+  /**
+   * A laptop or a notebook on the table in front of a seat (key "plot:spot"),
+   * shown while someone sits there. Only those in use are drawn: they're kept
+   * packed at the front of their instance list (`slot`, -1 when put away).
+   */
+  private readonly deskItems = new Map<string, { kind: 'laptop' | 'notes'; slot: number; matrix: Matrix4 }>();
+  private deskModels: { laptop: InstancedModel | null; notes: InstancedMesh; pen: InstancedMesh; inUse: Record<'laptop' | 'notes', string[]> } | null = null;
   /** The highest roof in the district (world metres): a pick ray starts looking below it. */
   private tallest = 0;
   /**
@@ -289,6 +299,7 @@ export class District {
     if (location.search.includes('perf')) console.log(`[switchboard] district: buildings loaded at ${Math.round(t0)} ms, read in ${Math.round(t1 - t0)} ms, merged in ${Math.round(performance.now() - t1)} ms`);
     this.buildPools(poolSpots);
     await this.placeProps(propPlacements);
+    await this.placeDeskItems((propPlacements.get('classic_laptop') ?? []).map(({ m }) => new Vector3().setFromMatrixPosition(m)));
   }
 
   /** Every plot building, merged by material: one draw per material for the whole district. */
@@ -444,15 +455,142 @@ export class District {
     const p = this.plots.get(key);
     const grid = p && this.heights.get(p.type);
     if (!p || !grid) return true;
-    const e = p.world.elements;
-    for (const [dx, dz] of ROOM) {
-      fadeLocal.set(x + dx, 0, z + dz).applyMatrix4(p.inverse);
-      const gx = Math.floor((fadeLocal.x + HALF_W) / LOW);
-      const gz = Math.floor((fadeLocal.z + HALF_D) / LOW);
-      if (gx < 0 || gz < 0 || gx >= LOW_W || gz >= LOW_D) continue;
-      if (grid.low[gz * LOW_W + gx] + e[13] > floor + 0.2) return false;
-    }
+    for (const [dx, dz] of ROOM) if (this.lowAt(p, x + dx, z + dz) > floor + 0.2) return false;
     return true;
+  }
+
+  /** Shows or puts away the laptop or notebook in front of a seat (someone sat down, or left). */
+  setDeskItem(key: PlotKey, spot: number, on: boolean) {
+    const id = `${key}:${spot}`;
+    const item = this.deskItems.get(id);
+    const m = this.deskModels;
+    if (!item || !m || (item.kind === 'laptop' && !m.laptop) || on === item.slot >= 0) return;
+    const list = m.inUse[item.kind];
+    if (on) {
+      item.slot = list.length;
+      list.push(id);
+      this.placeDeskItem(item.kind, item.slot, item.matrix);
+    } else {
+      // The last one in use moves into the freed slot.
+      const last = list.pop()!;
+      if (last !== id) {
+        const moved = this.deskItems.get(last)!;
+        moved.slot = item.slot;
+        list[item.slot] = last;
+        this.placeDeskItem(moved.kind, moved.slot, moved.matrix);
+      }
+      item.slot = -1;
+    }
+    if (item.kind === 'laptop') m.laptop!.setCount(list.length);
+    else m.notes.count = m.pen.count = list.length;
+  }
+
+  private placeDeskItem(kind: 'laptop' | 'notes', slot: number, matrix: Matrix4) {
+    const m = this.deskModels!;
+    if (kind === 'laptop') {
+      m.laptop!.set(slot, matrix);
+      return;
+    }
+    m.notes.setMatrixAt(slot, matrix);
+    m.notes.instanceMatrix.needsUpdate = true;
+    m.pen.setMatrixAt(slot, deskTmp.multiplyMatrices(matrix, PEN));
+    m.pen.instanceMatrix.needsUpdate = true;
+  }
+
+  /**
+   * Finds the table in front of each desk and bar seat (walking forward from
+   * the seat over the floor map until it reaches the table's height) and puts
+   * a laptop there, or a notebook and pen where a laptop doesn't fit or one in
+   * three times. Seats that already have a laptop from the building keep it.
+   */
+  private async placeDeskItems(buildingLaptops: Vector3[]) {
+    const plan: { key: string; kind: 'laptop' | 'notes'; matrix: Matrix4 }[] = [];
+    const fwd = new Vector3();
+    const side = new Vector3();
+    for (const p of this.plots.values()) {
+      p.spots.forEach((s, i) => {
+        if (!s || (s.kind !== 'desk' && s.kind !== 'stool')) return;
+        fwd.set(0, 0, 1).applyQuaternion(s.quaternion).setY(0).normalize();
+        side.set(fwd.z, 0, -fwd.x);
+        const top = (d: number, l: number) => this.lowAt(p, s.position.x + fwd.x * d + side.x * l, s.position.z + fwd.z * d + side.z * l) - s.position.y;
+        const onTable = (d: number, l: number) => Math.abs(top(d, l) - s.tableH) < 0.08;
+        let edge = -1;
+        for (let d = 0.2; d <= 0.9 && edge < 0; d += 0.05) if (onTable(d, 0)) edge = d;
+        if (edge < 0) return;
+        // Centre of an item this deep and wide, `gap` in from the edge, if all of it is on the table.
+        const fits = (depth: number, width: number, gap: number) => {
+          const c = edge + gap + depth / 2;
+          for (const [d, l] of [[c, 0], [c - depth / 2, -width / 2], [c - depth / 2, width / 2], [c + depth / 2, -width / 2], [c + depth / 2, width / 2]]) if (!onTable(d, l)) return -1;
+          return c;
+        };
+        const seed = ((typeof p.key === 'number' ? p.key : 97) * 31 + i * 17) % 3;
+        let kind: 'laptop' | 'notes' = seed === 0 ? 'notes' : 'laptop';
+        // A laptop stands back from the edge: leaning on the table to rest, forearms land where it would be.
+        let c = kind === 'laptop' ? fits(0.24, 0.32, 0.2) : -1;
+        if (c < 0) {
+          kind = 'notes';
+          c = fits(0.22, 0.17, 0.05);
+        }
+        if (c < 0) return;
+        const at = s.position.clone().addScaledVector(fwd, c);
+        at.y = s.position.y + top(c, 0) + 0.003;
+        if (buildingLaptops.some((b) => b.distanceTo(at) < 0.7)) return;
+        // A laptop's screen is on its -Z side: turn it to face the seat. A notebook lies a little askew.
+        const yaw = Math.atan2(fwd.x, fwd.z) + (kind === 'laptop' ? Math.PI : ((seed + i) % 5) * 0.08 - 0.16);
+        plan.push({ key: `${p.key}:${i}`, kind, matrix: new Matrix4().compose(at, new Quaternion().setFromAxisAngle(UP, yaw), ONE) });
+      });
+    }
+    const laptops = plan.filter((x) => x.kind === 'laptop');
+    const notes = plan.filter((x) => x.kind === 'notes');
+
+    let laptop: InstancedModel | null = null;
+    if (laptops.length) {
+      try {
+        const gltf = await loadGLTF('/assets/env/props/classic_laptop/classic_laptop.gltf');
+        // The light version (4.5k triangles, not 14k): 30 cm across, it looks the same even from close by.
+        const light = gltf.scene.clone(true);
+        const drop: Object3D[] = [];
+        light.traverse((o) => {
+          if ((o as Mesh).isMesh && /lod0/i.test(o.name)) drop.push(o);
+        });
+        for (const o of drop) o.removeFromParent();
+        laptop = new InstancedModel(light, laptops.length);
+        for (const mesh of laptop.meshes) {
+          // Its own materials: the building laptops' screens glow by plot; these are on while someone sits there.
+          mesh.material = (mesh.material as Material).clone();
+          if ((mesh.material as Material).name !== 'screen') continue;
+          (mesh.material as unknown as { emissive: Color }).emissive = new Color(0x8fb8ff);
+          perInstanceEmission(mesh, this.screensLevel);
+        }
+        laptop.setCount(0);
+        laptop.addTo(this.group);
+      } catch (err) {
+        console.warn('Desk laptops failed to load', err);
+      }
+    }
+    for (const x of laptops) this.deskItems.set(x.key, { kind: 'laptop', slot: -1, matrix: x.matrix });
+    const paper = new InstancedMesh(new BoxGeometry(0.15, 0.008, 0.21), new StandardMaterial({ color: 0xf4efe3, roughness: 0.9 }), Math.max(1, notes.length));
+    const pen = new InstancedMesh(new CylinderGeometry(0.004, 0.004, 0.14, 6).rotateZ(Math.PI / 2), new StandardMaterial({ color: 0x1d2a4a, roughness: 0.5 }), Math.max(1, notes.length));
+    for (const m of [paper, pen]) {
+      m.name = 'desk/notes';
+      m.frustumCulled = false;
+      m.receiveShadow = true;
+    }
+    for (const x of notes) this.deskItems.set(x.key, { kind: 'notes', slot: -1, matrix: x.matrix });
+    paper.count = pen.count = 0;
+    this.group.add(paper, pen);
+    this.deskModels = { laptop, notes: paper, pen, inUse: { laptop: [], notes: [] } };
+  }
+
+  /** Top of anything near the floor here (world metres), by the 0.25 m floor map, or -Infinity. */
+  private lowAt(p: PlotRuntime, x: number, z: number): number {
+    const e = p.world.elements;
+    fadeLocal.set(x, 0, z).applyMatrix4(p.inverse);
+    const gx = Math.floor((fadeLocal.x + HALF_W) / LOW);
+    const gz = Math.floor((fadeLocal.z + HALF_D) / LOW);
+    if (gx < 0 || gz < 0 || gx >= LOW_W || gz >= LOW_D) return -Infinity;
+    const grid = this.heights.get(p.type);
+    return grid ? grid.low[gz * LOW_W + gx] + e[13] : -Infinity;
   }
 
   /** Soft warm pools of light on the terraces at night: additive discs, no real lights. */
@@ -664,6 +802,11 @@ function lightFloors(root: Object3D): Map<string, number> {
 const fadeDir = new Vector3();
 const fadeAt = new Vector3();
 const fadeLocal = new Vector3();
+const UP = new Vector3(0, 1, 0);
+const ONE = new Vector3(1, 1, 1);
+/** The pen beside the notebook, in the notebook's frame. */
+const PEN = new Matrix4().compose(new Vector3(0.1, 0.004, 0.02), new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), 1.2), new Vector3(1, 1, 1));
+const deskTmp = new Matrix4();
 /** The footprint of someone standing: the centre and a ring 0.2 m out (body and feet). When unsure, they stay seated. */
 const ROOM = [[0, 0], [0.2, 0], [-0.2, 0], [0, 0.2], [0, -0.2], [0.14, 0.14], [-0.14, 0.14], [0.14, -0.14], [-0.14, -0.14]] as const;
 

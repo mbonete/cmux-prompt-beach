@@ -68,6 +68,12 @@ export class InstancedModel {
     for (const p of this.parts) p.mesh.computeBoundingSphere();
   }
 
+  /** Draw only the first n instances (the rest are kept, not drawn). */
+  setCount(n: number) {
+    this.count = n;
+    for (const p of this.parts) p.mesh.count = n;
+  }
+
   /** Materials by name across all parts (for driving emissive by time of day). */
   materials(name: string): Material[] {
     return this.parts.filter((p) => p.materialName === name).map((p) => p.mesh.material as Material);

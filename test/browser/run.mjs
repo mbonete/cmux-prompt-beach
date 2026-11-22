@@ -446,10 +446,30 @@ async function main() {
         stood++; const at = p.body.getWorldPosition(V());
         if (!D.roomToStand(e.plot, at.x, at.z, p.spot.position.y)) bad.push(p.spot.kind);
       }
-      return { seats, room, stood, stayed, bad };`);
+      // Those who stayed seated wave from the waist up. Checked at once: the next data update puts everyone back in
+      // their real mood. (Someone mid-yawn takes the change when the yawn ends.)
+      const seatedAsk = [...W.people.entries.values()].map((e) => e.person).filter((p) => p.seated && p.spot.kind !== 'standing' && p.model && !p.busy);
+      const still = seatedAsk.filter((p) => !(p.overlay?.isRunning() && p.overlay.getClip().tracks.some((t) => /UpperArm/.test(t.name)))).length;
+      return { seats, room, stood, stayed, bad, waving: seatedAsk.length - still, still };`);
     expect(r.room > 0, 'no seat in the city has room to stand up from');
+    expect(r.still === 0, `${r.still} seated people who need you never raised a hand`);
     expect(!r.bad.length, `${r.bad.length} stood up into furniture (${[...new Set(r.bad)].join(', ')})`);
-    return `${r.room}/${r.seats} seats have room to stand up from; here ${r.stood} stood to wave, ${r.stayed} stayed seated`;
+    return `${r.room}/${r.seats} seats have room to stand up from; here ${r.stood} stood to wave, ${r.waving} waved from their seat`;
+  });
+
+  await check('a laptop or notes on the table in front of seated people, only while someone sits there', async () => {
+    const r = await page.run(`${SETUP} const D = W.district; const M = D.deskModels;
+      // Drawn: in the front part of its instance list (only those are drawn), at its own table.
+      const shown = (item) => { if (item.slot < 0) return false; const mesh = item.kind === 'laptop' ? M.laptop.meshes[0] : M.notes; return item.slot < mesh.count; };
+      const sitting = new Set([...W.people.entries.values()].map((x) => x.plot + ':' + x.spot));
+      let laptops = 0, notes = 0, wrong = 0;
+      for (const [key, item] of D.deskItems) { const on = shown(item); if (on !== sitting.has(key)) wrong++; else if (on) item.kind === 'laptop' ? laptops++ : notes++; }
+      const drawn = M.laptop.meshes[0].count + M.notes.count;
+      return { items: D.deskItems.size, laptops, notes, wrong, drawn };`);
+    expect(r.items > 0, 'no table found in front of any seat');
+    expect(r.wrong === 0, `${r.wrong} items shown at an empty seat, or missing where someone sits`);
+    expect(r.drawn === r.laptops + r.notes, `${r.drawn} drawn for ${r.laptops + r.notes} in use`);
+    return `${r.items} tables with a place for one; ${r.laptops} laptops and ${r.notes} notebooks in use`;
   });
 
   console.log('\nInterface');
