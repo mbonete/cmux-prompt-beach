@@ -15,7 +15,7 @@ import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 
 const DIR = path.join(process.cwd(), 'public/assets/buildings');
 const MATERIALS = new Set(['stucco', 'trim', 'glass', 'glass_block', 'metal', 'terrazzo', 'wood', 'awning', 'roof',
-  'concrete', 'planter', 'water', 'neon_accent', 'interior', 'bulb']);
+  'concrete', 'planter', 'soil', 'water', 'neon_accent', 'interior', 'bulb']);
 const SPOT_KINDS = new Set(['desk', 'lounger', 'stool', 'bench', 'steps', 'standing']);
 const ALLOWED_EXT = new Set(['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_emissive_strength',
   'KHR_materials_clearcoat', 'KHR_materials_transmission', 'KHR_materials_ior',
@@ -199,7 +199,8 @@ else {
   });
   for (const [t, n] of Object.entries(count)) if (n > 4) errors.push(`layout: ${t} used ${n} times (max 4)`);
   if (!['plot_deco_hotel'].includes(lay.plots?.[1]) && lay.plots?.[2] !== 'plot_deco_hotel') errors.push('layout: the hero plot_deco_hotel belongs on plot 1 or 2');
-  for (const k of ['hangout', 'overflow']) if (!plots.has(lay[k])) errors.push(`layout.${k} = ${lay[k]} is not a plot building`);
+  // (The overflow lot is optional: the layout no longer names one.)
+  for (const k of ['hangout', 'overflow']) if ((k === 'hangout' || lay[k] !== undefined) && !plots.has(lay[k])) errors.push(`layout.${k} = ${lay[k]} is not a plot building`);
   summary.push(`layout: ${Object.entries(count).map(([t, n]) => `${t.slice(5)}x${n}`).join(' ')}; hangout ${lay.hangout}, overflow ${lay.overflow}`);
 }
 console.log(summary.join('\n'));

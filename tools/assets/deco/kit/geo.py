@@ -461,10 +461,13 @@ class MB:
                 ua, ub = circ * j / seg, circ * (j + 1) / seg
                 if len(ra) == 1 and len(rb) == 1:
                     continue
+                # Ends on the axis are fans, wound like the side quads (a_j, b_j, b_j2, a_j2)
+                # with one ring collapsed. They used to be wound the other way: every lid
+                # faced inward and was culled (open pots, bottomless drums, holed globes).
                 if len(ra) == 1:
-                    self.face([ra[0], rb[j2], rb[j]], mat, [(ua, va), (ub, vb), (ua, vb)])
+                    self.face([ra[0], rb[j], rb[j2]], mat, [(ua, va), (ua, vb), (ub, vb)])
                 elif len(rb) == 1:
-                    self.face([ra[j], ra[j2], rb[0]], mat, [(ua, va), (ub, va), (ua, vb)])
+                    self.face([ra[j], rb[0], ra[j2]], mat, [(ua, va), (ua, vb), (ub, va)])
                 else:
                     self.face([ra[j], rb[j], rb[j2], ra[j2]], mat, [(ua, va), (ua, vb), (ub, vb), (ub, va)])
         return rings

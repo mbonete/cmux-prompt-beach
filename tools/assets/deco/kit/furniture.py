@@ -261,14 +261,17 @@ def planter(mb, x0, x1, z0, z1, h=0.55, mat="planter", rim="trim", r=0.12, soil_
     sec = [(0.0, h - 0.06), (0.03, h - 0.06), (0.03, h - 0.01), (0.015, h), (-0.09, h), (-0.09, h - 0.06 - soil_drop)]
     mb.ring_sweep(p, sec, rim)
     inner = p.offset(-0.09)
-    mb.poly([(q[0], h - 0.06 - soil_drop, q[1]) for q in reversed(inner.pts)], mat)
+    mb.poly([(q[0], h - 0.06 - soil_drop, q[1]) for q in reversed(inner.pts)], "soil")
     return ((x0 + x1) / 2, h - 0.06 - soil_drop, (z0 + z1) / 2)
 
 
 def round_planter(mb, cx, cz, r=0.4, h=0.6, mat="planter", rim="trim"):
+    """Round pot filled with soil a few centimetres below its rim. Returns the soil centre."""
     mb.lathe([(0, 0.0), (r * 0.82, 0.0), (r * 0.86, 0.04), (r, h - 0.06), (r + 0.03, h - 0.05),
-              (r + 0.03, h - 0.01), (r + 0.01, h), (r - 0.05, h), (r - 0.06, h - 0.1), (0, h - 0.1)], cx, cz, mat, seg=16)
-    return (cx, h - 0.1, cz)
+              (r + 0.03, h - 0.01), (r + 0.01, h), (r - 0.05, h), (r - 0.06, h - 0.1)], cx, cz, mat, seg=16)
+    # soil, slightly domed, meeting the inner wall
+    mb.lathe([(r - 0.055, h - 0.075), (r * 0.5, h - 0.065), (0, h - 0.06)], cx, cz, "soil", seg=16)
+    return (cx, h - 0.06, cz)
 
 
 def sign_board(mb, x0, x1, y0, y1, z, depth=0.12, face="trim", frame="metal", neon=True):

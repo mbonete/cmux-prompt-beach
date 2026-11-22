@@ -252,6 +252,11 @@ def porthole(mb, c, n, r, ring_w=0.09, ring_out=0.09, mat_ring="trim", seg=20, b
         mb.poly_n(disc, "interior", N, uvs)
     else:
         mb.poly_n(disc, back, N)
+    # A pane of glass set into the ring: seen at an angle, the recessed room
+    # picture alone read as an open hole.
+    pane = [P(inner * math.cos(2 * math.pi * k / seg), inner * math.sin(2 * math.pi * k / seg), dback + 0.035)
+            for k in range(seg)]
+    mb.poly_n(pane, "glass", N)
 
 
 def neon_tube(mb, pts3, r=0.022, mat="neon_accent", seg=6, closed=False):

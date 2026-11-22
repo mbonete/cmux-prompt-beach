@@ -18,9 +18,9 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 771834,
-      "textureBytes": 1201142,
-      "tris": 15598,
+      "bytes": 712532,
+      "textureBytes": 1192752,
+      "tris": 15662,
       "bounds": {
         "min": [
           -8.34,
@@ -43,7 +43,8 @@
         "awning",
         "bulb",
         "concrete",
-        "planter"
+        "planter",
+        "soil"
       ],
       "look": {
         "awning": "teal",
@@ -223,7 +224,7 @@
           {
             "position": [
               -6.2,
-              0.4,
+              0.44,
               -0.9
             ],
             "rotation": [
@@ -241,7 +242,7 @@
           {
             "position": [
               6.2,
-              0.4,
+              0.44,
               -0.9
             ],
             "rotation": [
@@ -544,9 +545,9 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 837558,
-      "textureBytes": 2071516,
-      "tris": 17416,
+      "bytes": 787632,
+      "textureBytes": 2072560,
+      "tris": 17480,
       "bounds": {
         "min": [
           -9.7,
@@ -571,6 +572,7 @@
         "wood",
         "concrete",
         "planter",
+        "soil",
         "bulb"
       ],
       "look": {
@@ -659,7 +661,7 @@
           {
             "position": [
               -9,
-              0.45,
+              0.49,
               6.4
             ],
             "rotation": [
@@ -677,7 +679,7 @@
           {
             "position": [
               9,
-              0.45,
+              0.49,
               6.4
             ],
             "rotation": [
@@ -1074,9 +1076,9 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 803092,
-      "textureBytes": 2111424,
-      "tris": 16143,
+      "bytes": 764847,
+      "textureBytes": 2112246,
+      "tris": 16239,
       "bounds": {
         "min": [
           -9.7,
@@ -1102,6 +1104,7 @@
         "wood",
         "awning",
         "planter",
+        "soil",
         "concrete"
       ],
       "look": {
@@ -1190,7 +1193,7 @@
           {
             "position": [
               -8.75,
-              0.5,
+              0.54,
               6.35
             ],
             "rotation": [
@@ -1208,7 +1211,7 @@
           {
             "position": [
               8.75,
-              0.5,
+              0.54,
               6.35
             ],
             "rotation": [
@@ -1226,7 +1229,7 @@
           {
             "position": [
               9,
-              0.45,
+              0.49,
               -1.4
             ],
             "rotation": [
@@ -1654,9 +1657,9 @@
         "textures/glass_block_orm.webp",
         "textures/glass_block_normal.webp"
       ],
-      "bytes": 1135053,
-      "textureBytes": 2145054,
-      "tris": 22879,
+      "bytes": 1082280,
+      "textureBytes": 2147398,
+      "tris": 23079,
       "bounds": {
         "min": [
           -9.7,
@@ -1677,7 +1680,9 @@
         "trim",
         "roof",
         "neon_accent",
+        "glass",
         "planter",
+        "soil",
         "wood",
         "awning",
         "concrete",
@@ -1770,7 +1775,7 @@
           {
             "position": [
               -8.45,
-              0.56,
+              0.6,
               5.75
             ],
             "rotation": [
@@ -1788,7 +1793,7 @@
           {
             "position": [
               8.45,
-              0.56,
+              0.6,
               5.75
             ],
             "rotation": [
@@ -1806,7 +1811,7 @@
           {
             "position": [
               -2.95,
-              0.52,
+              0.56,
               0.15
             ],
             "rotation": [
@@ -1840,7 +1845,7 @@
           {
             "position": [
               2.95,
-              0.52,
+              0.56,
               0.15
             ],
             "rotation": [
@@ -2226,9 +2231,9 @@
         "textures/wood_orm.webp",
         "textures/wood_normal.webp"
       ],
-      "bytes": 859386,
-      "textureBytes": 1741828,
-      "tris": 18025,
+      "bytes": 791458,
+      "textureBytes": 1742228,
+      "tris": 18089,
       "bounds": {
         "min": [
           -9.7,
@@ -2253,6 +2258,7 @@
         "concrete",
         "wood",
         "planter",
+        "soil",
         "bulb"
       ],
       "look": {
@@ -2361,7 +2367,7 @@
           {
             "position": [
               -9.1,
-              0.45,
+              0.49,
               6.5
             ],
             "rotation": [
@@ -2379,7 +2385,7 @@
           {
             "position": [
               7.6,
-              0.45,
+              0.49,
               -1.2
             ],
             "rotation": [
@@ -2746,9 +2752,9 @@
         "textures/awning_orm.webp",
         "textures/awning_normal.webp"
       ],
-      "bytes": 799156,
-      "textureBytes": 1481848,
-      "tris": 16405,
+      "bytes": 754793,
+      "textureBytes": 1493614,
+      "tris": 16533,
       "bounds": {
         "min": [
           -9.7,
@@ -2771,7 +2777,8 @@
         "awning",
         "neon_accent",
         "bulb",
-        "planter"
+        "planter",
+        "soil"
       ],
       "look": {
         "awning": "coral",
@@ -2879,7 +2886,7 @@
           {
             "position": [
               -9,
-              0.5,
+              0.54,
               6.4
             ],
             "rotation": [
@@ -2897,7 +2904,7 @@
           {
             "position": [
               -1,
-              0.45,
+              0.49,
               6.5
             ],
             "rotation": [
@@ -2915,7 +2922,7 @@
           {
             "position": [
               -9,
-              0.45,
+              0.49,
               -7.1
             ],
             "rotation": [
@@ -2933,7 +2940,7 @@
           {
             "position": [
               9.15,
-              0.45,
+              0.49,
               6.45
             ],
             "rotation": [
@@ -3303,9 +3310,9 @@
         "textures/awning_orm.webp",
         "textures/awning_normal.webp"
       ],
-      "bytes": 833182,
-      "textureBytes": 1290306,
-      "tris": 17405,
+      "bytes": 774125,
+      "textureBytes": 1291210,
+      "tris": 17529,
       "bounds": {
         "min": [
           -9.7,
@@ -3328,7 +3335,9 @@
         "awning",
         "bulb",
         "neon_accent",
-        "planter"
+        "glass",
+        "planter",
+        "soil"
       ],
       "look": {
         "awning": "teal",
@@ -3416,7 +3425,7 @@
           {
             "position": [
               -9.1,
-              0.45,
+              0.49,
               6.4
             ],
             "rotation": [
@@ -3434,7 +3443,7 @@
           {
             "position": [
               9.1,
-              0.45,
+              0.49,
               -1.6
             ],
             "rotation": [
@@ -3452,7 +3461,7 @@
           {
             "position": [
               9.1,
-              0.45,
+              0.49,
               6.4
             ],
             "rotation": [
@@ -3792,9 +3801,9 @@
         "textures/awning_orm.webp",
         "textures/awning_normal.webp"
       ],
-      "bytes": 973719,
-      "textureBytes": 2077544,
-      "tris": 18878,
+      "bytes": 906427,
+      "textureBytes": 2076030,
+      "tris": 18974,
       "bounds": {
         "min": [
           -10,
@@ -3820,7 +3829,8 @@
         "water",
         "wood",
         "awning",
-        "planter"
+        "planter",
+        "soil"
       ],
       "look": {
         "awning": "teal",
@@ -3928,7 +3938,7 @@
           {
             "position": [
               -3.3,
-              0.45,
+              0.49,
               -1.6
             ],
             "rotation": [
@@ -3946,7 +3956,7 @@
           {
             "position": [
               -8.7,
-              0.5,
+              0.54,
               6.4
             ],
             "rotation": [
@@ -3964,7 +3974,7 @@
           {
             "position": [
               8.9,
-              0.45,
+              0.49,
               0.2
             ],
             "rotation": [
@@ -4338,9 +4348,9 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 943647,
-      "textureBytes": 2127998,
-      "tris": 19509,
+      "bytes": 852615,
+      "textureBytes": 2128062,
+      "tris": 19573,
       "bounds": {
         "min": [
           -9.7,
@@ -4365,6 +4375,7 @@
         "wood",
         "bulb",
         "planter",
+        "soil",
         "awning",
         "concrete"
       ],
@@ -4454,7 +4465,7 @@
           {
             "position": [
               -9,
-              0.5,
+              0.54,
               6.4
             ],
             "rotation": [
@@ -4472,7 +4483,7 @@
           {
             "position": [
               9.05,
-              0.45,
+              0.49,
               6.45
             ],
             "rotation": [
@@ -4882,9 +4893,9 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 744833,
-      "textureBytes": 2072276,
-      "tris": 15668,
+      "bytes": 675036,
+      "textureBytes": 2074956,
+      "tris": 15764,
       "bounds": {
         "min": [
           -9.7,
@@ -4909,7 +4920,8 @@
         "bulb",
         "wood",
         "concrete",
-        "planter"
+        "planter",
+        "soil"
       ],
       "look": {
         "awning": "butter",
@@ -5017,7 +5029,7 @@
           {
             "position": [
               -9.05,
-              0.45,
+              0.49,
               6.45
             ],
             "rotation": [
@@ -5035,7 +5047,7 @@
           {
             "position": [
               9.05,
-              0.45,
+              0.49,
               6.45
             ],
             "rotation": [
@@ -5053,7 +5065,7 @@
           {
             "position": [
               8.9,
-              0.45,
+              0.49,
               -7.2
             ],
             "rotation": [
@@ -5408,9 +5420,9 @@
         "textures/glass_block_orm.webp",
         "textures/glass_block_normal.webp"
       ],
-      "bytes": 546481,
-      "textureBytes": 1323836,
-      "tris": 11402,
+      "bytes": 508895,
+      "textureBytes": 1320556,
+      "tris": 11512,
       "bounds": {
         "min": [
           -9.7,
@@ -5431,8 +5443,10 @@
         "awning",
         "wood",
         "stucco",
+        "glass",
         "glass_block",
         "planter",
+        "soil",
         "neon_accent",
         "bulb"
       ],
@@ -5547,7 +5561,7 @@
           {
             "position": [
               -8.9,
-              0.45,
+              0.49,
               1.1
             ],
             "rotation": [
@@ -5565,7 +5579,7 @@
           {
             "position": [
               8.95,
-              0.45,
+              0.49,
               3.9
             ],
             "rotation": [
@@ -5583,7 +5597,7 @@
           {
             "position": [
               -8.9,
-              0.45,
+              0.49,
               6.4
             ],
             "rotation": [
@@ -6008,8 +6022,8 @@
         "textures/roof_orm.webp",
         "textures/roof_normal.webp"
       ],
-      "bytes": 123275,
-      "textureBytes": 874130,
+      "bytes": 122755,
+      "textureBytes": 873650,
       "tris": 1828,
       "bounds": {
         "min": [
@@ -6129,7 +6143,7 @@
     "materials": "stucco base colour is the pastel tint (override per plot); interior, neon_accent and bulb are emissive and meant to be scaled by time of day (bulb: festoon bulbs, sconce and lantern glass, marquee bulbs; warm white, emissiveStrength 6; drive it with a night level and switch it off on vacant plots)",
     "lights": "light_0..light_n (2-4 per plot): the main night light sources. The empty sits at the source; extras.light_radius (metres, 2-6) is the radius of the soft pool to draw on the floor below, extras.light_color a warm hex colour, extras.floor_y the local height of that floor (terrace or deck top). No real lights are intended.",
     "palms": "palm_0..palm_n: base of a palm trunk (soil in a planter, the ground or the sand); extras.palm_height in metres (5-11). The empty yaw is a free per-palm turn. The beach bar palms stand on the sand at origin height: drop them onto the dune surface.",
-    "layout": "layout.plots[i] is the building type for plot index i (row * 4 + col, row 0 nearest the beach); layout.hangout and layout.overflow name the shared beach bar and co-working types",
+    "layout": "layout.plots[i] is the building type for plot index i (0-15: the core, row * 4 + col, row 0 nearest the beach; 16-31: the outer columns); layout.cells[i] is its [column, row] on the eight-column grid; layout.hangout and layout.overflow name the shared beach bar and co-working types",
     "textures": "shared WebP files in textures/, EXT_texture_webp; ORM packed (R occlusion, G roughness, B metalness)"
   },
   "constants": {
@@ -6139,19 +6153,19 @@
     "stool_raise": 0.29
   },
   "textures": {
-    "ao_plot_beach_bar.webp": 53050,
-    "ao_plot_beach_cafe.webp": 65752,
-    "ao_plot_coworking.webp": 63134,
-    "ao_plot_deco_hotel.webp": 102336,
-    "ao_plot_diner.webp": 67962,
-    "ao_plot_juice_kiosk.webp": 104328,
-    "ao_plot_marina_office.webp": 79132,
-    "ao_plot_motel_court.webp": 73528,
-    "ao_plot_record_shop.webp": 85280,
-    "ao_plot_surf_shop.webp": 62688,
-    "ao_plot_trailer.webp": 72212,
+    "ao_plot_beach_bar.webp": 44660,
+    "ao_plot_beach_cafe.webp": 66796,
+    "ao_plot_coworking.webp": 63956,
+    "ao_plot_deco_hotel.webp": 104680,
+    "ao_plot_diner.webp": 68362,
+    "ao_plot_juice_kiosk.webp": 116094,
+    "ao_plot_marina_office.webp": 80036,
+    "ao_plot_motel_court.webp": 72014,
+    "ao_plot_record_shop.webp": 85344,
+    "ao_plot_surf_shop.webp": 65368,
+    "ao_plot_trailer.webp": 68932,
     "ao_tower_1.webp": 28362,
-    "ao_tower_2.webp": 31362,
+    "ao_tower_2.webp": 30882,
     "ao_tower_3.webp": 20930,
     "awning_butter_albedo.webp": 24548,
     "awning_cherry_albedo.webp": 17638,
@@ -6181,41 +6195,6 @@
     "wood_orm.webp": 91116
   },
   "layout": {
-    "hangout": "plot_beach_bar",
-    "plots": [
-      "plot_surf_shop",
-      "plot_deco_hotel",
-      "plot_beach_cafe",
-      "plot_marina_office",
-      "plot_trailer",
-      "plot_juice_kiosk",
-      "plot_record_shop",
-      "plot_motel_court",
-      "plot_motel_court",
-      "plot_diner",
-      "plot_surf_shop",
-      "plot_record_shop",
-      "plot_juice_kiosk",
-      "plot_beach_cafe",
-      "plot_trailer",
-      "plot_diner",
-      "plot_diner",
-      "plot_juice_kiosk",
-      "plot_beach_cafe",
-      "plot_trailer",
-      "plot_juice_kiosk",
-      "plot_beach_cafe",
-      "plot_record_shop",
-      "plot_motel_court",
-      "plot_motel_court",
-      "plot_record_shop",
-      "plot_surf_shop",
-      "plot_diner",
-      "plot_deco_hotel",
-      "plot_surf_shop",
-      "plot_trailer",
-      "plot_marina_office"
-    ],
     "cells": [
       [
         2,
@@ -6345,6 +6324,41 @@
         7,
         3
       ]
+    ],
+    "hangout": "plot_beach_bar",
+    "plots": [
+      "plot_surf_shop",
+      "plot_deco_hotel",
+      "plot_beach_cafe",
+      "plot_marina_office",
+      "plot_trailer",
+      "plot_juice_kiosk",
+      "plot_record_shop",
+      "plot_motel_court",
+      "plot_motel_court",
+      "plot_diner",
+      "plot_surf_shop",
+      "plot_record_shop",
+      "plot_juice_kiosk",
+      "plot_beach_cafe",
+      "plot_trailer",
+      "plot_diner",
+      "plot_diner",
+      "plot_juice_kiosk",
+      "plot_beach_cafe",
+      "plot_trailer",
+      "plot_juice_kiosk",
+      "plot_beach_cafe",
+      "plot_record_shop",
+      "plot_motel_court",
+      "plot_motel_court",
+      "plot_record_shop",
+      "plot_surf_shop",
+      "plot_diner",
+      "plot_deco_hotel",
+      "plot_surf_shop",
+      "plot_trailer",
+      "plot_marina_office"
     ]
   }
 }

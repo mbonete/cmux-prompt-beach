@@ -1,6 +1,6 @@
 {
   "asset": {
-    "generator": "glTF-Transform v4.5.1",
+    "generator": "Switchboard deco kit (Blender 5.2 + glTF-Transform 4.5)",
     "version": "2.0",
     "copyright": "Switchboard world v2, original work"
   },
@@ -195,7 +195,7 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 77,
+      "count": 64,
       "max": [
         0.699999988079071,
         108.19999694824219,
@@ -212,21 +212,21 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 77,
+      "count": 64,
       "bufferView": 5,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 77,
+      "count": 64,
       "bufferView": 5,
       "byteOffset": 24
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 77,
+      "count": 64,
       "bufferView": 5,
       "byteOffset": 32
     },
@@ -300,13 +300,13 @@
     {
       "buffer": 0,
       "byteOffset": 103896,
-      "byteLength": 3080,
+      "byteLength": 2560,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 106976,
+      "byteOffset": 106456,
       "byteLength": 3456,
       "byteStride": 32,
       "target": 34962
@@ -442,7 +442,7 @@
   "buffers": [
     {
       "uri": "tower_2.bin",
-      "byteLength": 110432
+      "byteLength": 109912
     }
   ],
   "materials": [
