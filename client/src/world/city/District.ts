@@ -294,6 +294,8 @@ export class District {
       (this.fadeFloor.array as number[])[i] = s.y + 0.45;
     });
 
+    for (const p of this.plots.values()) p.spots.forEach((s, i) => s?.kind === 'lounger' && (p.spots[i] = this.loungerSeat(p, s, i)));
+
     const t1 = performance.now();
     this.buildMerged([...sources.values()]);
     if (location.search.includes('perf')) console.log(`[switchboard] district: buildings loaded at ${Math.round(t0)} ms, read in ${Math.round(t1 - t0)} ms, merged in ${Math.round(performance.now() - t1)} ms`);
@@ -457,6 +459,30 @@ export class District {
     if (!p || !grid) return true;
     for (const [dx, dz] of ROOM) if (this.lowAt(p, x + dx, z + dz) > floor + 0.2) return false;
     return true;
+  }
+
+  /**
+   * A lounger's spot seats someone facing along it, but the seated pose is a
+   * chair's: their shins went down through the cushion. They sit on its edge
+   * instead, facing out with their feet on the ground, on a side with room;
+   * with no room either side, they stand beside it.
+   */
+  private loungerSeat(p: PlotRuntime, s: Spot, index: number): Spot {
+    const fwd = new Vector3(0, 0, 1).applyQuaternion(s.quaternion).setY(0).normalize();
+    const first = ((typeof p.key === 'number' ? p.key : 7) + index) % 2 ? 1 : -1;
+    for (const sign of [first, -first]) {
+      const out = new Vector3(fwd.z, 0, -fwd.x).multiplyScalar(sign);
+      const feet = s.position.clone().addScaledVector(out, LOUNGER_HALF_WIDTH + 0.35);
+      if (!this.roomToStand(p.key, feet.x, feet.z, s.position.y)) continue;
+      return {
+        ...s,
+        position: s.position.clone().addScaledVector(out, LOUNGER_HALF_WIDTH - 0.2),
+        quaternion: new Quaternion().setFromAxisAngle(UP, Math.atan2(out.x, out.z)),
+        seatH: LOUNGER_EDGE_SEAT,
+      };
+    }
+    const beside = s.position.clone().addScaledVector(new Vector3(fwd.z, 0, -fwd.x), LOUNGER_HALF_WIDTH + 0.4);
+    return { ...s, kind: 'standing', position: beside };
   }
 
   /** Shows or puts away the laptop or notebook in front of a seat (someone sat down, or left). */
@@ -803,6 +829,13 @@ const fadeDir = new Vector3();
 const fadeAt = new Vector3();
 const fadeLocal = new Vector3();
 const UP = new Vector3(0, 1, 0);
+/** Every lounger in the kit is the same: 0.36 m from its middle line (where its spot is) to either edge. */
+const LOUNGER_HALF_WIDTH = 0.36;
+/**
+ * Sitting on a lounger's edge (0.34 m) with a chair's seated pose (0.435 m):
+ * lowered all the way, the feet sank into the ground; halfway, neither shows.
+ */
+const LOUNGER_EDGE_SEAT = 0.385;
 const ONE = new Vector3(1, 1, 1);
 /** The pen beside the notebook, in the notebook's frame. */
 const PEN = new Matrix4().compose(new Vector3(0.1, 0.004, 0.02), new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), 1.2), new Vector3(1, 1, 1));
