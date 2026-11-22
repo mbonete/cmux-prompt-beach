@@ -415,7 +415,7 @@ export class World {
 
     this.people?.update(dt, cam);
     this.life?.update(dt, cam);
-    this.district.updateCamera(cam.position);
+    this.district.updateCamera(cam, dt);
     this.updateRing();
     this.updateHover();
     this.focusTags();
@@ -491,6 +491,9 @@ export class World {
     // one by one inside the first frames (which froze the page for seconds).
     await this.renderer.compileAsync(this.scene, this.rig.camera).catch(() => {});
     this.mark('shaders compiled');
+    // The dissolving twins of the building materials (a building the lens enters
+    // fades), compiled in the background so the first fade doesn't stall.
+    void this.district.warmDissolve(() => this.renderer.compileAsync(this.district.group, this.rig.camera, this.scene)).then(() => this.mark('dissolve shaders compiled'));
 
     // Background life loads after the reveal; the district comes first.
     const life = new Life(this.scene, castOk ? this.cast : null);

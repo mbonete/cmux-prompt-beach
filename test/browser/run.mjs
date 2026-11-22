@@ -234,10 +234,13 @@ async function main() {
     const canvas = document.querySelector('canvas'); const rect = canvas.getBoundingClientRect();
     // The real height under a point (the rig's lookup adds slack around footprints).
     const trueH = (x, z) => { let h = 0; const v = V(); for (const p of D.plots.values()) { v.set(x, 0, z).applyMatrix4(p.inverse); const gx = Math.floor((v.x + 12) / 2), gz = Math.floor((v.z + 10) / 2); if (gx < 0 || gz < 0 || gx >= 12 || gz >= 10) continue; h = Math.max(h, D.heights.get(p.type).cells[gz * 12 + gx] + p.world.elements[13]); } return h; };
-    const record = () => { const log = []; let on = true; const f = () => { if (!on) return; const c = R.camera.position, l = R.look; log.push({ dist: R.current.distance, tilt: Math.asin((c.y - l.y) / c.distanceTo(l)) * 180 / Math.PI, above: c.y - trueH(c.x, c.z) }); requestAnimationFrame(f); }; requestAnimationFrame(f); return () => { on = false; return log; }; };
+    // The plot whose building the lens is inside right now (or null), and how faded it is.
+    const insideOf = (c) => { const v = V(); for (const p of D.plots.values()) { v.set(c.x, 0, c.z).applyMatrix4(p.inverse); const gx = Math.floor((v.x + 12) / 2), gz = Math.floor((v.z + 10) / 2); if (gx < 0 || gz < 0 || gx >= 12 || gz >= 10) continue; if (D.heights.get(p.type).cells[gz * 12 + gx] + p.world.elements[13] > c.y) return p; } return null; };
+    const record = () => { const log = []; let on = true; const f = () => { if (!on) return; const c = R.camera.position, l = R.look; const inside = insideOf(c); log.push({ dist: R.current.distance, tilt: Math.asin((c.y - l.y) / c.distanceTo(l)) * 180 / Math.PI, above: c.y - trueH(c.x, c.z), inside: !!inside, fade: inside ? D.fade.array[inside.slot] : null }); requestAnimationFrame(f); }; requestAnimationFrame(f); return () => { on = false; return log; }; };
+    const faded = (log) => { const ins = log.filter((f) => f.inside); return { frames: ins.length, worst: ins.length ? Math.min(...ins.map((f) => f.fade)) : 1, late: ins.filter((f) => f.fade < 0.5).length }; };
     const wheel = async (n, dy, x, y) => { for (let i = 0; i < n; i++) { canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: dy, clientX: x, clientY: y, bubbles: true, cancelable: true })); await wait(70); } };`;
 
-  await check('zooming in toward a kiosk keeps the tilt (stops short of its roof)', async () => {
+  await check('zooming in toward a kiosk keeps the tilt', async () => {
     const r = await page.run(`${COLLIDE}
       const kiosk = [...D.plots.entries()].find(([, p]) => p.type === 'plot_juice_kiosk'); if (!kiosk) return { missing: true };
       // Its roof (the only part over 5 m), and a view across the plot toward it like the one it was reported from.
@@ -246,23 +249,44 @@ async function main() {
       R.flyTo({ target: V().set(roof.x + 4, 0, roof.z + 7), distance: 46, pitch: 48 * Math.PI / 180, yaw: 0.12 }, 0.01); await wait(800);
       const s = roof.clone().project(R.camera); const stop = record();
       await wheel(40, -40, rect.left + (s.x + 1) / 2 * rect.width, rect.top + (1 - s.y) / 2 * rect.height); await wait(1200); const log = stop();
-      const t = log.map((f) => f.tilt); return { swing: Math.max(...t) - Math.min(...t), end: log.at(-1).dist, above: Math.min(...log.map((f) => f.above)) };`);
+      const t = log.map((f) => f.tilt); return { swing: Math.max(...t) - Math.min(...t), end: log.at(-1).dist, faded: faded(log) };`);
     expect(!r.missing, 'no juice kiosk in the city');
-    expect(r.swing < 0.5, `the camera tilted ${r.swing.toFixed(1)}° on its own while zooming in`);
-    expect(r.above > 0.5, `the camera went within ${r.above.toFixed(1)} m of a roof`);
-    return `tilt held within ${r.swing.toFixed(2)}°, stopped at ${r.end.toFixed(1)} m`;
+    expect(r.swing < 0.05, `the camera tilted ${r.swing.toFixed(1)}° on its own while zooming in`);
+    expect(r.faded.late <= 1, `the lens was inside the kiosk for ${r.faded.late} frames before it faded`);
+    return `tilt held within ${r.swing.toFixed(2)}°, zoomed to ${r.end.toFixed(1)} m${r.faded.frames ? `, kiosk faded while the lens was in it` : ''}`;
   });
-  await check('zooming out into a tall building lifts the camera over it, never through it', async () => {
+  await check('zooming out through a tall building keeps the tilt; the building fades while the lens is in it', async () => {
     const r = await page.run(`${COLLIDE}
       let best = null; for (const [key, p] of D.plots) { const g = D.heights.get(p.type).cells; for (let k = 0; k < g.length; k++) if (!best || g[k] > best.h) best = { key, p, k, h: g[k] }; }
       const B = V().set((best.k % 12) * 2 - 11, 0, Math.floor(best.k / 12) * 2 - 9).applyMatrix4(best.p.world); const C = D.center(best.key);
       const away = V().set(C.x - B.x, 0, C.z - B.z).normalize(); const target = B.clone().addScaledVector(away, 14);
       R.flyTo({ target, distance: 8, pitch: 30 * Math.PI / 180, yaw: Math.atan2(B.x - target.x, B.z - target.z) }, 0.01); await wait(800);
       const stop = record(); await wheel(25, 40, rect.left + rect.width / 2, rect.top + rect.height / 2); await wait(1500); const log = stop();
-      return { height: best.h, to: log.at(-1).dist, above: Math.min(...log.map((f) => f.above)), rose: Math.max(...log.map((f) => f.tilt)) - 30 };`);
+      await wait(1500); const after = { fade: D.fade.array[best.p.slot], solid: !D.dissolving };
+      const t = log.map((f) => f.tilt); return { height: best.h, to: log.at(-1).dist, swing: Math.max(...t) - Math.min(...t), faded: faded(log), after };`);
     expect(r.to > 20, `the zoom out stopped at ${r.to.toFixed(0)} m`);
-    expect(r.above > 0.5, `the camera went within ${r.above.toFixed(1)} m of the ${r.height.toFixed(0)} m roof (or inside it)`);
-    return `${r.height.toFixed(0)} m building: rose ${r.rose.toFixed(0)}°, kept ${r.above.toFixed(1)} m above its roofs`;
+    expect(r.swing < 0.05, `the camera tilted ${r.swing.toFixed(1)}° on its own while zooming out`);
+    expect(r.faded.frames > 0, 'the lens never went inside the building (the test no longer covers the case)');
+    expect(r.faded.late <= 1, `the lens was inside the building for ${r.faded.late} frames before it faded (least ${r.faded.worst.toFixed(2)})`);
+    expect(r.after.fade === 0 && r.after.solid, `after the lens left, the building stayed faded (${r.after.fade}) or the dissolving materials stayed on`);
+    return `${r.height.toFixed(0)} m building: tilt held within ${r.swing.toFixed(2)}°, faded for the ${r.faded.frames} frames the lens was inside, back after`;
+  });
+  await check('at every plot, the angle on screen is always the one you set (zooming in and out)', async () => {
+    const r = await page.run(`${COLLIDE}
+      let worst = 0; let where = ''; let late = 0; let insideFrames = 0;
+      const keys = [...D.plots.keys()];
+      for (let n = 0; n < keys.length; n++) {
+        const C = D.center(keys[n]); const yaw = (n * 2.39996) % (Math.PI * 2); const pitch = (25 + (n % 5) * 9) * Math.PI / 180;
+        R.flyTo({ target: V().set(C.x, 0, C.z), distance: 22, pitch, yaw }, 0.01); await wait(250);
+        const stop = record(); const cx = rect.left + rect.width * (0.3 + (n % 3) * 0.2), cy = rect.top + rect.height * 0.55;
+        await wheel(6, -40, cx, cy); await wheel(9, 40, cx, cy); await wait(400); const log = stop();
+        const want = R.current.pitch * 180 / Math.PI; for (const f of log) { const d = Math.abs(f.tilt - want); if (d > worst) { worst = d; where = keys[n]; } }
+        const fd = faded(log); late += fd.late; insideFrames += fd.frames;
+      }
+      return { worst, where, late, insideFrames, plots: keys.length };`);
+    expect(r.worst < 0.05, `at plot ${r.where} the view tilted ${r.worst.toFixed(1)}° away from the angle set`);
+    expect(r.late <= r.plots, `the lens was inside an unfaded building for ${r.late} frames`);
+    return `${r.plots} plots: angle within ${r.worst.toFixed(3)}°; lens inside a building for ${r.insideFrames} frames, faded in all but ${r.late}`;
   });
   await check('scrolling during a flight takes over from where the camera is', async () => {
     const r = await page.run(`${SETUP} sb.app.state.select(null); W.overview(); await new Promise((x) => setTimeout(x, 2500));

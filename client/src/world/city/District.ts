@@ -10,10 +10,32 @@ import {
   PlaneGeometry,
   Quaternion,
   Raycaster,
+  type Camera,
+  type Material,
+  type Mesh,
   type Scene,
   Vector3,
 } from 'three/webgpu';
-import { attribute, float, instancedBufferAttribute, int, materialEmissive, pow, smoothstep, texture, uniform, uniformArray, uv, vec2, vec3 } from 'three/tsl';
+import {
+  attribute,
+  bool,
+  dot,
+  float,
+  fract,
+  instancedBufferAttribute,
+  int,
+  materialEmissive,
+  positionWorld,
+  pow,
+  screenCoordinate,
+  smoothstep,
+  texture,
+  uniform,
+  uniformArray,
+  uv,
+  vec2,
+  vec3,
+} from 'three/tsl';
 import type { MeshStandardNodeMaterial } from 'three/webgpu';
 import { aoAtlas, mergeStatic, type MergeSource } from '../engine/merge';
 import { loadGLTF, loadJSON } from '../engine/assets';
@@ -120,6 +142,23 @@ export class District {
   readonly screensLevel = uniform(0.6);
   private readonly screens: { attr: InstancedBufferAttribute; owner: PlotKey[] }[] = [];
   private readonly heights = new Map<string, HeightGrid>();
+  /**
+   * Per plot (slot): 0 solid … 1 gone, while the camera's lens is inside its
+   * building or right against it. The camera never tilts or stops for a
+   * building; the building makes way instead.
+   */
+  private readonly fade = uniformArray(new Array(SLOTS).fill(0), 'float');
+  /** Per plot: the world height below which nothing dissolves (its ground floor stays). */
+  private readonly fadeFloor = uniformArray(new Array(SLOTS).fill(0), 'float');
+  private readonly fadeHit = new Uint8Array(SLOTS);
+  /**
+   * Each merged mesh's normal material and its dissolving twin. The twin can
+   * discard pixels, which costs Apple GPUs their hidden-surface removal, so it's
+   * only swapped in while some building is fading.
+   */
+  private readonly variants: { mesh: Mesh; solid: Material; dissolve: Material }[] = [];
+  private dissolving = false;
+  private warming = false;
   readonly windowsLevel = uniform(1);
   readonly neonLevel = uniform(1);
 
@@ -210,6 +249,7 @@ export class District {
       this.group.add(outline.group, beamFx.group);
       this.plots.set(s.key, { key: s.key, type: s.type, world, inverse: world.clone().invert(), slot: i, spots, tag, beam, outline, beamFx });
       this.setLit(s.key, 0.08);
+      (this.fadeFloor.array as number[])[i] = s.y + 0.45;
     });
 
     const t1 = performance.now();
@@ -236,8 +276,90 @@ export class District {
         const level = name === 'interior' ? this.windowsLevel : name === 'bulb' ? this.lampsLevel : this.neonLevel;
         mat.emissiveNode = vec3(materialEmissive).mul(map).mul(lit).mul(level);
       }
+      const solid = mesh.material as MeshStandardNodeMaterial;
+      const dissolve = solid.clone();
+      // (three's types call maskNode a plain Node; it is a boolean node at runtime.)
+      dissolve.maskNode = this.keepNode() as never;
+      dissolve.maskShadowNode = bool(true) as never; // its shadow stays whole
+      this.variants.push({ mesh: mesh as unknown as Mesh, solid, dissolve });
       this.group.add(mesh);
     }
+  }
+
+  /**
+   * Which pixels of a fading building stay: the same fine dither as the palms'
+   * near-camera fade, and everything at ground-floor level (its floor and the
+   * furniture standing on it don't vanish under the people).
+   */
+  private keepNode() {
+    const slot = int(attribute('aSlot', 'float').add(0.5));
+    const amount = float(this.fade.element(slot) as never);
+    const floor = float(this.fadeFloor.element(slot) as never);
+    const p = screenCoordinate.xy;
+    const ign = fract(float(52.9829189).mul(fract(dot(p, vec2(0.06711056, 0.00583715)))));
+    return ign.greaterThanEqual(amount).or(positionWorld.y.lessThan(floor));
+  }
+
+  private useDissolve(on: boolean) {
+    this.dissolving = on;
+    for (const v of this.variants) v.mesh.material = on ? v.dissolve : v.solid;
+  }
+
+  /**
+   * Builds the dissolving materials' GPU pipelines ahead of the first fade: they
+   * stay in place until `compile` is done (nothing is faded, so they draw exactly
+   * like the normal ones), as three may only gather what to compile after a wait.
+   */
+  async warmDissolve(compile: () => Promise<unknown>) {
+    this.warming = true;
+    this.useDissolve(true);
+    try {
+      await compile();
+    } catch {
+      // A failed warm-up only means the first fade compiles on the spot.
+    }
+    this.warming = false;
+  }
+
+  /**
+   * A building the lens is inside, or about to touch (2 m ahead, past the near
+   * plane at 1 m), dissolves; the rest come back. In fast, so the lens never
+   * shows the inside of a wall; out gently once the camera has left it.
+   */
+  private updateFades(camera: Camera, dt: number) {
+    this.fadeHit.fill(0);
+    camera.getWorldDirection(fadeDir);
+    for (const ahead of [0, 1, 2]) {
+      fadeAt.copy(camera.position).addScaledVector(fadeDir, ahead);
+      for (const p of this.plots.values()) if (this.massAt(p, fadeAt.x, fadeAt.z) > fadeAt.y) this.fadeHit[p.slot] = 1;
+    }
+    const values = this.fade.array as number[];
+    let any = false;
+    for (let i = 0; i < SLOTS; i++) {
+      const target = this.fadeHit[i];
+      const cur = values[i];
+      if (cur === target) {
+        if (cur) any = true;
+        continue;
+      }
+      let next = cur + (target - cur) * (1 - Math.exp(-dt * (target > cur ? 22 : 5)));
+      if (Math.abs(next - target) < 0.01) next = target;
+      values[i] = next;
+      if (next) any = true;
+    }
+    if (any !== this.dissolving && !this.warming) this.useDissolve(any);
+  }
+
+  /** How tall the building is at this exact ground point (no slack: what the lens could actually touch). */
+  private massAt(p: PlotRuntime, x: number, z: number): number {
+    const e = p.world.elements;
+    if (Math.abs(x - e[12]) > 15 || Math.abs(z - e[14]) > 15) return 0;
+    fadeLocal.set(x, 0, z).applyMatrix4(p.inverse);
+    const gx = Math.floor((fadeLocal.x + GRID_W) / CELL);
+    const gz = Math.floor((fadeLocal.z + GRID_D) / CELL);
+    if (gx < 0 || gz < 0 || gx >= GRID_W || gz >= GRID_D) return 0;
+    const grid = this.heights.get(p.type);
+    return grid ? grid.cells[gz * GRID_W + gx] + e[13] : 0;
   }
 
   /** Soft warm pools of light on the terraces at night: additive discs, no real lights. */
@@ -364,9 +486,11 @@ export class District {
     }
   }
 
-  updateCamera(position: Vector3) {
+  updateCamera(camera: Camera, dt: number) {
     this.settleLights();
+    const position = camera.position;
     for (const p of this.plots.values()) if (p.beamFx.group.visible) p.beamFx.updateCamera(position.x, position.z);
+    this.updateFades(camera, dt);
   }
 
   setNeonLevel(level: number) {
@@ -441,6 +565,10 @@ function lightFloors(root: Object3D): Map<string, number> {
   });
   return out;
 }
+
+const fadeDir = new Vector3();
+const fadeAt = new Vector3();
+const fadeLocal = new Vector3();
 
 function heightGrid(root: Object3D): HeightGrid {
   const cells = new Float32Array(GRID_W * GRID_D);
