@@ -75,6 +75,22 @@ export class Person {
     this.ready = this.load();
   }
 
+  /**
+   * Whether standing up from this seat lands on clear floor (People asks the
+   * district). Standing up from a lounger walked them onto it; from a bar stool,
+   * into the counter. Where it isn't clear they stay seated: the badge and the
+   * ring still say they need you.
+   */
+  roomToStand = true;
+
+  /** Where standing up from this seat would leave them (world), or null for a standing spot. */
+  standPoint(out: Vector3): Vector3 | null {
+    if (!this.seatedSpot) return null;
+    const ge = this.cast.clipInfo(this.skeleton, this.table ? 'stand_up_table' : 'stand_up_chair')?.groundEnd;
+    out.set(ge ? ge.pos[0] : 0, 0, ge ? ge.pos[2] : 0.45);
+    return out.applyQuaternion(this.spot.quaternion).add(this.spot.position);
+  }
+
   private get seatedSpot() {
     return this.spot.kind !== 'standing';
   }
@@ -140,8 +156,9 @@ export class Person {
     if (mood === this.mood && this.current) return;
     this.mood = mood;
     instant ||= this.reducedMotion;
-    const stand = mood === 'ask' || mood === 'celebrate' || !this.seatedSpot;
-    this.faceCamera = mood === 'ask';
+    const stand = ((mood === 'ask' || mood === 'celebrate') && this.roomToStand) || !this.seatedSpot;
+    // Turning toward the camera is for someone standing; seated, it swung them off the seat.
+    this.faceCamera = mood === 'ask' && stand;
 
     if (stand && this.seated) {
       const clip = this.table ? 'stand_up_table' : 'stand_up_chair';
@@ -180,7 +197,10 @@ export class Person {
 
   private continueMood(instant = false) {
     const mood = this.mood;
-    if (mood === 'celebrate' && !instant) {
+    // The fist pump is a standing clip; someone who stayed seated just relaxes.
+    if (mood === 'celebrate' && this.seated) {
+      this.mood = 'relax';
+    } else if (mood === 'celebrate' && !instant) {
       this.playOnce(this.clips.has('fist_pump') ? 'fist_pump' : 'cheer', () => {
         this.mood = null;
         this.setMood('relax');

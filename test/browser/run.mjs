@@ -235,7 +235,7 @@ async function main() {
     // The real height under a point (the rig's lookup adds slack around footprints).
     const trueH = (x, z) => { let h = 0; const v = V(); for (const p of D.plots.values()) { v.set(x, 0, z).applyMatrix4(p.inverse); const gx = Math.floor((v.x + 12) / 2), gz = Math.floor((v.z + 10) / 2); if (gx < 0 || gz < 0 || gx >= 12 || gz >= 10) continue; h = Math.max(h, D.heights.get(p.type).cells[gz * 12 + gx] + p.world.elements[13]); } return h; };
     // The plot whose building the lens is inside right now (or null), and how faded it is.
-    const insideOf = (c) => { const v = V(); for (const p of D.plots.values()) { v.set(c.x, 0, c.z).applyMatrix4(p.inverse); const gx = Math.floor((v.x + 12) / 2), gz = Math.floor((v.z + 10) / 2); if (gx < 0 || gz < 0 || gx >= 12 || gz >= 10) continue; if (D.heights.get(p.type).cells[gz * 12 + gx] + p.world.elements[13] > c.y) return p; } return null; };
+    const insideOf = (c) => { for (const p of D.plots.values()) if (D.surfaceAt(p, c.x, c.z) > c.y) return p; return null; };
     const record = () => { const log = []; let on = true; const f = () => { if (!on) return; const c = R.camera.position, l = R.look; const inside = insideOf(c); log.push({ dist: R.current.distance, tilt: Math.asin((c.y - l.y) / c.distanceTo(l)) * 180 / Math.PI, above: c.y - trueH(c.x, c.z), inside: !!inside, fade: inside ? D.fade.array[inside.slot] : null }); requestAnimationFrame(f); }; requestAnimationFrame(f); return () => { on = false; return log; }; };
     const faded = (log) => { const ins = log.filter((f) => f.inside); return { frames: ins.length, worst: ins.length ? Math.min(...ins.map((f) => f.fade)) : 1, late: ins.filter((f) => f.fade < 0.5).length }; };
     const wheel = async (n, dy, x, y) => { for (let i = 0; i < n; i++) { canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: dy, clientX: x, clientY: y, bubbles: true, cancelable: true })); await wait(70); } };`;
@@ -407,6 +407,51 @@ async function main() {
     return `camera moved ${moved.toFixed(3)} m, card closed`;
   });
 
+  await check('zoomed all the way in on someone, their table, seat and counter stay whole', async () => {
+    const r = await page.run(`${SETUP} const D = W.district; const wait = (ms) => new Promise((x) => setTimeout(x, ms));
+      const rows = [...sb.app.state.rows.values()].filter((r) => r.item.spot !== null && r.item.plot !== null).slice(0, 12);
+      let faded = 0, cut = 0; const bad = [];
+      for (const row of rows) {
+        sb.app.selectAgent(row.item.surfaceId); await wait(2500);
+        for (let i = 0; i < 30; i++) { W.canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, clientX: innerWidth / 2, clientY: innerHeight / 2, bubbles: true, cancelable: true })); await wait(40); }
+        await wait(1500);
+        const p = D.plots.get(row.item.plot); const spot = D.spot(row.item.plot, row.item.spot);
+        if (D.fade.array[p.slot] > 0) {
+          faded++;
+          // What dissolves stops short of them: everything within 1.5 m of where they are stays.
+          const near = R.camera.position.distanceTo(spot.position) - 1.5;
+          if (D.fadeReach.value > near) { cut++; bad.push(row.item.plot); }
+        }
+        sb.app.state.select(null); await wait(300);
+      }
+      return { n: rows.length, faded, cut, bad, dist: R.current.distance };`);
+    expect(r.cut === 0, `around ${r.cut} of ${r.n} people (plots ${r.bad.join(', ')}) their furniture dissolved`);
+    return `${r.n} people at full zoom: ${r.faded} with something faded near the lens, furniture whole around all`;
+  });
+  await check('someone who needs you stands up only where there is room', async () => {
+    const r = await page.run(`${SETUP} const D = W.district; const V = () => R.camera.position.clone(); const cast = W.people.cast;
+      // Every seat in the city: is there room where standing up from it lands?
+      let seats = 0, room = 0;
+      for (const p of D.plots.values()) for (const s of p.spots) {
+        if (!s || s.kind === 'standing') continue;
+        const ge = cast.clipInfo('m', s.kind === 'desk' || s.kind === 'stool' ? 'stand_up_table' : 'stand_up_chair').groundEnd;
+        const at = V().set(ge.pos[0], 0, ge.pos[2]).applyQuaternion(s.quaternion).add(s.position);
+        seats++; if (D.roomToStand(p.key, at.x, at.z, s.position.y)) room++;
+      }
+      let stood = 0, stayed = 0; const bad = [];
+      for (const e of W.people.entries.values()) { if (e.person.spot.kind !== 'standing') e.person.setMood('ask', true); }
+      for (const e of W.people.entries.values()) {
+        const p = e.person; if (p.spot.kind === 'standing') continue;
+        if (p.seated) { stayed++; continue; }
+        stood++; const at = p.body.getWorldPosition(V());
+        if (!D.roomToStand(e.plot, at.x, at.z, p.spot.position.y)) bad.push(p.spot.kind);
+      }
+      return { seats, room, stood, stayed, bad };`);
+    expect(r.room > 0, 'no seat in the city has room to stand up from');
+    expect(!r.bad.length, `${r.bad.length} stood up into furniture (${[...new Set(r.bad)].join(', ')})`);
+    return `${r.room}/${r.seats} seats have room to stand up from; here ${r.stood} stood to wave, ${r.stayed} stayed seated`;
+  });
+
   console.log('\nInterface');
   await check('a list that reorders keeps the keyboard focus', async () => {
     const r = await page.run(`${SETUP} sb.app.state.openPanel('agents'); await new Promise((x) => setTimeout(x, 600));
@@ -494,9 +539,12 @@ async function main() {
   await check('a minute of use leaves memory and labels flat', async () => {
     await page.load(demo);
     const r = await page.run(`${SETUP} const sample = () => ({ heap: performance.memory.usedJSHeapSize / 1e6, pins: W.overlay.root.children.length, tex: W.renderer.info.memory.textures });
-      const rows = () => [...sb.app.state.rows.values()].filter((x) => x.item.spot !== null); await new Promise((x) => setTimeout(x, 3000)); const a = sample();
+      const rows = () => [...sb.app.state.rows.values()].filter((x) => x.item.spot !== null);
+      // One round first: people out of view load their textures when first seen. The check is for growth after that.
+      for (let round = 0; round < 2; round++) { if (round) var a = sample();
       for (let i = 0; i < 16; i++) { sb.app.selectAgent(rows()[i % rows().length].item.surfaceId); await new Promise((x) => setTimeout(x, 1200)); sb.app.state.openPanel(['agents', 'inbox', 'projects', null][i % 4]); await new Promise((x) => setTimeout(x, 400)); sb.app.state.openPanel(null); sb.app.state.select(null); W.overview(); await new Promise((x) => setTimeout(x, 1200)); }
-      const b = sample(); return { a, b };`, 180_000);
+      }
+      const b = sample(); return { a, b };`, 240_000);
     expect(r.b.pins <= r.a.pins + 4, `labels grew from ${r.a.pins} to ${r.b.pins}`);
     expect(r.b.tex <= r.a.tex + 4, `textures grew from ${r.a.tex} to ${r.b.tex}`);
     expect(r.b.heap - r.a.heap < 40, `memory grew ${Math.round(r.b.heap - r.a.heap)} MB`);

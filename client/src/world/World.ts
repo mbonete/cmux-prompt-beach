@@ -418,7 +418,7 @@ export class World {
 
     this.people?.update(dt, cam);
     this.life?.update(dt, cam);
-    this.district.updateCamera(cam, dt);
+    this.district.updateCamera(cam, dt, this.rig.current.distance);
     this.updateRing();
     this.updateHover();
     this.focusTags();

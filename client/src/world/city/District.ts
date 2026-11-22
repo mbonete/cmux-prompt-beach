@@ -20,6 +20,7 @@ import {
 import {
   attribute,
   bool,
+  cameraPosition,
   dot,
   float,
   fract,
@@ -87,6 +88,8 @@ interface HeightGrid {
   fine: Float32Array;
   /** The highest point (local metres). */
   top: number;
+  /** Everything near the floor at 0.25 m, every material (chairs, stools, counters): where someone can stand. */
+  low: Float32Array;
 }
 const CELL = 2;
 const GRID_W = 12; // 24 m along local X (plot 20 m + 2 m each side)
@@ -98,6 +101,10 @@ const BODY = new Set(['stucco', 'trim', 'roof', 'awning', 'wood', 'concrete', 'p
 const FINE = 0.5;
 const FINE_W = (GRID_W * CELL) / FINE;
 const FINE_D = (GRID_D * CELL) / FINE;
+/** The floor map (where someone can stand) is finer still: furniture is close together. */
+const LOW = 0.25;
+const LOW_W = (GRID_W * CELL) / LOW;
+const LOW_D = (GRID_D * CELL) / LOW;
 
 interface PlotRuntime {
   key: PlotKey;
@@ -168,6 +175,12 @@ export class District {
   private readonly fade = uniformArray(new Array(SLOTS).fill(0), 'float');
   /** Per plot: the world height below which nothing dissolves (its ground floor stays). */
   private readonly fadeFloor = uniformArray(new Array(SLOTS).fill(0), 'float');
+  /**
+   * How far from the lens a faded building actually dissolves: up to a little
+   * short of what you're looking at. Zoomed onto someone at a table, the
+   * awning over the lens makes way; their table, seat and counter stay whole.
+   */
+  private readonly fadeReach = uniform(1e6);
   private readonly fadeHit = new Uint8Array(SLOTS);
   /**
    * Each merged mesh's normal material and its dissolving twin. The twin can
@@ -316,7 +329,7 @@ export class District {
     const floor = float(this.fadeFloor.element(slot) as never);
     const p = screenCoordinate.xy;
     const ign = fract(float(52.9829189).mul(fract(dot(p, vec2(0.06711056, 0.00583715)))));
-    return ign.greaterThanEqual(amount).or(positionWorld.y.lessThan(floor));
+    return ign.greaterThanEqual(amount).or(positionWorld.y.lessThan(floor)).or(positionWorld.distance(cameraPosition).greaterThan(this.fadeReach));
   }
 
   private useDissolve(on: boolean) {
@@ -350,7 +363,9 @@ export class District {
     camera.getWorldDirection(fadeDir);
     for (const ahead of [0, 1, 2]) {
       fadeAt.copy(camera.position).addScaledVector(fadeDir, ahead);
-      for (const p of this.plots.values()) if (this.massAt(p, fadeAt.x, fadeAt.z) > fadeAt.y) this.fadeHit[p.slot] = 1;
+      // The building's solid parts only: a string of bulbs or a mast's lines
+      // overhead made the lens "inside" a terrace and dissolved the plot.
+      for (const p of this.plots.values()) if (this.surfaceAt(p, fadeAt.x, fadeAt.z) > fadeAt.y) this.fadeHit[p.slot] = 1;
     }
     const values = this.fade.array as number[];
     let any = false;
@@ -367,18 +382,6 @@ export class District {
       if (next) any = true;
     }
     if (any !== this.dissolving && !this.warming) this.useDissolve(any);
-  }
-
-  /** How tall the building is at this exact ground point (no slack: what the lens could actually touch). */
-  private massAt(p: PlotRuntime, x: number, z: number): number {
-    const e = p.world.elements;
-    if (Math.abs(x - e[12]) > 15 || Math.abs(z - e[14]) > 15) return 0;
-    fadeLocal.set(x, 0, z).applyMatrix4(p.inverse);
-    const gx = Math.floor((fadeLocal.x + GRID_W) / CELL);
-    const gz = Math.floor((fadeLocal.z + GRID_D) / CELL);
-    if (gx < 0 || gz < 0 || gx >= GRID_W || gz >= GRID_D) return 0;
-    const grid = this.heights.get(p.type);
-    return grid ? grid.cells[gz * GRID_W + gx] + e[13] : 0;
   }
 
   /**
@@ -430,6 +433,26 @@ export class District {
     if (gx < 0 || gz < 0 || gx >= FINE_W || gz >= FINE_D) return -Infinity;
     const grid = this.heights.get(p.type);
     return grid ? grid.fine[gz * FINE_W + gx] + e[13] : -Infinity;
+  }
+
+  /**
+   * Is there room to stand here (where the feet go, at floor height `floor`)? No
+   * chair, stool, lounger, counter or wall knee-high or more. Someone who'd
+   * stand up into one stays seated instead.
+   */
+  roomToStand(key: PlotKey, x: number, z: number, floor: number): boolean {
+    const p = this.plots.get(key);
+    const grid = p && this.heights.get(p.type);
+    if (!p || !grid) return true;
+    const e = p.world.elements;
+    for (const [dx, dz] of ROOM) {
+      fadeLocal.set(x + dx, 0, z + dz).applyMatrix4(p.inverse);
+      const gx = Math.floor((fadeLocal.x + HALF_W) / LOW);
+      const gz = Math.floor((fadeLocal.z + HALF_D) / LOW);
+      if (gx < 0 || gz < 0 || gx >= LOW_W || gz >= LOW_D) continue;
+      if (grid.low[gz * LOW_W + gx] + e[13] > floor + 0.2) return false;
+    }
+    return true;
   }
 
   /** Soft warm pools of light on the terraces at night: additive discs, no real lights. */
@@ -556,7 +579,9 @@ export class District {
     }
   }
 
-  updateCamera(camera: Camera, dt: number) {
+  /** `lookDistance`: from the lens to what it looks at (a faded building dissolves only short of it). */
+  updateCamera(camera: Camera, dt: number, lookDistance = 1e6) {
+    this.fadeReach.value = Math.max(0, lookDistance - 2.5);
     this.settleLights();
     const position = camera.position;
     for (const p of this.plots.values()) if (p.beamFx.group.visible) p.beamFx.updateCamera(position.x, position.z);
@@ -639,6 +664,8 @@ function lightFloors(root: Object3D): Map<string, number> {
 const fadeDir = new Vector3();
 const fadeAt = new Vector3();
 const fadeLocal = new Vector3();
+/** The footprint of someone standing: the centre and a ring 0.2 m out (body and feet). When unsure, they stay seated. */
+const ROOM = [[0, 0], [0.2, 0], [-0.2, 0], [0, 0.2], [0, -0.2], [0.14, 0.14], [-0.14, 0.14], [0.14, -0.14], [-0.14, -0.14]] as const;
 
 /** The stretch of a ray (in its own distance) that lies within 15 m of c along one axis. */
 const slabOut: [number, number] = [0, 0];
@@ -659,16 +686,10 @@ function slab(origin: number, dir: number, c: number): [number, number] {
 function heightGrid(root: Object3D): HeightGrid {
   const cells = new Float32Array(GRID_W * GRID_D);
   const fine = new Float32Array(FINE_W * FINE_D).fill(-Infinity);
+  const low = new Float32Array(LOW_W * LOW_D).fill(-Infinity);
   let top = 0;
   const v = new Vector3();
   const tri = [new Vector3(), new Vector3(), new Vector3()];
-  const raise = (x: number, y: number, z: number) => {
-    const gx = Math.floor((x + HALF_W) / FINE);
-    const gz = Math.floor((z + HALF_D) / FINE);
-    if (gx < 0 || gz < 0 || gx >= FINE_W || gz >= FINE_D) return;
-    const k = gz * FINE_W + gx;
-    if (y > fine[k]) fine[k] = y;
-  };
   root.updateMatrixWorld(true);
   root.traverse((o) => {
     const mesh = o as InstancedMesh;
@@ -684,48 +705,62 @@ function heightGrid(root: Object3D): HeightGrid {
       const k = gz * GRID_W + gx;
       if (v.y > cells[k]) cells[k] = v.y;
     }
-    // The fine map, face by face: along each edge (a wall's top runs between
-    // two corners), and across each face at the centres of the cells it covers
-    // (a flat roof is mostly empty between its corners). Only the building's
-    // body: a string of bulbs or a mast's lines would stand as a solid column
-    // down to the pavement under them.
+    // The fine maps, face by face. `fine`: only the building's body (a string
+    // of bulbs or a mast's lines would stand as a solid column down to the
+    // pavement under them). `low`: anything within reach of the floor.
     const material = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as Material | undefined;
-    if (!BODY.has(material?.name ?? '')) return;
+    const body = BODY.has(material?.name ?? '');
     const index = mesh.geometry.index;
     const faces = (index ? index.count : pos.count) / 3;
     for (let f = 0; f < faces; f++) {
       for (let c = 0; c < 3; c++) tri[c].fromBufferAttribute(pos, index ? index.getX(f * 3 + c) : f * 3 + c).applyMatrix4(mesh.matrixWorld);
-      for (let c = 0; c < 3; c++) {
-        const a = tri[c];
-        const b = tri[(c + 1) % 3];
-        const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / (FINE / 2)));
-        for (let s = 0; s <= steps; s++) {
-          const u = s / steps;
-          raise(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, a.z + (b.z - a.z) * u);
-        }
-      }
-      const [a, b, c] = tri;
-      const area = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
-      if (Math.abs(area) < 1e-6) continue; // a wall seen from above: its edges did it
-      const x0 = Math.max(0, Math.floor((Math.min(a.x, b.x, c.x) + HALF_W) / FINE));
-      const x1 = Math.min(FINE_W - 1, Math.floor((Math.max(a.x, b.x, c.x) + HALF_W) / FINE));
-      const z0 = Math.max(0, Math.floor((Math.min(a.z, b.z, c.z) + HALF_D) / FINE));
-      const z1 = Math.min(FINE_D - 1, Math.floor((Math.max(a.z, b.z, c.z) + HALF_D) / FINE));
-      for (let gz = z0; gz <= z1; gz++) {
-        const pz = (gz + 0.5) * FINE - HALF_D;
-        for (let gx = x0; gx <= x1; gx++) {
-          const px = (gx + 0.5) * FINE - HALF_W;
-          const wb = ((px - a.x) * (c.z - a.z) - (c.x - a.x) * (pz - a.z)) / area;
-          const wc = ((b.x - a.x) * (pz - a.z) - (px - a.x) * (b.z - a.z)) / area;
-          if (wb < 0 || wc < 0 || wb + wc > 1) continue;
-          const y = a.y + (b.y - a.y) * wb + (c.y - a.y) * wc;
-          const k = gz * FINE_W + gx;
-          if (y > fine[k]) fine[k] = y;
-        }
-      }
+      if (body) rasterize(fine, tri, FINE, FINE_W, FINE_D);
+      if (Math.min(tri[0].y, tri[1].y, tri[2].y) < 1.6) rasterize(low, tri, LOW, LOW_W, LOW_D);
     }
   });
-  return { cells, fine, top };
+  return { cells, fine, top, low };
+}
+
+/**
+ * Raises the 0.5 m cells a triangle covers to its height there: along each
+ * edge (a wall's top runs between two corners), and across the face at the
+ * centres of the cells it covers (a flat roof is mostly empty between its corners).
+ */
+function rasterize(grid: Float32Array, [a, b, c]: Vector3[], cell: number, w: number, d: number) {
+  for (const [p, q] of [
+    [a, b],
+    [b, c],
+    [c, a],
+  ]) {
+    const steps = Math.max(1, Math.ceil(Math.hypot(q.x - p.x, q.z - p.z) / (cell / 2)));
+    for (let s = 0; s <= steps; s++) {
+      const u = s / steps;
+      const gx = Math.floor((p.x + (q.x - p.x) * u + HALF_W) / cell);
+      const gz = Math.floor((p.z + (q.z - p.z) * u + HALF_D) / cell);
+      if (gx < 0 || gz < 0 || gx >= w || gz >= d) continue;
+      const y = p.y + (q.y - p.y) * u;
+      const k = gz * w + gx;
+      if (y > grid[k]) grid[k] = y;
+    }
+  }
+  const area = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
+  if (Math.abs(area) < 1e-6) return; // a wall seen from above: its edges did it
+  const x0 = Math.max(0, Math.floor((Math.min(a.x, b.x, c.x) + HALF_W) / cell));
+  const x1 = Math.min(w - 1, Math.floor((Math.max(a.x, b.x, c.x) + HALF_W) / cell));
+  const z0 = Math.max(0, Math.floor((Math.min(a.z, b.z, c.z) + HALF_D) / cell));
+  const z1 = Math.min(d - 1, Math.floor((Math.max(a.z, b.z, c.z) + HALF_D) / cell));
+  for (let gz = z0; gz <= z1; gz++) {
+    const pz = (gz + 0.5) * cell - HALF_D;
+    for (let gx = x0; gx <= x1; gx++) {
+      const px = (gx + 0.5) * cell - HALF_W;
+      const wb = ((px - a.x) * (c.z - a.z) - (c.x - a.x) * (pz - a.z)) / area;
+      const wc = ((b.x - a.x) * (pz - a.z) - (px - a.x) * (b.z - a.z)) / area;
+      if (wb < 0 || wc < 0 || wb + wc > 1) continue;
+      const y = a.y + (b.y - a.y) * wb + (c.y - a.y) * wc;
+      const k = gz * w + gx;
+      if (y > grid[k]) grid[k] = y;
+    }
+  }
 }
 
 /** A copy of the template keeping only meshes (empties are read separately). */

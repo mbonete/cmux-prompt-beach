@@ -98,6 +98,8 @@ export class People {
         taken.add(avatarId);
         const person = new Person(item.surfaceId, avatarId, spot, this.cast);
         person.reducedMotion = this.reducedMotion;
+        const standAt = person.standPoint(new Vector3());
+        if (standAt) person.roomToStand = this.district.roomToStand(item.plot, standAt.x, standAt.z, spot.position.y);
         this.scene.add(person.root);
         const el = document.createElement('div');
         el.className = 'agent';
