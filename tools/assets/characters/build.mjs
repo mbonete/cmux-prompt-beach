@@ -34,10 +34,9 @@ const OUT = path.join(REPO, 'public/assets/characters');
 const PREV = path.join(SRC, '_previews/characters');
 
 export const AVATARS = [
-  ['Female_Adult_01', 'Adults'], ['Female_Adult_03', 'Adults'], ['Female_Adult_06', 'Adults'],
-  ['Female_Adult_08', 'Adults'], ['Female_Adult_11', 'Adults'], ['Female_Adult_12', 'Adults'],
-  ['Female_Adult_17', 'Adults'], ['Female_Party_02', 'Adults'], ['Sports_Female_02', 'Professions'],
-  ['Business_Female_01', 'Professions'],
+  ['Female_Adult_01', 'Adults'], ['Female_Adult_03', 'Adults'], ['Female_Adult_08', 'Adults'],
+  ['Female_Adult_11', 'Adults'], ['Female_Adult_12', 'Adults'], ['Female_Adult_17', 'Adults'],
+  ['Female_Party_02', 'Adults'], ['Sports_Female_02', 'Professions'], ['Business_Female_01', 'Professions'],
   ['Male_Adult_01', 'Adults'], ['Male_Adult_04', 'Adults'], ['Male_Adult_06', 'Adults'],
   ['Male_Adult_08', 'Adults'], ['Male_Adult_09', 'Adults'], ['Male_Adult_10', 'Adults'],
   ['Male_Adult_12', 'Adults'], ['Male_Adult_16', 'Adults'], ['Male_Adult_17', 'Adults'],

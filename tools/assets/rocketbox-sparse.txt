@@ -18,15 +18,6 @@
 /Assets/Avatars/Adults/Female_Adult_03/Textures/f003_head_specular.tga
 /Assets/Avatars/Adults/Female_Adult_03/Textures/f003_body_color.tga
 /Assets/Avatars/Adults/Female_Adult_03/Textures/f003_opacity_color.tga
-/Assets/Avatars/Adults/Female_Adult_06/Female_Adult_06.png
-/Assets/Avatars/Adults/Female_Adult_06/Textures/f202_opacity_color.tga
-/Assets/Avatars/Adults/Female_Adult_06/Textures/f202_head_color.tga
-/Assets/Avatars/Adults/Female_Adult_06/Textures/f202_head_specular.tga
-/Assets/Avatars/Adults/Female_Adult_06/Export/Female_Adult_06.fbx
-/Assets/Avatars/Adults/Female_Adult_06/Textures/f202_head_normal.tga
-/Assets/Avatars/Adults/Female_Adult_06/Textures/f202_body_normal.tga
-/Assets/Avatars/Adults/Female_Adult_06/Textures/f202_body_color.tga
-/Assets/Avatars/Adults/Female_Adult_06/Textures/f202_body_specular.tga
 /Assets/Avatars/Adults/Female_Adult_08/Textures/f008_head_specular.tga
 /Assets/Avatars/Adults/Female_Adult_08/Textures/f008_opacity_color.tga
 /Assets/Avatars/Adults/Female_Adult_08/Textures/f008_head_normal.tga

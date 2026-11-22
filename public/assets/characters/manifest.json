@@ -90,47 +90,6 @@
    ],
    "notes": "hair/eyelash cards in material \"alpha\""
   },
-  "Female_Adult_06": {
-   "files": [
-    "Female_Adult_06/Female_Adult_06.bin",
-    "Female_Adult_06/Female_Adult_06.gltf",
-    "Female_Adult_06/textures/alpha_color.webp",
-    "Female_Adult_06/textures/body_color.webp",
-    "Female_Adult_06/textures/body_normal.webp",
-    "Female_Adult_06/textures/body_orm.webp",
-    "Female_Adult_06/textures/head_color.webp",
-    "Female_Adult_06/textures/head_normal.webp",
-    "Female_Adult_06/textures/head_orm.webp"
-   ],
-   "gltf": "Female_Adult_06/Female_Adult_06.gltf",
-   "skeleton": "f",
-   "height": 1.7363,
-   "bounds": {
-    "min": [
-     -0.6086,
-     -0.0017,
-     -0.2083
-    ],
-    "max": [
-     0.6086,
-     1.7346,
-     0.164
-    ]
-   },
-   "tris": {
-    "lod0": 6992,
-    "lod1": 2498
-   },
-   "bytes": 889386,
-   "alphaMaterials": [
-    {
-     "name": "alpha",
-     "mode": "MASK",
-     "cutoff": 0.4
-    }
-   ],
-   "notes": "hair/eyelash cards in material \"alpha\""
-  },
   "Female_Adult_08": {
    "files": [
     "Female_Adult_08/Female_Adult_08.bin",
@@ -2553,5 +2512,5 @@
    }
   }
  },
- "totalBytes": 23716077
+ "totalBytes": 22826691
 }

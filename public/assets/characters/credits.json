@@ -16,14 +16,6 @@
   "changes": "Converted from FBX to glTF in metres; Biped root made a bone; added a simplified LOD1; textures resized to 1024 and converted to WebP; specular map converted to roughness (ORM); geometry quantized."
  },
  {
-  "asset": "Female_Adult_06",
-  "author": "Microsoft Rocketbox Avatar Library (Microsoft, original creation by Rocketbox Studios)",
-  "source": "https://github.com/microsoft/Microsoft-Rocketbox",
-  "licence": "MIT",
-  "url": "https://github.com/microsoft/Microsoft-Rocketbox/tree/master/Assets/Avatars",
-  "changes": "Converted from FBX to glTF in metres; Biped root made a bone; added a simplified LOD1; textures resized to 1024 and converted to WebP; specular map converted to roughness (ORM); geometry quantized."
- },
- {
   "asset": "Female_Adult_08",
   "author": "Microsoft Rocketbox Avatar Library (Microsoft, original creation by Rocketbox Studios)",
   "source": "https://github.com/microsoft/Microsoft-Rocketbox",
