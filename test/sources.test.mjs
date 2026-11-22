@@ -5,7 +5,7 @@ import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { createRepoKindCache, detectRepoKind } from '../server/repo-kind.mjs';
 import { CONVERSATION_LIMITS, extractConversation, humanPromptOf } from '../server/sources/claude-transcripts.mjs';
-import { hookTick } from '../server/sources/cmux.mjs';
+import { hookTick, repoKeyOf } from '../server/sources/cmux.mjs';
 import { tickTool, toolCategory } from '../server/tools.mjs';
 
 describe('tool categories', () => {
@@ -235,4 +235,17 @@ describe('a session keeps its project', async () => {
     assert.equal(s.cwd, '/tmp/x');
     assert.deepEqual(s.cwds, ['/tmp/x', '/code/a', '/code']);
   });
+});
+
+test('a repo gets the same key however git names its git dir', () => {
+  const isDir = (p) => ['/u/code/app/.git'].includes(p);
+  const key = '/u/code/app/.git';
+  assert.equal(repoKeyOf('/u/code/app', '.git\n', isDir), key);
+  assert.equal(repoKeyOf('/u/code/app/src', '../.git', isDir), key);
+  assert.equal(repoKeyOf('/u/code/app/.git', '.', isDir), key);
+  assert.equal(repoKeyOf('/u/code/app-ui', '/u/code/app/.git', isDir), key, 'a linked worktree joins its repo');
+  assert.equal(repoKeyOf('/u/code/app', '.', isDir), key, 'the work tree itself folds onto its .git');
+  assert.equal(repoKeyOf('/u/code/app', '/u/code/app', isDir), key);
+  assert.equal(repoKeyOf('/u/code/app', '  \n', isDir), null, 'no answer is no repo');
+  assert.equal(repoKeyOf('/srv/bare.git', '.', isDir), '/srv/bare.git', 'a bare repo is its own key');
 });

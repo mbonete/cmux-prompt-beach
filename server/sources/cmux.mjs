@@ -7,7 +7,7 @@
 // ~/.claude/projects. Every write action goes through cmux itself.
 
 import { execFile, spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { createRepoKindCache } from '../repo-kind.mjs';
@@ -177,14 +177,29 @@ const REPO_TTL_MS = 60 * 1000;
 const repoCache = new Map(); // cwd -> { at, promise }
 const repoKind = createRepoKindCache();
 
+/**
+ * A repo's identity: its shared git dir, from what `git rev-parse --git-common-dir`
+ * printed in `cwd`. It's the only thing telling two projects apart, so it must
+ * come out the same however git phrases it: once git answered with the work
+ * tree itself (no "/.git"), and the repo got a second plot, with the same name,
+ * for a week. A work tree folds back onto its .git directory.
+ */
+export function repoKeyOf(cwd, gitOutput, isDir = (p) => statSync(p, { throwIfNoEntry: false })?.isDirectory() ?? false) {
+  const out = gitOutput.trim();
+  if (!out) return null;
+  const dir = path.resolve(cwd, out);
+  if (path.basename(dir) !== '.git' && isDir(path.join(dir, '.git'))) return path.join(dir, '.git');
+  return dir;
+}
+
 function repoOf(cwd) {
   if (!cwd) return Promise.resolve(null);
   const hit = repoCache.get(cwd);
   if (hit && Date.now() - hit.at < REPO_TTL_MS) return hit.promise;
   const promise = new Promise((resolve) => {
     execFile('git', ['-C', cwd, 'rev-parse', '--git-common-dir'], { timeout: 3000 }, (err, stdout) => {
-      if (err) return resolve(null);
-      const dir = path.resolve(cwd, String(stdout).trim());
+      const dir = err ? null : repoKeyOf(cwd, String(stdout));
+      if (!dir) return resolve(null);
       const top = path.basename(dir) === '.git' ? path.dirname(dir) : dir.replace(/\.git$/, '');
       // The kind is read from the main worktree's root, so every worktree of a repo agrees.
       repoKind(top).then((kind) => resolve({ key: dir, name: path.basename(top), kind }));

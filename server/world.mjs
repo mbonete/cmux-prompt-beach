@@ -69,11 +69,25 @@ export function sanitizeState(raw, now = Date.now()) {
       lastSeen: num(r.lastSeen, now),
     };
   }
+  // One repo saved under two keys (its work tree, and its .git dir: see repoKeyOf
+  // in sources/cmux.mjs) is merged into the .git one, which keeps its plot.
+  const renamed = new Map();
+  for (const key of Object.keys(s.repos)) {
+    const into = `${key.replace(/\/+$/, '')}/.git`;
+    if (path.basename(key) === '.git' || !Object.hasOwn(s.repos, into)) continue;
+    const from = s.repos[key];
+    const to = s.repos[into];
+    if (to.plot === null) to.plot = from.plot;
+    to.firstSeen = Math.min(to.firstSeen, from.firstSeen);
+    to.lastSeen = Math.max(to.lastSeen, from.lastSeen);
+    delete s.repos[key];
+    renamed.set(`repo:${key}`, `repo:${into}`);
+  }
   const agents = raw.agents && typeof raw.agents === 'object' ? Object.entries(raw.agents).slice(0, 5000) : [];
   for (const [key, a] of agents) {
     if (!key || key.length > 300 || !a || typeof a !== 'object' || typeof a.group !== 'string' || a.group.length > 4200) continue;
     const spot = Number.isInteger(a.spot) && a.spot >= 0 && a.spot < SPOTS_PER_PLOT ? a.spot : null;
-    s.agents[key] = { group: a.group, spot, firstSeen: num(a.firstSeen, now) };
+    s.agents[key] = { group: renamed.get(a.group) ?? a.group, spot, firstSeen: num(a.firstSeen, now) };
   }
   const archived = raw.archived && typeof raw.archived === 'object' ? Object.entries(raw.archived).slice(0, MAX_ARCHIVED) : [];
   for (const [sessionId, at] of archived) if (SESSION_ID_RE.test(sessionId) && Number.isFinite(at)) s.archived[sessionId] = at;

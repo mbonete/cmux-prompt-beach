@@ -3,7 +3,7 @@ import { mkdtemp, readFile, readdir, rm, stat, writeFile, mkdir } from 'node:fs/
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
-import { PLOT_COUNT, PLOT_TTL_MS, SPOT_GRACE_MS, createWorld, needsYou } from '../server/world.mjs';
+import { PLOT_COUNT, PLOT_TTL_MS, SPOT_GRACE_MS, createWorld, needsYou, sanitizeState } from '../server/world.mjs';
 
 const MIN = 60 * 1000;
 const DAY = 24 * 60 * MIN;
@@ -291,4 +291,26 @@ test('keys that look like Object.prototype members are plain keys', () => {
   assert.equal(w.apply(snap({ ...agent(1, 'a'), agent: { kind: 'claude', sessionId: 'constructor', state: 'idle' } }), T0 + 2).items[0].archived, true);
   assert.equal({}.plot, undefined, 'Object.prototype untouched');
   assert.equal({}.lastSeen, undefined);
+});
+
+test('one repo saved under its work tree and its .git dir becomes one project', () => {
+  const now = Date.UTC(2026, 10, 22);
+  const s = sanitizeState(
+    {
+      version: 1,
+      repos: {
+        '/u/code/app/.git': { plot: 1, name: 'app', kind: 'mobile', firstSeen: now - 5000, lastSeen: now },
+        '/u/code/app': { plot: 9, name: 'app', kind: 'mobile', firstSeen: now - 9000, lastSeen: now - 3000 },
+        '/u/code/other': { plot: 4, name: 'other', kind: 'web', firstSeen: now, lastSeen: now },
+      },
+      agents: { 's:a': { group: 'repo:/u/code/app', spot: 2, firstSeen: now } },
+      archived: {},
+    },
+    now,
+  );
+  assert.deepEqual(Object.keys(s.repos).sort(), ['/u/code/app/.git', '/u/code/other']);
+  assert.equal(s.repos['/u/code/app/.git'].plot, 1, 'the .git entry keeps its plot');
+  assert.equal(s.repos['/u/code/app/.git'].firstSeen, now - 9000);
+  assert.equal(s.agents['s:a'].group, 'repo:/u/code/app/.git', 'its people follow it');
+  assert.equal(s.repos['/u/code/other'].plot, 4, 'a repo with no twin is left alone');
 });
