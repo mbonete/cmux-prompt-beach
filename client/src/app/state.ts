@@ -1,7 +1,6 @@
 import { DEFAULT_STALE_MS, SORTS, askOf, laneOf, type Ask, type Lane } from '../data/derive';
 import type { Item, Snapshot } from '../data/types';
 import type { QualitySetting } from '../world/engine/quality';
-import type { TimeOfDay } from '../world/env/looks';
 
 // The page's single source of truth: the latest snapshot with every session's
 // lane worked out, the user's settings, and what is selected or open. Views
@@ -13,7 +12,6 @@ export type Connection = 'connecting' | 'live' | 'retrying' | 'restarted' | 'off
 
 export interface Settings {
   quality: QualitySetting;
-  timeOfDay: TimeOfDay;
   staleAfterMs: number;
   sound: boolean;
   chime: boolean;
@@ -31,7 +29,6 @@ export const STALE_CHOICES: { ms: number; label: string }[] = [
 
 const DEFAULTS: Settings = {
   quality: 'auto',
-  timeOfDay: 'sunset',
   staleAfterMs: DEFAULT_STALE_MS,
   sound: false,
   chime: false,
@@ -57,10 +54,11 @@ export function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(KEY);
     const saved = raw ? (JSON.parse(raw) as Partial<Settings>) : {};
-    // Carry over the look-dev strip's two keys.
-    const tod = localStorage.getItem('switchboard.timeOfDay') as TimeOfDay | null;
+    // Carry over the look-dev strip's quality key.
     const q = localStorage.getItem('switchboard.quality') as QualitySetting | null;
-    return { ...DEFAULTS, ...(tod ? { timeOfDay: tod } : {}), ...(q ? { quality: q } : {}), ...saved };
+    // (A saved time of day from before 2026-11-22 is left out: the city is always at sunset.)
+    const { timeOfDay: _gone, ...rest } = saved as Partial<Settings> & { timeOfDay?: unknown };
+    return { ...DEFAULTS, ...(q ? { quality: q } : {}), ...rest };
   } catch {
     return { ...DEFAULTS };
   }

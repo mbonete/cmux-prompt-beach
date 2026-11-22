@@ -76,7 +76,6 @@ export class App {
         this.state.emit();
         requestAnimationFrame(() => this.panels.el.querySelector(`.group--${lane}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
       },
-      onTimeOfDay: (t) => this.state.setSettings({ timeOfDay: t }),
       onSound: () => {
         const on = !this.state.settings.sound;
         this.state.setSettings({ sound: on, chime: on ? true : this.state.settings.chime });
@@ -282,7 +281,6 @@ export class App {
     const w = this.world;
     if (w) {
       if (force || prev.quality !== s.quality) w.setQuality(s.quality);
-      if (force || prev.timeOfDay !== s.timeOfDay) w.setTimeOfDay(s.timeOfDay, force);
       if (force || prev.staleAfterMs !== s.staleAfterMs) w.setStaleAfter(s.staleAfterMs);
       if (force || prev.motion !== s.motion) w.setReducedMotion(reduced);
       if (force || prev.idleCamera !== s.idleCamera || prev.motion !== s.motion) w.setIdleCamera(s.idleCamera);

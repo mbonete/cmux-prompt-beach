@@ -240,12 +240,7 @@ export class Panels {
       ['cinematic', 'Cinematic'],
       ['balanced', 'Balanced'],
       ['light', 'Light'],
-    ])}<p class="field__status">${esc(this.nav.status())}</p>${seg('timeOfDay', 'Time of day', s.timeOfDay, [
-      ['day', 'Day'],
-      ['sunset', 'Sunset'],
-      ['night', 'Night'],
-      ['auto', 'Auto'],
-    ])}<div class="field"><label class="field__label" for="stale-after">Stale after</label><select id="stale-after" class="select" data-select="staleAfterMs">${STALE_CHOICES.map(
+    ])}<p class="field__status">${esc(this.nav.status())}</p><div class="field"><label class="field__label" for="stale-after">Stale after</label><select id="stale-after" class="select" data-select="staleAfterMs">${STALE_CHOICES.map(
       (c) => `<option value="${c.ms}"${c.ms === s.staleAfterMs ? ' selected' : ''}>${c.label} without activity</option>`,
     ).join('')}</select></div>${toggle('sound', 'Sound', 'Waves and the city, very quietly.')}${toggle('chime', 'Chime', 'A soft chime when someone starts needing you.')}${toggle(
       'idleCamera',

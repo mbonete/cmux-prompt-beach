@@ -48,10 +48,6 @@ export const ICONS = {
   archive: '<rect x="3.5" y="4" width="17" height="4.5" rx="1"/><path d="M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5M10 12.5h4"/>',
   send: '<path d="M4 12 20 4l-4.5 16-3.5-6.5L4 12Z"/><path d="m12 13.5 3.5-3.5"/>',
   check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
-  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
-  sunset: '<path d="M4 17h16M7 17a5 5 0 0 1 10 0M12 4v3M5.2 8.2l1.6 1.6M18.8 8.2l-1.6 1.6M7.5 21h9"/>',
-  moon: '<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z"/>',
-  auto: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.5 2"/>',
 } as const;
 
 export type IconName = keyof typeof ICONS;

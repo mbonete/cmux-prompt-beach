@@ -1,9 +1,8 @@
 import type { AppState, PanelId } from '../app/state';
-import type { TimeOfDay } from '../world/env/looks';
 import { icon, type IconName } from './icons';
 
 // The fixed frame around the city: the wordmark (top left), the rail of views
-// (left), the counts, time of day, tour, sound and help (top right), and the
+// (left), the counts, tour, sound and help (top right), and the
 // controls bar (bottom right).
 
 export const RAIL: { id: PanelId | null; label: string; icon: IconName; key: string }[] = [
@@ -13,13 +12,6 @@ export const RAIL: { id: PanelId | null; label: string; icon: IconName; key: str
   { id: 'inbox', label: 'Inbox', icon: 'inbox', key: '4' },
   { id: 'archive', label: 'Archive', icon: 'archive', key: '5' },
   { id: 'settings', label: 'Settings', icon: 'sliders', key: '6' },
-];
-
-const TOD: { id: TimeOfDay; label: string; icon: IconName }[] = [
-  { id: 'day', label: 'Day', icon: 'sun' },
-  { id: 'sunset', label: 'Sunset', icon: 'sunset' },
-  { id: 'night', label: 'Night', icon: 'moon' },
-  { id: 'auto', label: 'Auto: follows your clock', icon: 'auto' },
 ];
 
 export type HintKey = 'pan' | 'rotate' | 'zoom' | 'pick';
@@ -33,7 +25,6 @@ const HINTS: { keys: string; text: string }[] = [
 export interface HudHooks {
   onRail(id: PanelId | null): void;
   onCount(lane: 'needs' | 'working' | 'move' | 'stale'): void;
-  onTimeOfDay(t: TimeOfDay): void;
   onSound(): void;
   onHelp(): void;
   onTour(): void;
@@ -44,8 +35,6 @@ export class Hud {
   private readonly status: HTMLElement;
   private readonly rail: HTMLElement;
   private readonly counts: HTMLElement;
-  private readonly tod: HTMLElement;
-  private readonly clock: HTMLElement;
   private readonly sound: HTMLButtonElement;
 
   constructor(
@@ -65,9 +54,6 @@ export class Hud {
       ).join('')}</nav>
       <div class="topbar">
         <div class="tally" role="group" aria-label="Agents by state"></div>
-        <div class="tod" role="radiogroup" aria-label="Time of day">${TOD.map(
-          (t) => `<button type="button" role="radio" class="tod__btn" data-tod="${t.id}" aria-checked="false" title="${t.label}" aria-label="${t.label}">${icon(t.icon, 'i')}</button>`,
-        ).join('')}<span class="tod__clock" aria-label="Local time"></span></div>
         <button type="button" class="hud-btn" data-tour aria-pressed="false" aria-keyshortcuts="T" title="Cinematic tour (T)">${icon('film', 'i')}</button>
         <button type="button" class="hud-btn" data-sound aria-pressed="false" title="Sound">${icon('mute', 'i')}</button>
         <button type="button" class="hud-btn" data-help aria-keyshortcuts="Shift+/" title="Help (?)">${icon('help', 'i')}</button>
@@ -77,8 +63,6 @@ export class Hud {
     this.status = this.el.querySelector('.brand__status')!;
     this.rail = this.el.querySelector('.rail')!;
     this.counts = this.el.querySelector('.tally')!;
-    this.tod = this.el.querySelector('.tod')!;
-    this.clock = this.el.querySelector('.tod__clock')!;
     this.sound = this.el.querySelector('[data-sound]')!;
 
     this.rail.addEventListener('click', (e) => {
@@ -89,15 +73,9 @@ export class Hud {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-lane]');
       if (b) hooks.onCount(b.dataset.lane as 'needs');
     });
-    this.tod.addEventListener('click', (e) => {
-      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-tod]');
-      if (b) hooks.onTimeOfDay(b.dataset.tod as TimeOfDay);
-    });
     this.sound.addEventListener('click', () => hooks.onSound());
     this.el.querySelector('[data-tour]')!.addEventListener('click', () => hooks.onTour());
     this.el.querySelector('[data-help]')!.addEventListener('click', () => hooks.onHelp());
-    this.tickClock();
-    window.setInterval(() => this.tickClock(), 15000);
   }
 
   render() {
@@ -120,7 +98,6 @@ export class Hud {
       .join('');
     if (this.counts.innerHTML !== tally) this.counts.innerHTML = tally;
 
-    for (const b of this.tod.querySelectorAll<HTMLElement>('[data-tod]')) b.setAttribute('aria-checked', String(b.dataset.tod === s.settings.timeOfDay));
     this.sound.setAttribute('aria-pressed', String(s.settings.sound));
     this.sound.innerHTML = icon(s.settings.sound ? 'volume' : 'mute', 'i');
     this.sound.title = s.settings.sound ? 'Sound on' : 'Sound off';
@@ -148,11 +125,6 @@ export class Hud {
   setTour(on: boolean) {
     const b = this.el.querySelector<HTMLElement>('[data-tour]')!;
     b.setAttribute('aria-pressed', String(on));
-  }
-
-  private tickClock() {
-    const d = new Date();
-    this.clock.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 
   /** The rail button for a panel, to return focus to when it closes. */

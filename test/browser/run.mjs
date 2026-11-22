@@ -175,14 +175,6 @@ async function main() {
     });
   }
 
-  console.log('\nTimes of day');
-  await check('every time of day renders without errors', async () => {
-    const since = page.errors.length;
-    const looks = await page.run(`${SETUP} const out = []; for (const t of ['day', 'sunset', 'dusk', 'night', 'dawn']) { W.setTimeOfDay(t); await new Promise((r) => setTimeout(r, 3500)); out.push(t); } W.setTimeOfDay('sunset'); return out.join(', ');`);
-    noErrors(page, since);
-    return looks;
-  });
-
   console.log('\nCamera');
   await check('clicking a person: one flight, then the camera holds still', async () => {
     const r = await page.run(`${SETUP} sb.app.state.select(null); W.overview(); await new Promise((x) => setTimeout(x, 2500));

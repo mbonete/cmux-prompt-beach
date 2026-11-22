@@ -34,7 +34,6 @@ To try it without cmux, or to take screenshots without showing your real session
 - **Phone:** selecting an agent opens it. Answer a call to allow (Decline denies, "Always allow" is under the buttons), tap a reply to a text, approve the emailed plan, or text back an idle agent. A ring counts down cmux's ~120-second window before the decision falls back to the terminal.
 - **Job done:** a banner announces each finished job.
 - **Controls:** drag to pan, scroll or pinch to zoom, right-drag (or Shift-drag) to rotate, double-click to zoom in on a spot. Click a person, car, floor or marker to select it, a lot to zoom to it, or the minimap to move there. Keys: `N` next agent that needs you, `F` show everything, `+`/`-` zoom, `Q`/`E` rotate, `W` `A` `S` `D` pan, `Esc` close.
-- **Time of day:** Day, Sunset or Night, at the top right.
 
 Everything is also in the agent list on the left, which works with the keyboard and without the 3D view. On narrow windows it folds behind the **Agents** button and the phone becomes a bottom sheet. With reduced motion on, nobody drives or walks and the camera cuts instead of flying.
 

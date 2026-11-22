@@ -27,7 +27,6 @@ async function boot() {
     world = await Promise.race([
       World.create(canvas, {
         reducedMotion: reduced,
-        timeOfDay: settings.timeOfDay,
         quality: settings.quality,
         onLost: (message) => lost(message),
       }),

@@ -20,7 +20,7 @@ import { CameraRig } from './camera/rig';
 import { Pipeline, type PipelineParts } from './engine/pipeline';
 import { AutoQuality, PRESETS, type QualityLevel, type QualitySetting } from './engine/quality';
 import { Lighting } from './env/lighting';
-import { LOOKS, cloneLook, lookForHour, mixLook, type Look, type TimeOfDay } from './env/looks';
+import { SUNSET } from './env/looks';
 import { wetness } from './env/materials';
 import { Ocean } from './env/ocean';
 import { Sky } from './env/sky';
@@ -42,7 +42,6 @@ import { behindCamera } from './engine/behind';
 
 export interface WorldOptions {
   reducedMotion: boolean;
-  timeOfDay: TimeOfDay;
   quality: QualitySetting;
   onStatus?: (s: WorldStatus) => void;
   /** The graphics device was lost (GPU crash or reset): the city can't draw any more. */
@@ -65,7 +64,6 @@ export interface WorldStatus {
   fps: number;
 }
 
-const LOOK_BLEND_S = 2.4;
 /** How far the camera stands from someone whose card is open. */
 export const FOCUS_DISTANCE = 17;
 /** District materials that can stand between the close-up camera and a person. */
@@ -97,9 +95,7 @@ export class World {
   private readonly lighting: Lighting;
   private pipeline: Pipeline;
   private readonly timer = new Timer();
-  private readonly look: Look = cloneLook(LOOKS.sunset);
-  private blend: { from: Look; to: Look; t: number } | null = null;
-  private timeOfDay: TimeOfDay;
+  private readonly look = SUNSET;
   private qualitySetting: QualitySetting;
   private level: QualityLevel;
   private readonly auto: AutoQuality;
@@ -118,7 +114,6 @@ export class World {
   private fps = 0;
   private reducedMotion: boolean;
   private running = false;
-  private autoHourCheck = 0;
   readonly director: Director;
   private idleCamera = true;
   /** Called after each rendered frame, for HTML that follows the world. */
@@ -152,7 +147,6 @@ export class World {
     private readonly opts: WorldOptions,
   ) {
     this.reducedMotion = opts.reducedMotion;
-    this.timeOfDay = opts.timeOfDay;
     this.qualitySetting = opts.quality;
     this.level = opts.quality === 'auto' ? 'balanced' : opts.quality;
     this.auto = new AutoQuality(this.level);
@@ -208,7 +202,8 @@ export class World {
 
     this.applyQuality(this.level);
     this.pipeline = new Pipeline(renderer, this.scene, this.rig.camera, this.level);
-    this.setTimeOfDay(this.timeOfDay, true);
+    this.applyLook();
+    this.lighting.updateEnvironment(true);
     this.setReducedMotion(this.reducedMotion);
     this.resize();
 
@@ -249,19 +244,6 @@ export class World {
   stop() {
     this.running = false;
     this.renderer.setAnimationLoop(null);
-  }
-
-  setTimeOfDay(tod: TimeOfDay, instant = false) {
-    this.timeOfDay = tod;
-    const target = tod === 'auto' ? lookForHour(localHour(), cloneLook(LOOKS.day)) : cloneLook(LOOKS[tod]);
-    if (instant || this.reducedMotion) {
-      mixLook(this.look, target, target, 0);
-      this.blend = null;
-      this.applyLook();
-      this.lighting.updateEnvironment(true);
-    } else {
-      this.blend = { from: cloneLook(this.look), to: target, t: 0 };
-    }
   }
 
   setQuality(q: QualitySetting) {
@@ -395,18 +377,6 @@ export class World {
     // move, and a throttled frame rate reads as lag); the loop stops when hidden.
     const frameMs = now - this.lastFrame;
     this.lastFrame = now;
-
-    if (this.blend) {
-      this.blend.t = Math.min(1, this.blend.t + dt / LOOK_BLEND_S);
-      const k = this.blend.t * this.blend.t * (3 - 2 * this.blend.t);
-      mixLook(this.look, this.blend.from, this.blend.to, k);
-      this.applyLook();
-      if (this.blend.t >= 1) this.blend = null;
-    }
-    if (this.timeOfDay === 'auto' && now - this.autoHourCheck > 60000) {
-      this.autoHourCheck = now;
-      this.setTimeOfDay('auto');
-    }
 
     this.director.update(dt);
     this.rig.update(dt);
@@ -853,7 +823,3 @@ export function nearDistrict(p: { x: number; z: number }) {
   return p.x > -125 && p.x < 130 && p.z > -75 && p.z < CITY.z1 + 4;
 }
 
-function localHour() {
-  const d = new Date();
-  return d.getHours() + d.getMinutes() / 60;
-}
