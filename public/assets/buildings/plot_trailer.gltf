@@ -1536,62 +1536,6 @@
       ]
     },
     {
-      "name": "prop:mid_century_lounge_chair",
-      "extras": {
-        "prop_id": "mid_century_lounge_chair"
-      },
-      "translation": [
-        -6.400000095367432,
-        0.03999999910593033,
-        5.400000095367432
-      ],
-      "rotation": [
-        0,
-        0.9396926164627075,
-        0,
-        0.3420201539993286
-      ]
-    },
-    {
-      "name": "prop:mid_century_lounge_chair",
-      "extras": {
-        "prop_id": "mid_century_lounge_chair"
-      },
-      "translation": [
-        -3.700000047683716,
-        0.03999999910593033,
-        5.599999904632568
-      ],
-      "rotation": [
-        0,
-        -0.9396927356719971,
-        0,
-        0.3420201539993286
-      ]
-    },
-    {
-      "name": "prop:street_lamp_02",
-      "extras": {
-        "prop_id": "street_lamp_02"
-      },
-      "translation": [
-        -9.699999809265137,
-        0,
-        7.699999809265137
-      ]
-    },
-    {
-      "name": "prop:street_lamp_02",
-      "extras": {
-        "prop_id": "street_lamp_02"
-      },
-      "translation": [
-        9.699999809265137,
-        0,
-        7.699999809265137
-      ]
-    },
-    {
       "name": "spot_0",
       "extras": {
         "spot_kind": "desk",
@@ -1728,11 +1672,7 @@
         19,
         20,
         21,
-        22,
-        23,
-        24,
-        25,
-        26
+        22
       ]
     }
   ],
@@ -1740,7 +1680,7 @@
     {
       "name": "Scene",
       "nodes": [
-        27
+        23
       ]
     }
   ],

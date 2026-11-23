@@ -130,7 +130,7 @@
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 2280,
+      "count": 2016,
       "bufferView": 1,
       "byteOffset": 111368
     },
@@ -139,21 +139,21 @@
       "componentType": 5123,
       "count": 36,
       "bufferView": 1,
-      "byteOffset": 115928
+      "byteOffset": 115400
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 11232,
       "bufferView": 1,
-      "byteOffset": 116000
+      "byteOffset": 115472
     },
     {
       "type": "SCALAR",
       "componentType": 5123,
       "count": 6,
       "bufferView": 1,
-      "byteOffset": 138464
+      "byteOffset": 137936
     },
     {
       "type": "VEC3",
@@ -555,16 +555,16 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 610,
+      "count": 478,
       "max": [
         7.517000198364258,
-        10.720000267028809,
+        0.10999999940395355,
         6.511273384094238
       ],
       "min": [
         -7.517000198364258,
         0.03999999910593033,
-        -7.199999809265137
+        1.7100000381469727
       ],
       "bufferView": 13,
       "byteOffset": 0
@@ -572,21 +572,21 @@
     {
       "type": "VEC3",
       "componentType": 5126,
-      "count": 610,
+      "count": 478,
       "bufferView": 13,
       "byteOffset": 12
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 610,
+      "count": 478,
       "bufferView": 13,
       "byteOffset": 24
     },
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 610,
+      "count": 478,
       "bufferView": 13,
       "byteOffset": 32
     },
@@ -709,110 +709,110 @@
     {
       "buffer": 0,
       "byteOffset": 24720,
-      "byteLength": 138476,
+      "byteLength": 137948,
       "target": 34963
     },
     {
       "buffer": 0,
-      "byteOffset": 163196,
+      "byteOffset": 162668,
       "byteLength": 70280,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 233476,
+      "byteOffset": 232948,
       "byteLength": 16768,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 250244,
+      "byteOffset": 249716,
       "byteLength": 259200,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 509444,
+      "byteOffset": 508916,
       "byteLength": 275240,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 784684,
+      "byteOffset": 784156,
       "byteLength": 1760,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 786444,
+      "byteOffset": 785916,
       "byteLength": 34112,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 820556,
+      "byteOffset": 820028,
       "byteLength": 2560,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 823116,
+      "byteOffset": 822588,
       "byteLength": 42880,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 865996,
+      "byteOffset": 865468,
       "byteLength": 8640,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 874636,
+      "byteOffset": 874108,
       "byteLength": 52320,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 926956,
+      "byteOffset": 926428,
       "byteLength": 21200,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 948156,
-      "byteLength": 24400,
+      "byteOffset": 947628,
+      "byteLength": 19120,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 972556,
+      "byteOffset": 966748,
       "byteLength": 960,
       "byteStride": 40,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 973516,
+      "byteOffset": 967708,
       "byteLength": 68896,
       "byteStride": 32,
       "target": 34962
     },
     {
       "buffer": 0,
-      "byteOffset": 1042412,
+      "byteOffset": 1036604,
       "byteLength": 160,
       "byteStride": 40,
       "target": 34962
@@ -1117,7 +1117,7 @@
   "buffers": [
     {
       "uri": "plot_deco_hotel.bin",
-      "byteLength": 1042572
+      "byteLength": 1036764
     }
   ],
   "materials": [
@@ -1795,112 +1795,6 @@
       ]
     },
     {
-      "name": "prop:exterior_aircon_unit",
-      "extras": {
-        "prop_id": "exterior_aircon_unit"
-      },
-      "translation": [
-        3.4000000953674316,
-        10.720000267028809,
-        -6.650000095367432
-      ]
-    },
-    {
-      "name": "prop:exterior_aircon_unit",
-      "extras": {
-        "prop_id": "exterior_aircon_unit"
-      },
-      "translation": [
-        5.599999904632568,
-        10.720000267028809,
-        -6.650000095367432
-      ]
-    },
-    {
-      "name": "prop:exterior_aircon_unit",
-      "extras": {
-        "prop_id": "exterior_aircon_unit"
-      },
-      "translation": [
-        8.600000381469727,
-        3.950000047683716,
-        -7.349999904632568
-      ],
-      "rotation": [
-        0,
-        0.7071068286895752,
-        0,
-        0.7071068286895752
-      ]
-    },
-    {
-      "name": "prop:mid_century_lounge_chair",
-      "extras": {
-        "prop_id": "mid_century_lounge_chair"
-      },
-      "translation": [
-        7.050000190734863,
-        0.03999999910593033,
-        0.949999988079071
-      ],
-      "rotation": [
-        0,
-        -0.8191520571708679,
-        0,
-        0.5735764503479004
-      ]
-    },
-    {
-      "name": "prop:outdoor_table_chair_set_01",
-      "extras": {
-        "prop_id": "outdoor_table_chair_set_01"
-      },
-      "translation": [
-        -5.599999904632568,
-        0.03999999910593033,
-        5.099999904632568
-      ],
-      "rotation": [
-        0,
-        0.7071068286895752,
-        0,
-        0.7071068286895752
-      ]
-    },
-    {
-      "name": "prop:painted_wooden_bench",
-      "extras": {
-        "prop_id": "painted_wooden_bench"
-      },
-      "translation": [
-        -4.599999904632568,
-        0.03999999910593033,
-        -1.149999976158142
-      ]
-    },
-    {
-      "name": "prop:street_lamp_02",
-      "extras": {
-        "prop_id": "street_lamp_02"
-      },
-      "translation": [
-        -9.699999809265137,
-        0,
-        7.699999809265137
-      ]
-    },
-    {
-      "name": "prop:street_lamp_02",
-      "extras": {
-        "prop_id": "street_lamp_02"
-      },
-      "translation": [
-        9.699999809265137,
-        0,
-        7.699999809265137
-      ]
-    },
-    {
       "name": "sign_face",
       "mesh": 1
     },
@@ -2040,15 +1934,7 @@
         18,
         19,
         20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29
+        21
       ]
     }
   ],
@@ -2056,7 +1942,7 @@
     {
       "name": "Scene",
       "nodes": [
-        30
+        22
       ]
     }
   ],

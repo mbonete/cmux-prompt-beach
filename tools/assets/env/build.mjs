@@ -3,7 +3,7 @@
 //
 //   node tools/assets/env/build.mjs                  # every step
 //   node tools/assets/env/build.mjs props            # one or more steps
-//   node tools/assets/env/build.mjs props --only ocean_buoy,classic_laptop
+//   node tools/assets/env/build.mjs props --only anthurium_botany_01,classic_laptop
 //
 // Steps: sky, textures, water, props, manifest, previews, check.
 // manifest.json and credits.json are merged, so a partial run keeps the other

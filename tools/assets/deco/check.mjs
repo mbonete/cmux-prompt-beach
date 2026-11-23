@@ -15,7 +15,7 @@ import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 
 const DIR = path.join(process.cwd(), 'public/assets/buildings');
 const MATERIALS = new Set(['stucco', 'trim', 'glass', 'glass_block', 'metal', 'terrazzo', 'wood', 'awning', 'roof',
-  'concrete', 'planter', 'soil', 'water', 'neon_accent', 'interior', 'bulb']);
+  'concrete', 'planter', 'soil', 'door', 'water', 'neon_accent', 'interior', 'bulb']);
 const SPOT_KINDS = new Set(['desk', 'lounger', 'stool', 'bench', 'steps', 'standing']);
 const ALLOWED_EXT = new Set(['KHR_mesh_quantization', 'KHR_texture_transform', 'KHR_materials_emissive_strength',
   'KHR_materials_clearcoat', 'KHR_materials_transmission', 'KHR_materials_ior',

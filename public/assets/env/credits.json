@@ -48,22 +48,6 @@
     "changes": "Generated procedurally."
   },
   {
-    "asset": "props/street_lamp_02",
-    "author": "Josh Dean",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/street_lamp_02",
-    "changes": "Converted to glTF + WebP (1024), quantized, ORM packed, pivot wall; LOD0 simplified to the triangle budget; LOD1 (meshoptimizer); street_lamp_02: LOD0 simplified 20338 -> 14612 tris (max error 0.99% of radius)."
-  },
-  {
-    "asset": "props/CoffeeCart_01",
-    "author": "Joe Seabuhr",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/CoffeeCart_01",
-    "changes": "Converted to glTF + WebP (1024), quantized, ORM packed, pivot base; LOD0 simplified to the triangle budget; LOD1 (meshoptimizer); CoffeeCart_01: LOD0 simplified 27659 -> 14545 tris (max error 0.76% of radius)."
-  },
-  {
     "asset": "props/classic_laptop",
     "author": "Arrangemonk",
     "source": "Poly Haven",
@@ -72,52 +56,12 @@
     "changes": "Converted to glTF + WebP (512), quantized, ORM packed, pivot base, scaled x0.46; LOD1 (meshoptimizer); no other changes."
   },
   {
-    "asset": "props/mid_century_lounge_chair",
-    "author": "Kuutti Siitonen",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/mid_century_lounge_chair",
-    "changes": "Converted to glTF + WebP (1024), quantized, ORM packed, pivot base; no other changes."
-  },
-  {
-    "asset": "props/outdoor_table_chair_set_01",
-    "author": "James Ray Cock",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/outdoor_table_chair_set_01",
-    "changes": "Converted to glTF + WebP (1024), quantized, ORM packed, pivot base; no other changes."
-  },
-  {
-    "asset": "props/painted_wooden_bench",
-    "author": "Kirill Sannikov",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/painted_wooden_bench",
-    "changes": "Converted to glTF + WebP (1024), quantized, ORM packed, pivot base; no other changes."
-  },
-  {
-    "asset": "props/exterior_aircon_unit",
-    "author": "Monsta3D",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/exterior_aircon_unit",
-    "changes": "Converted to glTF + WebP (512), quantized, ORM packed, pivot base; no other changes."
-  },
-  {
-    "asset": "props/ocean_buoy",
-    "author": "Mateusz Sadek",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/ocean_buoy",
-    "changes": "Converted to glTF + WebP (512), quantized, ORM packed, pivot origin-y; LOD1 (meshoptimizer); no other changes."
-  },
-  {
     "asset": "props/anthurium_botany_01",
     "author": "Rob Tuytel (scanning), Rico Cilliers (modeling)",
     "source": "Poly Haven",
     "licence": "CC0 1.0",
     "url": "https://polyhaven.com/a/anthurium_botany_01",
-    "changes": "Converted to glTF + WebP (512), quantized, ORM packed, pivot base; LOD0 simplified to the triangle budget; removed KHR_materials_specular; anthurium_botany_01: alphaMode MASK -> OPAQUE (no alpha in the source); a: LOD0 simplified 15808 -> 3880 tris (max error 0.26% of radius); b: LOD0 simplified 15544 -> 3880 tris (max error 0.37% of radius); c: LOD0 simplified 9072 -> 4030 tris (max error 0.2% of radius); d: LOD0 simplified 10360 -> 3880 tris (max error 0.29% of radius); e: LOD0 simplified 7664 -> 3879 tris (max error 0.24% of radius); f: LOD0 simplified 8704 -> 3880 tris (max error 0.24% of radius)."
+    "changes": "Converted to glTF + WebP (512), quantized, ORM packed, pivot base; LOD0 simplified to the triangle budget; LOD1 (meshoptimizer); removed KHR_materials_specular; anthurium_botany_01: alphaMode MASK -> OPAQUE (no alpha in the source); a: LOD0 simplified 15808 -> 3880 tris (max error 0.26% of radius); b: LOD0 simplified 15544 -> 3880 tris (max error 0.37% of radius); c: LOD0 simplified 9072 -> 4030 tris (max error 0.2% of radius); d: LOD0 simplified 10360 -> 3880 tris (max error 0.29% of radius); e: LOD0 simplified 7664 -> 3879 tris (max error 0.24% of radius); f: LOD0 simplified 8704 -> 3880 tris (max error 0.24% of radius)."
   },
   {
     "asset": "props/calathea_orbifolia_01",
@@ -125,14 +69,6 @@
     "source": "Poly Haven",
     "licence": "CC0 1.0",
     "url": "https://polyhaven.com/a/calathea_orbifolia_01",
-    "changes": "Converted to glTF + WebP (512), quantized, ORM packed, pivot base; LOD0 simplified to the triangle budget; removed KHR_materials_specular; calathea_orbifolia_01: alphaMode MASK -> OPAQUE (no alpha in the source); a: LOD0 simplified 5904 -> 3880 tris (max error 0.15% of radius)."
-  },
-  {
-    "asset": "props/vintage_day_bed",
-    "author": "Aron Łyczek",
-    "source": "Poly Haven",
-    "licence": "CC0 1.0",
-    "url": "https://polyhaven.com/a/vintage_day_bed",
-    "changes": "Converted to glTF + WebP (1024), quantized, ORM packed, pivot base; no other changes."
+    "changes": "Converted to glTF + WebP (512), quantized, ORM packed, pivot base; LOD0 simplified to the triangle budget; LOD1 (meshoptimizer); removed KHR_materials_specular; calathea_orbifolia_01: alphaMode MASK -> OPAQUE (no alpha in the source); a: LOD0 simplified 5904 -> 3880 tris (max error 0.15% of radius)."
   }
 ]

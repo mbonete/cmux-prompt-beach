@@ -1542,84 +1542,6 @@
       ]
     },
     {
-      "name": "prop:exterior_aircon_unit",
-      "extras": {
-        "prop_id": "exterior_aircon_unit"
-      },
-      "translation": [
-        -2,
-        5.197150707244873,
-        -6.400000095367432
-      ]
-    },
-    {
-      "name": "prop:exterior_aircon_unit",
-      "extras": {
-        "prop_id": "exterior_aircon_unit"
-      },
-      "translation": [
-        2.5,
-        4.633225917816162,
-        -6.400000095367432
-      ]
-    },
-    {
-      "name": "prop:outdoor_table_chair_set_01",
-      "extras": {
-        "prop_id": "outdoor_table_chair_set_01"
-      },
-      "translation": [
-        4.599999904632568,
-        0.03999999910593033,
-        2
-      ],
-      "rotation": [
-        0,
-        0.7071068286895752,
-        0,
-        0.7071068286895752
-      ]
-    },
-    {
-      "name": "prop:outdoor_table_chair_set_01",
-      "extras": {
-        "prop_id": "outdoor_table_chair_set_01"
-      },
-      "translation": [
-        7.599999904632568,
-        0.03999999910593033,
-        3.5999999046325684
-      ],
-      "rotation": [
-        0,
-        0.5,
-        0,
-        0.8660253882408142
-      ]
-    },
-    {
-      "name": "prop:street_lamp_02",
-      "extras": {
-        "prop_id": "street_lamp_02"
-      },
-      "translation": [
-        -9.699999809265137,
-        0,
-        7.699999809265137
-      ]
-    },
-    {
-      "name": "prop:street_lamp_02",
-      "extras": {
-        "prop_id": "street_lamp_02"
-      },
-      "translation": [
-        9.699999809265137,
-        0,
-        7.699999809265137
-      ]
-    },
-    {
       "name": "sign_face",
       "mesh": 1
     },
@@ -1771,13 +1693,7 @@
         17,
         18,
         19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26
+        20
       ]
     }
   ],
@@ -1785,7 +1701,7 @@
     {
       "name": "Scene",
       "nodes": [
-        27
+        21
       ]
     }
   ],

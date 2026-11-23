@@ -280,11 +280,6 @@ def plot_deco_hotel():
     with mb.at(-8.85, T, 4.4, 90):
         F.bench_back(mb, 1.8)
     # props
-    b.prop("outdoor_table_chair_set_01", (-5.6, T, 5.1), 90.0)
-    b.prop("mid_century_lounge_chair", (7.05, T, 0.95), -110.0)
-    b.prop("painted_wooden_bench", (-4.6, T, -1.15), 0.0)
-    b.prop("street_lamp_02", (-9.7, 0.0, 7.7), 0.0)
-    b.prop("street_lamp_02", (9.7, 0.0, 7.7), 0.0)
     # roof: stair bulkhead and aircon pads
     bh = rrect(-5.6, -3.0, -7.35, -5.0, (0, 0, 0.3, 0.3), seg=3)
     D.solid_band(mb, bh, y_roof, y_roof + 2.3)
@@ -292,10 +287,6 @@ def plot_deco_hotel():
     D.roof_fill(mb, bh, y_roof + 2.42)
     door_c = (-4.3, y_roof + 1.05, -5.0)
     mb.box(-4.75, -3.85, y_roof, y_roof + 2.05, -5.03, -4.98, "metal")
-    for x in (3.4, 5.6):
-        mb.box(x - 0.75, x + 0.75, y_roof, y_roof + 0.12, -7.2, -6.2, "concrete", bevel=0.02, segs=1)
-        b.prop("exterior_aircon_unit", (x, y_roof + 0.12, -6.65), 0.0)
-    b.prop("exterior_aircon_unit", (X1, 3.95, -7.35), 90.0)
     # roof skylight and vents
     mb.box(1.4, 3.4, y_roof, y_roof + 0.35, -6.6, -4.4, "trim", bevel=0.04, segs=2)
     mb.box(1.55, 3.25, y_roof + 0.35, y_roof + 0.42, -6.45, -4.55, "glass_block")
@@ -433,12 +424,6 @@ def plot_beach_cafe():
     soils = [F.planter(mb, 3.0, 4.4, 6.35, 6.85, h=0.5), F.planter(mb, -4.4, -3.0, 6.35, 6.85, h=0.5)]
     for k, sp in enumerate(soils):
         b.prop(["calathea_orbifolia_01", "anthurium_botany_01"][k % 2], sp, 0.0)
-    b.prop("CoffeeCart_01", (4.2, T, -0.6), -30.0)
-    b.prop("outdoor_table_chair_set_01", (1.0, T, 1.4), 90.0)
-    b.prop("mid_century_lounge_chair", (5.4, T, 5.5), 200.0)
-    b.prop("street_lamp_02", (-9.7, 0.0, 7.7), 0.0)
-    b.prop("street_lamp_02", (9.7, 0.0, 7.7), 0.0)
-    b.prop("exterior_aircon_unit", (-1.0, y_top + 0.24, -6.6), 0.0)
     # night life: festoons from the awning posts to poles along the deck front,
     # one more run up to the roof slab, a sconce by the door
     zf, yf = Z1 + 3.3, 3.7 - 1.05
@@ -609,12 +594,6 @@ def plot_diner():
     palm_soils = [F.round_planter(mb, -9.1, 6.5, r=0.4, h=0.55), F.round_planter(mb, 7.6, -1.2, r=0.42, h=0.55)]
     for k, sp in enumerate(soils):
         b.prop(["anthurium_botany_01", "calathea_orbifolia_01"][k % 2], sp, 0.0)
-    b.prop("outdoor_table_chair_set_01", (4.6, T, 2.0), 90.0)
-    b.prop("outdoor_table_chair_set_01", (7.6, T, 3.6), 60.0)
-    b.prop("street_lamp_02", (-9.7, 0.0, 7.7), 0.0)
-    b.prop("street_lamp_02", (9.7, 0.0, 7.7), 0.0)
-    b.prop("exterior_aircon_unit", (-2.0, roof_y(-2.0) + th, -6.4), 0.0)
-    b.prop("exterior_aircon_unit", (2.5, roof_y(2.5) + th, -6.4), 0.0)
     # night life: festoons from the roof fascia down to poles across the patio,
     # a sconce by the door, bulbs along the sign pylon's chrome bands
     P = [N.pole(mb, x, z, 3.2, y0=T) for (x, z) in ((-6.0, 6.2), (-1.9, 6.6), (2.6, 6.3), (6.3, 5.0))]

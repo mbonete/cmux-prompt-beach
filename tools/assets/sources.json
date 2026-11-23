@@ -18,19 +18,11 @@
       { "id": "interlocking_concrete_pavers", "res": "2k" }
     ],
     "models": [
-      { "id": "street_lamp_02", "res": "1k" },
-      { "id": "CoffeeCart_01", "res": "1k" },
       { "id": "modular_wooden_pier", "res": "1k" },
       { "id": "classic_laptop", "res": "1k" },
-      { "id": "mid_century_lounge_chair", "res": "1k" },
-      { "id": "outdoor_table_chair_set_01", "res": "1k" },
-      { "id": "painted_wooden_bench", "res": "1k" },
-      { "id": "exterior_aircon_unit", "res": "1k" },
-      { "id": "ocean_buoy", "res": "1k" },
       { "id": "utility_box_01", "res": "1k" },
       { "id": "anthurium_botany_01", "res": "1k" },
-      { "id": "calathea_orbifolia_01", "res": "1k" },
-      { "id": "vintage_day_bed", "res": "1k" }
+      { "id": "calathea_orbifolia_01", "res": "1k" }
     ]
   },
   "ambientcg": {

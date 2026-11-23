@@ -23,11 +23,6 @@ PLANTS = ["anthurium_botany_01", "calathea_orbifolia_01"]
 # ---------------------------------------------------------------------------
 # helpers shared by the district plots
 # ---------------------------------------------------------------------------
-def street_lamps(b):
-    b.prop("street_lamp_02", (-9.7, 0.0, 7.7), 0.0)
-    b.prop("street_lamp_02", (9.7, 0.0, 7.7), 0.0)
-
-
 def plant(b, soils):
     for k, sp in enumerate(soils):
         b.prop(PLANTS[k % 2], sp, 0.0)
@@ -289,9 +284,6 @@ def plot_beach_bar():
             mb.lathe([(0.315, y), (0.345, y + 0.02), (0.345, y + 0.07), (0.315, y + 0.09)], x, z, "metal", seg=12)
         mb.lathe([(0, F0 + 0.98), (0.42, F0 + 0.98), (0.42, F0 + 1.03), (0, F0 + 1.03)], x, z, "wood", seg=14)
     plant(b, [F.round_planter(mb, -6.2, -0.9, r=0.38, h=0.5), F.round_planter(mb, 6.2, -0.9, r=0.38, h=0.5)])
-    b.prop("vintage_day_bed", (-5.9, F0, 0.6), 15.0)
-    b.prop("outdoor_table_chair_set_01", (-3.0, F0, 3.2), 80.0)
-    b.prop("outdoor_table_chair_set_01", (-6.3, F0, 4.0), 100.0)
     # surfboards leaning on the back wall's left end
     for k, (z, pin) in enumerate(((-6.92, F.SWATCH_COLOUR), (-6.5, F.SWATCH_WHITE))):
         with mb.at(-4.6 - 0.3 - 0.06 * k, F0 + 1.08, z, 90, pitch=-78):
@@ -420,13 +412,8 @@ def plot_coworking():
     p1 = F.round_planter(mb, -8.75, 6.35, r=0.55, h=0.6)
     p2 = F.round_planter(mb, 8.75, 6.35, r=0.5, h=0.6)
     p3 = F.round_planter(mb, 9.0, -1.4, r=0.45, h=0.55)
-    b.prop("mid_century_lounge_chair", (-3.6, T, 6.0), 160.0)
     with mb.at(3.9, T, Z1 + 0.45, 0):
         F.bench_back(mb, 1.8)
-    b.prop("CoffeeCart_01", (7.6, T, 1.2), -90.0)
-    street_lamps(b)
-    b.prop("exterior_aircon_unit", (-1.6, y_roof + 0.56, -6.8), 0.0)
-    b.prop("exterior_aircon_unit", (6.6, y_roof + 0.56, -3.9), 0.0)
 
     # ---- night life ------------------------------------------------------------
     pa = N.pole(mb, -4.3, tz, 3.25, y0=T)
@@ -647,9 +634,6 @@ def plot_surf_shop():
     p1 = F.round_planter(mb, -9.05, 6.45, r=0.45, h=0.55)
     p2 = F.round_planter(mb, 9.05, 6.45, r=0.42, h=0.55)
     p3 = F.round_planter(mb, 8.9, -7.2, r=0.45, h=0.55)
-    b.prop("painted_wooden_bench", (3.2, T, 6.0), 180.0)
-    b.prop("exterior_aircon_unit", (-5.0, y_top, -6.6), 0.0)
-    street_lamps(b)
     # night life
     ye = 3.2 - 0.06
     P = [N.pole(mb, x, z, 3.2, y0=T) for (x, z) in ((-6.6, 6.2), (-1.7, 6.5), (3.0, 6.2), (8.6, 1.4))]
@@ -760,9 +744,6 @@ def plot_juice_kiosk():
     p2 = F.round_planter(mb, -1.0, 6.5, r=0.42, h=0.55)
     p3 = F.round_planter(mb, -9.0, -7.1, r=0.45, h=0.55)
     p4 = F.round_planter(mb, 9.15, 6.45, r=0.42, h=0.55)
-    b.prop("CoffeeCart_01", (-2.6, T, 0.9), 90.0)
-    b.prop("mid_century_lounge_chair", (8.2, T, -5.6), 200.0)
-    street_lamps(b)
     # ---- night life ------------------------------------------------------------
     for x in (rafters[2] + 0.375, rafters[7] + 0.375, rafters[12] + 0.375):
         N.string_lights(mb, [(x, yb - 0.02, -3.9), (x, yb - 0.02, 4.7)], sag=0.3)
@@ -892,10 +873,6 @@ def plot_motel_court():
     p3 = F.round_planter(mb, 8.9, 0.2, r=0.45, h=0.55)
     soils = [F.planter(mb, XW + 1.5, XW + 3.0, ZL - 0.5, ZL, h=0.45), F.planter(mb, 4.6, 6.0, ZF + 1.5, ZF + 2.0, h=0.45)]
     plant(b, soils)
-    b.prop("exterior_aircon_unit", (-7.3, y2, -6.6), 0.0)
-    b.prop("exterior_aircon_unit", (1.5, y2, -6.6), 0.0)
-    b.prop("exterior_aircon_unit", (-7.3, y2, 0.5), 90.0)
-    street_lamps(b)
     # ---- googie sign at the front right --------------------------------------
     gx, gz = 8.4, 6.2
     for dx in (-0.45, 0.45):
@@ -1043,9 +1020,6 @@ def plot_marina_office():
     p3 = F.round_planter(mb, 9.1, 6.4, r=0.4, h=0.55)
     soils = [F.planter(mb, -8.4, -6.8, Z1 + 0.1, Z1 + 0.55, h=0.45)]
     plant(b, soils)
-    b.prop("ocean_buoy", (8.4, T + 0.8, -4.6), 0.0)
-    b.prop("exterior_aircon_unit", (-2.2, yb + 0.16, -6.9), 0.0)
-    street_lamps(b)
     # ---- night life: dressing lines from the mast, festoons over the tables -----
     P = [N.pole(mb, x, z, 3.3, y0=T) for (x, z) in ((-8.6, 5.6), (-4.4, 6.3), (0.0, 5.0), (8.8, 5.4))]
     top = (tx, mast_top - 0.05, tz)
@@ -1177,8 +1151,6 @@ def plot_trailer():
     with mb.at(7.6, T, 1.2, -15):
         b.add(F.lounger(mb))
     mb.lathe([(0, 0.0), (0.55, 0.0), (0.62, 0.25), (0.66, 0.36), (0.5, 0.33), (0, 0.2)], -5.0, 4.6, "concrete", seg=14)
-    b.prop("mid_century_lounge_chair", (-6.4, T, 5.4), 140.0)
-    b.prop("mid_century_lounge_chair", (-3.7, T, 5.6), 220.0)
     # ---- cabana: a little pastel bath house -------------------------------------
     cb = rrect(4.4, 9.0, -7.7, -4.3, (0, 0, 1.0, 0), seg=6)
     D.solid_band(mb, cb, 0.0, 2.95)
@@ -1192,7 +1164,6 @@ def plot_trailer():
          F.round_planter(mb, -8.9, 6.4, r=0.4, h=0.55)]
     soils = [F.planter(mb, 0.6, 3.4, 6.4, 6.9, h=0.45)]
     plant(b, soils)
-    street_lamps(b)
     # ---- camp sign: a round badge on a pole ---------------------------------
     sx, sz = 8.7, 6.4
     mb.cylinder(sx, sz, 0.07, 0.0, 4.2, "metal", seg=8)
@@ -1360,14 +1331,8 @@ def plot_record_shop():
     p2 = F.round_planter(mb, 9.05, 6.45, r=0.42, h=0.55)
     soils = [F.planter(mb, -6.4, -4.4, Z1 + 0.1, Z1 + 0.55, h=0.45), F.planter(mb, 2.2, 4.0, 6.4, 6.9, h=0.45)]
     plant(b, soils)
-    b.prop("exterior_aircon_unit", (1.2, y3, -7.2), 0.0)
-    b.prop("outdoor_table_chair_set_01", (-6.6, T, 5.4), 70.0)
-    b.prop("outdoor_table_chair_set_01", (2.6, T, 4.4), 100.0)
-    b.prop("mid_century_lounge_chair", (7.6, T, 0.6), 210.0)
-    b.prop("painted_wooden_bench", (-4.6, T, 6.5), 180.0)
     with mb.at(-7.6, T, 1.4, 25):
         F.cafe_table_set(mb, laptop=False)
-    street_lamps(b)
     # ---- night life ----------------------------------------------------------
     ye = 3.65 + 0.02
     P = [N.pole(mb, x, z, 3.2, y0=T) for (x, z) in ((-7.4, 6.2), (-2.4, 6.6), (3.0, 6.3), (8.4, 4.4))]

@@ -18,7 +18,7 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 712532,
+      "bytes": 711480,
       "textureBytes": 1192752,
       "tris": 15662,
       "bounds": {
@@ -322,58 +322,6 @@
             }
           }
         ],
-        "prop:outdoor_table_chair_set_01": [
-          {
-            "position": [
-              -3,
-              0.35,
-              3.2
-            ],
-            "rotation": [
-              0,
-              0.64279,
-              0,
-              0.76604
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          },
-          {
-            "position": [
-              -6.3,
-              0.35,
-              4
-            ],
-            "rotation": [
-              0,
-              0.76604,
-              0,
-              0.64279
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          }
-        ],
-        "prop:vintage_day_bed": [
-          {
-            "position": [
-              -5.9,
-              0.35,
-              0.6
-            ],
-            "rotation": [
-              0,
-              0.13053,
-              0,
-              0.99144
-            ],
-            "extras": {
-              "prop_id": "vintage_day_bed"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -545,7 +493,7 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 787632,
+      "bytes": 785909,
       "textureBytes": 2072560,
       "tris": 17480,
       "bounds": {
@@ -795,112 +743,6 @@
             }
           }
         ],
-        "prop:CoffeeCart_01": [
-          {
-            "position": [
-              4.2,
-              0.06,
-              -0.6
-            ],
-            "rotation": [
-              0,
-              -0.25882,
-              0,
-              0.96593
-            ],
-            "extras": {
-              "prop_id": "CoffeeCart_01"
-            }
-          }
-        ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              -1,
-              4.54,
-              -6.6
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:mid_century_lounge_chair": [
-          {
-            "position": [
-              5.4,
-              0.06,
-              5.5
-            ],
-            "rotation": [
-              0,
-              -0.98481,
-              0,
-              0.17365
-            ],
-            "extras": {
-              "prop_id": "mid_century_lounge_chair"
-            }
-          }
-        ],
-        "prop:outdoor_table_chair_set_01": [
-          {
-            "position": [
-              1,
-              0.06,
-              1.4
-            ],
-            "rotation": [
-              0,
-              0.70711,
-              0,
-              0.70711
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -1076,7 +918,7 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 764847,
+      "bytes": 763211,
       "textureBytes": 2112246,
       "tris": 16239,
       "bounds": {
@@ -1377,110 +1219,6 @@
             }
           }
         ],
-        "prop:CoffeeCart_01": [
-          {
-            "position": [
-              7.6,
-              0.04,
-              1.2
-            ],
-            "rotation": [
-              0,
-              -0.70711,
-              0,
-              0.70711
-            ],
-            "extras": {
-              "prop_id": "CoffeeCart_01"
-            }
-          }
-        ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              -1.6,
-              7.91,
-              -6.8
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          },
-          {
-            "position": [
-              6.6,
-              7.91,
-              -3.9
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:mid_century_lounge_chair": [
-          {
-            "position": [
-              -3.6,
-              0.04,
-              6
-            ],
-            "rotation": [
-              0,
-              0.98481,
-              0,
-              0.17365
-            ],
-            "extras": {
-              "prop_id": "mid_century_lounge_chair"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -1657,9 +1395,9 @@
         "textures/glass_block_orm.webp",
         "textures/glass_block_normal.webp"
       ],
-      "bytes": 1082280,
-      "textureBytes": 2147398,
-      "tris": 23079,
+      "bytes": 1074190,
+      "textureBytes": 2141526,
+      "tris": 22991,
       "bounds": {
         "min": [
           -9.7,
@@ -1925,144 +1663,6 @@
             }
           }
         ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              3.4,
-              10.72,
-              -6.65
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          },
-          {
-            "position": [
-              5.6,
-              10.72,
-              -6.65
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          },
-          {
-            "position": [
-              8.6,
-              3.95,
-              -7.35
-            ],
-            "rotation": [
-              0,
-              0.70711,
-              0,
-              0.70711
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:mid_century_lounge_chair": [
-          {
-            "position": [
-              7.05,
-              0.04,
-              0.95
-            ],
-            "rotation": [
-              0,
-              -0.81915,
-              0,
-              0.57358
-            ],
-            "extras": {
-              "prop_id": "mid_century_lounge_chair"
-            }
-          }
-        ],
-        "prop:outdoor_table_chair_set_01": [
-          {
-            "position": [
-              -5.6,
-              0.04,
-              5.1
-            ],
-            "rotation": [
-              0,
-              0.70711,
-              0,
-              0.70711
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          }
-        ],
-        "prop:painted_wooden_bench": [
-          {
-            "position": [
-              -4.6,
-              0.04,
-              -1.15
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "painted_wooden_bench"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -2231,7 +1831,7 @@
         "textures/wood_orm.webp",
         "textures/wood_normal.webp"
       ],
-      "bytes": 791458,
+      "bytes": 789842,
       "textureBytes": 1742228,
       "tris": 18089,
       "bounds": {
@@ -2483,108 +2083,6 @@
             }
           }
         ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              -2,
-              5.197,
-              -6.4
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          },
-          {
-            "position": [
-              2.5,
-              4.633,
-              -6.4
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:outdoor_table_chair_set_01": [
-          {
-            "position": [
-              4.6,
-              0.04,
-              2
-            ],
-            "rotation": [
-              0,
-              0.70711,
-              0,
-              0.70711
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          },
-          {
-            "position": [
-              7.6,
-              0.04,
-              3.6
-            ],
-            "rotation": [
-              0,
-              0.5,
-              0,
-              0.86603
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -2752,7 +2250,7 @@
         "textures/awning_orm.webp",
         "textures/awning_normal.webp"
       ],
-      "bytes": 754793,
+      "bytes": 753640,
       "textureBytes": 1493614,
       "tris": 16533,
       "bounds": {
@@ -3072,76 +2570,6 @@
             }
           }
         ],
-        "prop:CoffeeCart_01": [
-          {
-            "position": [
-              -2.6,
-              0.04,
-              0.9
-            ],
-            "rotation": [
-              0,
-              0.70711,
-              0,
-              0.70711
-            ],
-            "extras": {
-              "prop_id": "CoffeeCart_01"
-            }
-          }
-        ],
-        "prop:mid_century_lounge_chair": [
-          {
-            "position": [
-              8.2,
-              0.04,
-              -5.6
-            ],
-            "rotation": [
-              0,
-              -0.98481,
-              0,
-              0.17365
-            ],
-            "extras": {
-              "prop_id": "mid_century_lounge_chair"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -3310,7 +2738,7 @@
         "textures/awning_orm.webp",
         "textures/awning_normal.webp"
       ],
-      "bytes": 774125,
+      "bytes": 773204,
       "textureBytes": 1291210,
       "tris": 17529,
       "bounds": {
@@ -3559,76 +2987,6 @@
             }
           }
         ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              -2.2,
-              3.76,
-              -6.9
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:ocean_buoy": [
-          {
-            "position": [
-              8.4,
-              0.88,
-              -4.6
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "ocean_buoy"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -3801,9 +3159,9 @@
         "textures/awning_orm.webp",
         "textures/awning_normal.webp"
       ],
-      "bytes": 906427,
-      "textureBytes": 2076030,
-      "tris": 18974,
+      "bytes": 957337,
+      "textureBytes": 2076800,
+      "tris": 19910,
       "bounds": {
         "min": [
           -10,
@@ -3821,6 +3179,7 @@
         "interior",
         "metal",
         "trim",
+        "door",
         "bulb",
         "roof",
         "neon_accent",
@@ -4090,90 +3449,6 @@
             }
           }
         ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              -7.3,
-              6.1,
-              -6.6
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          },
-          {
-            "position": [
-              1.5,
-              6.1,
-              -6.6
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          },
-          {
-            "position": [
-              -7.3,
-              6.1,
-              0.5
-            ],
-            "rotation": [
-              0,
-              0.70711,
-              0,
-              0.70711
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -4348,7 +3623,7 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 852615,
+      "bytes": 850508,
       "textureBytes": 2128062,
       "tris": 19573,
       "bounds": {
@@ -4599,128 +3874,6 @@
             }
           }
         ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              1.2,
-              10,
-              -7.2
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:mid_century_lounge_chair": [
-          {
-            "position": [
-              7.6,
-              0.04,
-              0.6
-            ],
-            "rotation": [
-              0,
-              -0.96593,
-              0,
-              0.25882
-            ],
-            "extras": {
-              "prop_id": "mid_century_lounge_chair"
-            }
-          }
-        ],
-        "prop:outdoor_table_chair_set_01": [
-          {
-            "position": [
-              -6.6,
-              0.04,
-              5.4
-            ],
-            "rotation": [
-              0,
-              0.57358,
-              0,
-              0.81915
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          },
-          {
-            "position": [
-              2.6,
-              0.04,
-              4.4
-            ],
-            "rotation": [
-              0,
-              0.76604,
-              0,
-              0.64279
-            ],
-            "extras": {
-              "prop_id": "outdoor_table_chair_set_01"
-            }
-          }
-        ],
-        "prop:painted_wooden_bench": [
-          {
-            "position": [
-              -4.6,
-              0.04,
-              6.5
-            ],
-            "rotation": [
-              0,
-              -1,
-              0,
-              0
-            ],
-            "extras": {
-              "prop_id": "painted_wooden_bench"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -4893,7 +4046,7 @@
         "textures/concrete_albedo.webp",
         "textures/concrete_orm.webp"
       ],
-      "bytes": 675036,
+      "bytes": 674051,
       "textureBytes": 2074956,
       "tris": 15764,
       "bounds": {
@@ -5181,76 +4334,6 @@
             }
           }
         ],
-        "prop:exterior_aircon_unit": [
-          {
-            "position": [
-              -5,
-              4,
-              -6.6
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "exterior_aircon_unit"
-            }
-          }
-        ],
-        "prop:painted_wooden_bench": [
-          {
-            "position": [
-              3.2,
-              0.04,
-              6
-            ],
-            "rotation": [
-              0,
-              -1,
-              0,
-              0
-            ],
-            "extras": {
-              "prop_id": "painted_wooden_bench"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          }
-        ],
         "spot_0": [
           {
             "position": [
@@ -5420,7 +4503,7 @@
         "textures/glass_block_orm.webp",
         "textures/glass_block_normal.webp"
       ],
-      "bytes": 508895,
+      "bytes": 507723,
       "textureBytes": 1320556,
       "tris": 11512,
       "bounds": {
@@ -5728,74 +4811,6 @@
             ],
             "extras": {
               "prop_id": "classic_laptop"
-            }
-          }
-        ],
-        "prop:mid_century_lounge_chair": [
-          {
-            "position": [
-              -6.4,
-              0.04,
-              5.4
-            ],
-            "rotation": [
-              0,
-              0.93969,
-              0,
-              0.34202
-            ],
-            "extras": {
-              "prop_id": "mid_century_lounge_chair"
-            }
-          },
-          {
-            "position": [
-              -3.7,
-              0.04,
-              5.6
-            ],
-            "rotation": [
-              0,
-              -0.93969,
-              0,
-              0.34202
-            ],
-            "extras": {
-              "prop_id": "mid_century_lounge_chair"
-            }
-          }
-        ],
-        "prop:street_lamp_02": [
-          {
-            "position": [
-              -9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
-            }
-          },
-          {
-            "position": [
-              9.7,
-              0,
-              7.7
-            ],
-            "rotation": [
-              0,
-              0,
-              0,
-              1
-            ],
-            "extras": {
-              "prop_id": "street_lamp_02"
             }
           }
         ],
@@ -6156,11 +5171,11 @@
     "ao_plot_beach_bar.webp": 44660,
     "ao_plot_beach_cafe.webp": 66796,
     "ao_plot_coworking.webp": 63956,
-    "ao_plot_deco_hotel.webp": 104680,
+    "ao_plot_deco_hotel.webp": 98808,
     "ao_plot_diner.webp": 68362,
     "ao_plot_juice_kiosk.webp": 116094,
     "ao_plot_marina_office.webp": 80036,
-    "ao_plot_motel_court.webp": 72014,
+    "ao_plot_motel_court.webp": 72784,
     "ao_plot_record_shop.webp": 85344,
     "ao_plot_surf_shop.webp": 65368,
     "ao_plot_trailer.webp": 68932,

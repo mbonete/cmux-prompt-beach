@@ -9,7 +9,7 @@ import copy
 from .config import PALETTE, NEON, LIGHT, hex_lin
 
 ALLOWED = ["stucco", "trim", "glass", "glass_block", "metal", "terrazzo", "wood", "awning", "roof",
-           "concrete", "planter", "soil", "water", "neon_accent", "interior", "bulb"]
+           "concrete", "planter", "soil", "door", "water", "neon_accent", "interior", "bulb"]
 
 BASE = {
     "stucco": dict(base=hex_lin(PALETTE["flamingo"]), albedo="stucco_albedo", orm="stucco_orm",
@@ -21,6 +21,8 @@ BASE = {
     "planter": dict(base=hex_lin("#B88468"), albedo="stucco_albedo", orm="stucco_orm",
                     normal="stucco_normal", normalScale=1.0, rough=1.0, metal=0.0),
     "soil": dict(base=hex_lin("#4B3527"), rough=0.97, metal=0.0),
+    # painted room doors (deep teal, semi-gloss)
+    "door": dict(base=hex_lin(PALETTE["deep_teal"]), rough=0.5, metal=0.0),
     "terrazzo": dict(base=[1, 1, 1, 1], albedo="terrazzo_albedo", orm="terrazzo_orm", rough=1.0, metal=0.0),
     "wood": dict(base=[1, 1, 1, 1], albedo="wood_albedo", orm="wood_orm", normal="wood_normal",
                  normalScale=0.6, rough=1.0, metal=0.0),

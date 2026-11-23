@@ -357,8 +357,24 @@ def applied_door(mb, x0, x1, y0, y1, z, mat_frame="trim", panes=2, cell=None, gl
     mb.box(x1, x1 + fw, y0, y1 + fw, z, z + depth, mat_frame, bevel=0.02, segs=1)
     mb.box(x0 - fw, x1 + fw, y1, y1 + fw, z, z + depth, mat_frame, bevel=0.02, segs=1)
     w = (x1 - x0) / panes
+    # A room's door (a room picture, not the lit panel of a shop door) is painted, with a small
+    # square window: as a full-height pane, the stretched room picture read as a door of floorboards.
+    room = cell is not None and cell < LIGHT_PANEL_CELL
     for k in range(panes):
         a, b = x0 + k * w, x0 + (k + 1) * w
+        if room:
+            mb.box(a + 0.005, b - 0.005, y0, y1, z + 0.01, z + 0.05, "door", bevel=0.01, segs=1)
+            side = min(0.34, (b - a) - 0.36)
+            cx, top = (a + b) / 2, y1 - 0.3
+            border = 0.035
+            mb.poly([(cx - side / 2 - border, top - side - border, z + 0.051), (cx + side / 2 + border, top - side - border, z + 0.051),
+                     (cx + side / 2 + border, top + border, z + 0.051), (cx - side / 2 - border, top + border, z + 0.051)], mat_frame)
+            u0, v0, u1, v1 = atlas_rect(cell)
+            mb.poly([(cx - side / 2, top - side, z + 0.053), (cx + side / 2, top - side, z + 0.053), (cx + side / 2, top, z + 0.053),
+                     (cx - side / 2, top, z + 0.053)], glass_mat, [(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
+            hx = b - 0.13 if k == panes - 1 else a + 0.13
+            mb.box(hx - 0.018, hx + 0.018, y0 + 0.98, y0 + 1.05, z + 0.05, z + 0.1, "metal", bevel=0.008, segs=1)
+            continue
         mb.box(a + 0.005, b - 0.005, y0, y1, z + 0.01, z + 0.05, "metal")
         if cell is None:
             uv = [panel_uv()] * 4

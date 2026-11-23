@@ -49,6 +49,7 @@ TILE = {
     "concrete": 3.0,
     "planter": 1.5,
     "soil": 1.5,
+    "door": 1.5,
     "terrazzo": 2.0,
     "wood": 2.0,
     "roof": 4.0,

@@ -163,54 +163,6 @@
   },
   "props": [
     {
-      "id": "street_lamp_02",
-      "src": "assets-src/polyhaven/models/street_lamp_02/street_lamp_02_1k.gltf",
-      "credit": {
-        "author": "Josh Dean",
-        "url": "https://polyhaven.com/a/street_lamp_02"
-      },
-      "texture": 1024,
-      "pivot": "wall",
-      "materials": {
-        "street_lamp_02": {
-          "rename": "metal"
-        },
-        "street_lamp_02_glass": {
-          "rename": "glass",
-          "alphaMode": "OPAQUE",
-          "baseColor": [
-            0.62,
-            0.6,
-            0.55,
-            1
-          ],
-          "dropTextures": [
-            "baseColor",
-            "metallicRoughness"
-          ],
-          "roughness": 0.25,
-          "metallic": 0
-        },
-        "street_lamp_02_bulb": {
-          "rename": "bulb"
-        }
-      },
-      "notes": "Wall-mounted Victorian lantern on a bracket, not a free-standing lamp post. Pivot: wall plane (z = 0), bottom of the bracket, centred in x; +Z points away from the wall. Make `glass` and `bulb` emissive at night."
-    },
-    {
-      "id": "CoffeeCart_01",
-      "src": "assets-src/polyhaven/models/CoffeeCart_01/CoffeeCart_01_1k.gltf",
-      "credit": {
-        "author": "Joe Seabuhr",
-        "url": "https://polyhaven.com/a/CoffeeCart_01"
-      },
-      "texture": 1024,
-      "pivotFrom": [
-        "CoffeeCart_01_cart"
-      ],
-      "notes": "Pivot is the base centre of the cart body; the power cord trails to a plug about 1.4 m to the cart's left (-X)."
-    },
-    {
       "id": "classic_laptop",
       "src": "assets-src/polyhaven/models/classic_laptop/classic_laptop_1k.gltf",
       "credit": {
@@ -232,104 +184,6 @@
         }
       },
       "notes": "Source is modelled about 2.2x too large (65 cm wide); scaled by 0.46 to a 30 cm wide 1990s notebook. The screen is its own material `screen` (dark, no texture) with planar UVs 0..1 (u to +X, v = 0 at the top) so the client can make it emissive or map a texture."
-    },
-    {
-      "id": "mid_century_lounge_chair",
-      "src": "assets-src/polyhaven/models/mid_century_lounge_chair/mid_century_lounge_chair_1k.gltf",
-      "credit": {
-        "author": "Kuutti Siitonen",
-        "url": "https://polyhaven.com/a/mid_century_lounge_chair"
-      },
-      "texture": 1024
-    },
-    {
-      "id": "outdoor_table_chair_set_01",
-      "src": "assets-src/polyhaven/models/outdoor_table_chair_set_01/outdoor_table_chair_set_01_1k.gltf",
-      "credit": {
-        "author": "James Ray Cock",
-        "url": "https://polyhaven.com/a/outdoor_table_chair_set_01"
-      },
-      "texture": 1024,
-      "parts": {
-        "table": [
-          "outdoor_table_chair_set_01_table"
-        ],
-        "chair_01": [
-          "outdoor_table_chair_set_01_chair_01"
-        ],
-        "chair_02": [
-          "outdoor_table_chair_set_01_chair_02"
-        ]
-      },
-      "notes": "lod0 keeps the table and the two chairs as separate child nodes (table, chair_01, chair_02) so chairs can be moved."
-    },
-    {
-      "id": "painted_wooden_bench",
-      "src": "assets-src/polyhaven/models/painted_wooden_bench/painted_wooden_bench_1k.gltf",
-      "credit": {
-        "author": "Kirill Sannikov",
-        "url": "https://polyhaven.com/a/painted_wooden_bench"
-      },
-      "texture": 1024
-    },
-    {
-      "id": "exterior_aircon_unit",
-      "src": "assets-src/polyhaven/models/exterior_aircon_unit/exterior_aircon_unit_1k.gltf",
-      "credit": {
-        "author": "Monsta3D",
-        "url": "https://polyhaven.com/a/exterior_aircon_unit"
-      },
-      "texture": 512,
-      "variants": {
-        "clean": [
-          "exterior_aircon_unit"
-        ],
-        "rusted": [
-          "exterior_aircon_unit_rusted"
-        ]
-      },
-      "materials": {
-        "exterior_aircon_unit_02": {
-          "rename": "grille",
-          "alphaMode": "MASK",
-          "alphaFromBaseColorTexture": true,
-          "baseColor": [
-            0.62,
-            0.62,
-            0.6,
-            1
-          ]
-        },
-        "exterior_aircon_unit_rusted_02": {
-          "rename": "grille_rusted",
-          "alphaMode": "MASK",
-          "alphaFromBaseColorTexture": true,
-          "baseColor": [
-            0.5,
-            0.47,
-            0.43,
-            1
-          ]
-        },
-        "exterior_aircon_unit_01": {
-          "rename": "body"
-        },
-        "exterior_aircon_unit_rusted_01": {
-          "rename": "body_rusted"
-        }
-      },
-      "notes": "Two variants (clean, rusted). The source glTF puts the grille's opacity map in the base colour slot; it is moved to the alpha channel (MASK) over a flat metal grey."
-    },
-    {
-      "id": "ocean_buoy",
-      "src": "assets-src/polyhaven/models/ocean_buoy/ocean_buoy_1k.gltf",
-      "credit": {
-        "author": "Mateusz Sadek",
-        "url": "https://polyhaven.com/a/ocean_buoy"
-      },
-      "texture": 512,
-      "pivot": "origin-y",
-      "notes": "Pivot kept at the waterline (y = 0); the hull reaches 0.81 m below it. The lamp is an emissive texture (KHR_materials_emissive_strength)."
     },
     {
       "id": "anthurium_botany_01",
@@ -391,15 +245,6 @@
       "notes": "Five ground-planted clumps (no pot), up to 0.42 m tall. Alpha-masked, double-sided leaves.",
       "lod0MaxTris": 4000,
       "lod1": true
-    },
-    {
-      "id": "vintage_day_bed",
-      "src": "assets-src/polyhaven/models/vintage_day_bed/vintage_day_bed_1k.gltf",
-      "credit": {
-        "author": "Aron Łyczek",
-        "url": "https://polyhaven.com/a/vintage_day_bed"
-      },
-      "texture": 1024
     }
   ],
   "_shipping": "Only what the client uses ships: the sky is drawn by a shader (no HDRIs), each texture set at the one size the client samples, the ocean normal map, and the props the buildings place. Add an entry back here before using it."
