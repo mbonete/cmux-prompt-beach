@@ -5,7 +5,7 @@ import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { createRepoKindCache, detectRepoKind } from '../server/repo-kind.mjs';
 import { CONVERSATION_LIMITS, extractConversation, humanPromptOf } from '../server/sources/claude-transcripts.mjs';
-import { hookTick, repoKeyOf } from '../server/sources/cmux.mjs';
+import { hookTick, pairTool, repoKeyOf } from '../server/sources/cmux.mjs';
 import { tickTool, toolCategory } from '../server/tools.mjs';
 
 describe('tool categories', () => {
@@ -248,4 +248,26 @@ test('a repo gets the same key however git names its git dir', () => {
   assert.equal(repoKeyOf('/u/code/app', '/u/code/app', isDir), key);
   assert.equal(repoKeyOf('/u/code/app', '  \n', isDir), null, 'no answer is no repo');
   assert.equal(repoKeyOf('/srv/bare.git', '.', isDir), '/srv/bare.git', 'a bare repo is its own key');
+});
+
+describe('pairing a permission request with its tool call', () => {
+  const at = '2026-11-23T12:00:10.000Z';
+  const bash = (command, ts) => ({ name: 'Bash', input: { command }, at: ts });
+
+  test('one open call of that tool, just before the request: the transcript copy', () => {
+    assert.equal(pairTool([bash('rm -rf build', '2026-11-23T12:00:09.000Z')], 'Bash', at)?.command, 'rm -rf build');
+  });
+
+  test('two open calls of the same tool (in parallel): no guess, the Feed copy is shown', () => {
+    assert.equal(pairTool([bash('ls', '2026-11-23T12:00:08.000Z'), bash('rm -rf build', '2026-11-23T12:00:09.000Z')], 'Bash', at), null);
+  });
+
+  test('an older call still running (the new one not in the transcript yet): no guess', () => {
+    assert.equal(pairTool([bash('npm run dev', '2026-11-23T11:55:00.000Z')], 'Bash', at), null);
+  });
+
+  test('another tool, or nothing open: no pairing', () => {
+    assert.equal(pairTool([{ name: 'Read', input: { file_path: '/a/b' }, at: '2026-11-23T12:00:09.000Z' }], 'Bash', at), null);
+    assert.equal(pairTool(undefined, 'Bash', at), null);
+  });
 });

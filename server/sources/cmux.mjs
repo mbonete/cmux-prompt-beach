@@ -152,6 +152,26 @@ function isOpenDecision(item, now) {
   return Number.isFinite(created) && now - created < FEED_DECISION_TTL_MS;
 }
 
+/** How close (ms) a tool call must be to the permission request it's paired with. */
+const PAIR_WINDOW_MS = 30_000;
+
+/**
+ * The transcript's copy of the tool call a permission request is about (the
+ * Feed's copy has its paths redacted), only when it can't be another call:
+ * exactly one open call of that tool, made within 30 s of the request.
+ * Pairing by name alone could show one Bash command while Allow approved
+ * another (two running in parallel), or an older call still running while the
+ * new one hadn't reached the transcript yet. Otherwise null: the card shows the
+ * Feed's copy, which is exactly what Allow approves.
+ */
+export function pairTool(openTools, toolName, requestedAt) {
+  const name = prettyToolName(toolName);
+  const at = Date.parse(requestedAt);
+  if (!name || !Number.isFinite(at)) return null;
+  const near = (openTools || []).filter((t) => prettyToolName(t.name) === name && Math.abs((Date.parse(t.at) || 0) - at) <= PAIR_WINDOW_MS);
+  return near.length === 1 ? describeTool(near[0].name, near[0].input) : null;
+}
+
 function describeDecision(feedItem, tx) {
   const kind = /question/i.test(feedItem.kind) ? 'question' : /plan/i.test(feedItem.kind) ? 'plan' : 'permission';
   const created = Date.parse(feedItem.created_at);
@@ -165,9 +185,9 @@ function describeDecision(feedItem, tx) {
     return { ...base, questions: tx?.pendingQuestion || [{ header: null, question: feedItem.question_prompt || feedItem.title || 'Question', multiSelect: Boolean(feedItem.question_multi_select), options: [] }] };
   }
   if (kind === 'plan') return { ...base, plan: tx?.pendingPlan || null };
-  // Prefer the transcript's copy of the tool call: the Feed copy has paths redacted.
+  // The transcript's copy of the exact call (the Feed copy has paths redacted), when it's certain.
   const toolName = feedItem.tool_name || feedItem.title;
-  const fromTx = tx?.currentTool && tx.currentTool.name === prettyToolName(toolName) ? tx.currentTool : null;
+  const fromTx = pairTool(tx?.openTools, toolName, feedItem.created_at);
   return { ...base, tool: fromTx || describeTool(toolName, parseLooseJSON(feedItem.tool_input) || {}) };
 }
 

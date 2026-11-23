@@ -397,7 +397,7 @@ function helpHTML(): string {
     ['Esc', 'Close'],
   ];
   const states: [Lane, string][] = [
-    ['needs', 'Stands up, turns to you and waves. A light beam rises from their plot.'],
+    ['needs', 'Waves at you: standing up where there is room, from their seat where there isn\'t. A light beam rises from their plot.'],
     ['working', 'At their desk. A small icon pops up for each tool call.'],
     ['move', 'Relaxing: it finished and you have read it.'],
     ['stale', 'Dozing: nothing for a while (see Settings).'],

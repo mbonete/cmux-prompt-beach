@@ -145,9 +145,18 @@ async function handleAction(body) {
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
+  // No other page may frame this one: a hidden frame under a fake button could steal a click on
+  // "Allow" (clickjacking). frame-ancestors for current browsers, X-Frame-Options for older ones.
+  'X-Frame-Options': 'DENY',
   'Content-Security-Policy':
-    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'",
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
 };
+
+/** The token, compared in constant time. */
+function tokenOk(value) {
+  if (typeof value !== 'string' || value.length !== TOKEN.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(value), Buffer.from(TOKEN));
+}
 
 function send(res, status, type, body, extra = {}) {
   res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store', ...SECURITY_HEADERS, ...extra });
@@ -199,7 +208,7 @@ const server = http.createServer(async (req, res) => {
       if (!originOk(req)) return sendJSON(res, 403, { error: 'Forbidden origin' });
 
       if (req.method === 'GET' && url.pathname === '/api/stream') {
-        if (url.searchParams.get('token') !== TOKEN) return send(res, 403, 'text/plain', 'Forbidden');
+        if (!tokenOk(url.searchParams.get('token'))) return send(res, 403, 'text/plain', 'Forbidden');
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', ...SECURITY_HEADERS });
         res.write('retry: 2000\n\n');
         clients.add(res);
@@ -213,12 +222,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (url.pathname === '/api/snapshot' && req.method === 'GET') {
-        if (req.headers['x-switchboard-token'] !== TOKEN) return sendJSON(res, 403, { error: 'Forbidden' });
+        if (!tokenOk(req.headers['x-switchboard-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
         return sendJSON(res, 200, snapshot ? currentPayload() : { ...world.apply(await source.snapshot()), source: source.name });
       }
 
       if (url.pathname === '/api/conversation' && req.method === 'GET') {
-        if (req.headers['x-switchboard-token'] !== TOKEN) return sendJSON(res, 403, { error: 'Forbidden' });
+        if (!tokenOk(req.headers['x-switchboard-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
         const surfaceId = url.searchParams.get('surfaceId') || '';
         if (!UUID_RE.test(surfaceId)) return sendJSON(res, 400, { error: 'Invalid surface' });
         const item = snapshot?.items?.find((i) => String(i.surfaceId).toLowerCase() === surfaceId.toLowerCase());
@@ -234,7 +243,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (url.pathname === '/api/action' && req.method === 'POST') {
-        if (req.headers['x-switchboard-token'] !== TOKEN) return sendJSON(res, 403, { error: 'Forbidden' });
+        if (!tokenOk(req.headers['x-switchboard-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
         if (!String(req.headers['content-type'] || '').startsWith('application/json')) return sendJSON(res, 415, { error: 'Send JSON' });
         const body = parseLooseJSON(await readBody(req));
         if (!body || typeof body !== 'object') return sendJSON(res, 400, { error: 'Invalid JSON' });

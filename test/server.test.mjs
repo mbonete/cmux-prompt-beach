@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { after, before, describe, test } from 'node:test';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'";
+const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 
 async function freePort(from = 4770, to = 4799) {
   for (let port = from; port <= to; port += 1) {
@@ -139,6 +139,8 @@ describe('the page', () => {
     assert.equal(r.headers['content-security-policy'], CSP);
     assert.equal(r.headers['x-content-type-options'], 'nosniff');
     assert.equal(r.headers['referrer-policy'], 'no-referrer');
+    // No other page may frame it (clickjacking a click on Allow).
+    assert.equal(r.headers['x-frame-options'], 'DENY');
     assert.match(token, /^[0-9a-f]{48}$/);
     assert.ok(!r.body.includes('__SWITCHBOARD_TOKEN__'));
     const head = await request('HEAD', '/');

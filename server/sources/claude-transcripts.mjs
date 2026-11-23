@@ -283,6 +283,8 @@ export function summarizeTranscript(lines) {
   const live = [...openTools.values()].filter((t) => (Date.parse(t.at) || 0) >= since);
   const lastTool = live[live.length - 1] || null;
   s.currentTool = lastTool ? describeTool(lastTool.name, lastTool.input) : null;
+  // Every open call, for pairing a permission request with the exact one it's about (cmux.pairTool).
+  s.openTools = live.map((t) => ({ name: t.name, input: t.input, at: t.at }));
   s.pendingQuestion = lastTool?.name === 'AskUserQuestion' ? normalizeQuestions(lastTool.input?.questions) : null;
   s.pendingPlan = lastTool?.name === 'ExitPlanMode' ? clip(String(lastTool.input?.plan || ''), 6000) : null;
   s.cwds = [...seenCwd].reverse().slice(0, 6);
