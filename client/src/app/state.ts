@@ -16,6 +16,8 @@ export interface Settings {
   sound: boolean;
   chime: boolean;
   idleCamera: boolean;
+  /** Ambient motion even when nobody is using the city (off: it holds still after 45 s without input). */
+  liveMotion: boolean;
   motion: Motion;
 }
 
@@ -33,6 +35,7 @@ const DEFAULTS: Settings = {
   sound: false,
   chime: false,
   idleCamera: true,
+  liveMotion: false,
   motion: 'system',
 };
 

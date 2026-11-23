@@ -267,7 +267,11 @@ export class Panels {
     ).join('')}</select></div>${toggle('sound', 'Sound', 'Waves and the city, very quietly.')}${toggle('chime', 'Chime', 'A soft chime when someone starts needing you.')}${toggle(
       'idleCamera',
       'Idle camera',
-      'After 2 minutes without input, slow shots of the city that cut to whoever needs you.',
+      'After 2 minutes without input, slow shots of the city that cut to whoever needs you. Needs Keep the city lively.',
+    )}${toggle(
+      'liveMotion',
+      'Keep the city lively',
+      'Waves, walkers and the idle camera even when you are not using it. Off, the city holds still after 45 seconds without input and still shows every change, which keeps a laptop cool.',
     )}${seg(
       'motion',
       'Reduced motion',

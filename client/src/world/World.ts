@@ -15,7 +15,8 @@ import {
   Vector3,
   WebGPURenderer,
 } from 'three/webgpu';
-import { float, sin, time, uniform } from 'three/tsl';
+import { float, sin, uniform } from 'three/tsl';
+import { worldTime } from './engine/clock';
 import { CameraRig } from './camera/rig';
 import { Pipeline, type PipelineParts } from './engine/pipeline';
 import { AutoQuality, PRESETS, type QualityLevel, type QualitySetting } from './engine/quality';
@@ -80,6 +81,17 @@ const VIEW_CANDIDATES: [number, number][] = (() => {
 })();
 /** Closer than this (metres from what the camera looks at), only the focused plot keeps its label. */
 const CLOSE_UP_TAGS = 55;
+/**
+ * Calm: after this long without input (focused or not: on a second screen an
+ * unfocused window is still in view), the city stops drawing until something
+ * changes. Drawing every frame kept a fanless laptop at about a core plus the
+ * GPU, all day. "Keep the city lively" in Settings turns it off.
+ */
+const CALM_AFTER_MS = 45_000;
+/** Drawing time for a change to show (people sitting down or standing up, labels moving). */
+const CHANGE_MS = 2500;
+/** A new "needs you" gets a few seconds of motion: the wave, the badge, so a glance catches it. */
+const NEEDS_MS = 5000;
 /** How far a plot's own view stands back (focusPlot). */
 const PLOT_VIEW_DISTANCE = 46;
 
@@ -120,6 +132,17 @@ export class World {
   onFrame: ((camera: PerspectiveCamera, w: number, h: number, now: number) => void) | null = null;
   /** Clicks in the city: a person, a plot, or open ground. */
   onPick: ((p: Pick) => void) | null = null;
+  /** The city went calm (stopped drawing) or woke up. */
+  onCalm: ((calm: boolean) => void) | null = null;
+  /** How long without input before the city goes calm (a field, so tests can shorten it). */
+  calmAfterMs = CALM_AFTER_MS;
+  private awakeUntil = performance.now() + CALM_AFTER_MS;
+  private calm = false;
+  private calmWatch = 0;
+  private liveMotion = false;
+  private lost = false;
+  private seen = '';
+  private needing = new Set<string>();
   private selected: string | null = null;
   private readonly ring: Mesh;
   private readonly ringColor = uniform(new Color(0x2fd8ff));
@@ -179,7 +202,7 @@ export class World {
     // The selection ring at the chosen person's feet.
     const ringMat = new MeshBasicNodeMaterial({ transparent: true, depthWrite: false, blending: AdditiveBlending });
     ringMat.colorNode = this.ringColor;
-    ringMat.opacityNode = float(0.7).add(sin(time.mul(3)).mul(0.25));
+    ringMat.opacityNode = float(0.7).add(sin(worldTime.mul(3)).mul(0.25));
     this.ring = new Mesh(new RingGeometry(0.5, 0.66, 48).rotateX(-Math.PI / 2), ringMat);
     this.ring.visible = false;
     this.ring.renderOrder = 5;
@@ -221,10 +244,15 @@ export class World {
       .catch(() => {});
     // A lost device (the GPU process crashed or reset) used to freeze the city with no word.
     renderer.onDeviceLost = (info) => {
+      this.lost = true;
       this.stop();
       this.opts.onLost?.(info?.message || 'the graphics device was lost');
     };
-    document.addEventListener('visibilitychange', () => (document.hidden ? this.stop() : this.start()));
+    document.addEventListener('visibilitychange', () => (document.hidden ? this.stop() : this.wake(1000)));
+    // Any input anywhere on the page means someone is here: full speed again (and for a while).
+    for (const ev of ['pointermove', 'pointerdown', 'wheel', 'keydown', 'touchstart'] as const) {
+      window.addEventListener(ev, () => this.wake(this.calmAfterMs), { passive: true, capture: true });
+    }
     // Default framing: the district from the land side, the sea and sunset beyond.
     this.rig.flyTo({ target: new Vector3(0, 0, 30), distance: 165 }, 0.01);
   }
@@ -246,7 +274,40 @@ export class World {
     this.renderer.setAnimationLoop(null);
   }
 
+  /** Draw (again) for at least `ms`: something changed, or someone is here. */
+  wake(ms: number) {
+    this.awakeUntil = Math.max(this.awakeUntil, performance.now() + ms);
+    if (this.calm) {
+      this.calm = false;
+      window.clearInterval(this.calmWatch);
+      this.onCalm?.(false);
+    }
+    if (!document.hidden && !this.lost) this.start();
+  }
+
+  /** Keep ambient motion going even when nobody is using the city (Settings: Keep the city lively). */
+  setLiveMotion(on: boolean) {
+    this.liveMotion = on;
+    this.wake(this.calmAfterMs);
+  }
+
+  /**
+   * Nobody is using the city and nothing is moving: stop drawing. A light
+   * check keeps watching the camera (a flight started from a list or a card,
+   * the framing shift of a card) and the tour, and wakes the city for them;
+   * changes from the server wake it in sync().
+   */
+  private goCalm() {
+    this.stop();
+    this.calm = true;
+    this.onCalm?.(true);
+    this.calmWatch = window.setInterval(() => {
+      if (this.rig.moving || this.director.running) this.wake(2000);
+    }, 400);
+  }
+
   setQuality(q: QualitySetting) {
+    this.wake(1000);
     this.qualitySetting = q;
     const level = q === 'auto' ? this.auto.level : q;
     if (level !== this.level) this.rebuildPipeline(level);
@@ -259,6 +320,7 @@ export class World {
   }
 
   setReducedMotion(on: boolean) {
+    this.wake(1000);
     this.reducedMotion = on;
     this.rig.reducedMotion = on;
     this.director.enabled = this.idleCamera && !on;
@@ -345,6 +407,7 @@ export class World {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
     if (!w || !h) return;
+    this.wake(300);
     this.renderer.setSize(w, h, false);
     this.rig.resize(w / h);
     this.rig.viewHeight = h;
@@ -377,6 +440,7 @@ export class World {
     // move, and a throttled frame rate reads as lag); the loop stops when hidden.
     const frameMs = now - this.lastFrame;
     this.lastFrame = now;
+    worldTime.value += dt;
 
     this.director.update(dt);
     this.rig.update(dt);
@@ -417,6 +481,7 @@ export class World {
       this.fpsSince = now;
       this.opts.onStatus?.({ backend: this.backend, quality: this.level, fps: this.fps });
     }
+    if (!this.liveMotion && now > this.awakeUntil && !this.rig.moving && !this.director.running && !this.people?.transitioning) this.goCalm();
   }
 
   /** Loads the buildings and props. */
@@ -506,9 +571,22 @@ export class World {
     this.district.update(states);
     this.syncTags(snap);
     this.people?.sync(snap.items, this.staleMs);
+
+    // Something to see in 3D changed (who is where, in which state; which plots are in use): draw for
+    // a moment. Titles, phases and helper counts only change labels, which update without it; a
+    // working agent's phase flips every few seconds. A new "needs you" gets a few seconds more.
+    const shown = snap.items.filter((i) => i.agent && i.phase !== 'shell' && !i.archived && i.plot !== null);
+    const seen = shown.map((i) => `${i.surfaceId}:${i.plot}:${i.spot}:${laneOf(i, now, this.staleMs)}`).join('|') + `#${states.map((p) => `${p.key}${p.dormant ? 'd' : ''}${p.needs ? 'n' : ''}`).join(',')}`;
+    if (seen !== this.seen) this.wake(CHANGE_MS);
+    this.seen = seen;
+    const needing = new Set(shown.filter((i) => laneOf(i, now, this.staleMs) === 'needs').map((i) => i.surfaceId));
+    if ([...needing].some((id) => !this.needing.has(id))) this.wake(NEEDS_MS);
+    this.needing = needing;
   }
 
   tick(t: Tick) {
+    // Tool-call pops are ambient: a calm city stays calm (the counts and badges carry the state).
+    if (this.calm) return;
     this.people?.tick(t, this.rig.camera);
   }
 
@@ -654,6 +732,7 @@ export class World {
 
   /** Selects a person in the world: their ring, their name, and the camera follows. */
   select(id: string | null, lane: Lane | null) {
+    this.wake(2500);
     this.selected = id;
     this.people?.setSelected(id);
     if (lane) this.ringColor.value.copy(LANE_RING[lane]);
@@ -674,6 +753,7 @@ export class World {
   }
 
   focusAgent(id: string, seconds = 1.2): boolean {
+    this.wake(2500);
     const p = this.people?.positionOf(id, new Vector3());
     if (!p) return false;
     this.rig.poke();
@@ -729,6 +809,7 @@ export class World {
   }
 
   focusPlot(key: PlotKey) {
+    this.wake(2500);
     const c = this.district.center(key);
     if (!c) return;
     this.rig.poke();
@@ -744,6 +825,7 @@ export class World {
 
   /** The whole district from the land side. */
   overview() {
+    this.wake(2500);
     this.rig.poke();
     this.rig.setFollow(null);
     this.rig.flyTo({ target: new Vector3(0, 0, 30), distance: 165, pitch: MathUtils.degToRad(40), yaw: 0 }, 1.6);

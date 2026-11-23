@@ -31,11 +31,11 @@ import {
   sin,
   smoothstep,
   step,
-  time,
   uniform,
   uv,
   vec3,
 } from 'three/tsl';
+import { worldTime as time } from '../engine/clock';
 
 // Procedural coconut palms: a tapered, gently curved trunk with growth rings,
 // and a crown of drooping fronds whose leaflets are cut out in the shader.

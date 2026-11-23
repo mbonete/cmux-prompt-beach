@@ -100,6 +100,11 @@ export class Person {
     return out.applyQuaternion(this.spot.quaternion).add(this.spot.position);
   }
 
+  /** Mid sit-down, stand-up or a one-off clip (the city keeps drawing until it ends). */
+  get transitioning() {
+    return this.busy;
+  }
+
   private get seatedSpot() {
     return this.spot.kind !== 'standing';
   }

@@ -2287,6 +2287,13 @@ button.toast:hover {
   opacity: 1;
 }
 
+/* Calm (nobody using the city, nothing changing): looping animations pause, so nothing redraws. */
+.app--calm *,
+.app--calm *::before,
+.app--calm *::after {
+  animation-play-state: paused !important;
+}
+
 .app--idle .rail,
 .app--idle .hint,
 .app--idle .minimap,

@@ -147,7 +147,8 @@ function noErrors(page, since = 0) {
 }
 
 // Shared page snippets.
-const SETUP = `const sb = window.switchboard; const W = sb.world; const R = W.rig; W.director.enabled = false;`;
+// (Kept lively: these checks measure motion. Calm mode has its own check.)
+const SETUP = `const sb = window.switchboard; const W = sb.world; const R = W.rig; W.director.enabled = false; W.setLiveMotion(true);`;
 const AGENT = `[...sb.app.state.rows.values()].find((r) => r.item.spot !== null && typeof r.item.plot === 'number')`;
 
 async function main() {
@@ -464,16 +465,45 @@ async function main() {
     return `${r.items} tables with a place for one; ${r.laptops} laptops and ${r.notes} notebooks in use`;
   });
 
+  await check('left alone, the city stops drawing; input or a change brings it back', async () => {
+    const r = await page.run(`${SETUP} W.setLiveMotion(false); const wait = (ms) => new Promise((x) => setTimeout(x, ms));
+      let n = 0; const orig = W.onFrame; W.onFrame = (...a) => { n++; orig?.(...a); };
+      const frames = async (ms) => { const a = n; await wait(ms); return n - a; };
+      // A short calm delay; then wait for a calm second (the demo's own changes wake it now and then).
+      W.calmAfterMs = 2000; W.awakeUntil = performance.now() + 2000;
+      let calmSecond = null;
+      const why = [];
+      for (let i = 0; i < 20 && !calmSecond; i++) { const f = await frames(1000); if (W.calm && f <= 1) calmSecond = { f, paused: document.querySelector('.app').classList.contains('app--calm') }; else why.push(f + 'f left ' + Math.round(W.awakeUntil - performance.now()) + ' moving ' + R.moving + ' tour ' + W.director.running + ' busy ' + W.people.transitioning + ' live ' + W.liveMotion); }
+      W.canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 1, clientX: 400, clientY: 300, bubbles: true }));
+      const afterInput = await frames(1000);
+      // Calm again, then a camera flight with no input (a click in a list does this).
+      W.awakeUntil = performance.now(); for (let i = 0; i < 40 && !W.calm; i++) await wait(100);
+      const wasCalm = W.calm; const row = [...sb.app.state.rows.values()].find((x) => x.item.spot !== null); W.focusAgent(row.item.surfaceId);
+      const afterFlight = await frames(1000);
+      W.onFrame = orig; W.calmAfterMs = 45000; sb.app.state.select(null); W.setLiveMotion(true);
+      return { calmSecond, afterInput, wasCalm, afterFlight, why: why.slice(-3) };`);
+    expect(r.calmSecond, `never went calm: ${r.why.join(' | ')}`);
+    expect(r.calmSecond.paused, 'calm, but the page animations kept running');
+    expect(r.afterInput > 30, `input brought back only ${r.afterInput} frames a second`);
+    expect(!r.wasCalm || r.afterFlight > 30, `a camera flight while calm drew only ${r.afterFlight} frames a second`);
+    return `calm: ${r.calmSecond.f} frames in a second; input: ${r.afterInput}/s; flight: ${r.afterFlight}/s`;
+  });
+
   console.log('\nInterface');
   await check('a list that reorders keeps the keyboard focus', async () => {
     const r = await page.run(`${SETUP} sb.app.state.openPanel('agents'); await new Promise((x) => setTimeout(x, 600));
       // The last row of "your move" (sorted by latest activity): give it the newest activity so it jumps to the top.
-      const lane = sb.app.state.lane('move'); const pick = lane[lane.length - 1].item.surfaceId;
-      const target = document.querySelector('.panel [data-pick="' + CSS.escape(pick) + '"]'); target.focus();
+      // A data update from the demo can land in between and put the row back: then try again (up to 3 times).
       const order = () => [...document.querySelectorAll('.panel .group--move [data-pick]')].map((e) => e.dataset.pick);
-      const before = order().indexOf(pick);
-      const row = sb.app.state.row(pick); row.item.lastActivityAt = new Date().toISOString(); sb.app.state.emit(); await new Promise((x) => setTimeout(x, 300));
-      const after = order().indexOf(pick);
+      let pick, target, before, after;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const lane = sb.app.state.lane('move'); pick = lane[lane.length - 1].item.surfaceId;
+        target = document.querySelector('.panel [data-pick="' + CSS.escape(pick) + '"]'); target.focus();
+        before = order().indexOf(pick);
+        const row = sb.app.state.row(pick); row.item.lastActivityAt = new Date().toISOString(); sb.app.state.emit(); await new Promise((x) => setTimeout(x, 300));
+        after = order().indexOf(pick);
+        if (after !== before) break;
+      }
       const a = document.activeElement; const out = { moved: before !== after, before, after, same: a === target, pick: a?.dataset?.pick === pick, tag: a?.tagName };
       sb.app.state.openPanel(null); return out;`);
     expect(r.moved, `the row didn't move (position ${r.before})`);

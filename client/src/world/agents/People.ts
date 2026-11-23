@@ -71,6 +71,16 @@ export class People {
     for (const e of this.entries.values()) e.person.reducedMotion = on;
   }
 
+  /**
+   * Someone in view is mid sit-down or stand-up. (Off screen nobody is
+   * animated, so a clip started there waits for its next visible frame and
+   * would have held the city awake forever.)
+   */
+  get transitioning() {
+    for (const e of this.entries.values()) if (e.person.transitioning && e.person.root.visible) return true;
+    return false;
+  }
+
   sync(items: Item[], staleMs: number) {
     const now = Date.now();
     const live = new Set<string>();

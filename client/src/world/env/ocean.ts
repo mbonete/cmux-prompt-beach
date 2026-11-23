@@ -35,11 +35,11 @@ import {
   smoothstep,
   step,
   texture,
-  time,
   uniform,
   vec2,
   vec3,
 } from 'three/tsl';
+import { worldTime as time } from '../engine/clock';
 import { BAY_EDGE_X, BEACH, CAUSEWAY_END, CITY, SEABED_Y, SEA_Y } from '../city/layout';
 import { loading } from '../engine/assets';
 import type { Look } from './looks';

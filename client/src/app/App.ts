@@ -286,6 +286,7 @@ export class App {
       if (force || prev.staleAfterMs !== s.staleAfterMs) w.setStaleAfter(s.staleAfterMs);
       if (force || prev.motion !== s.motion) w.setReducedMotion(reduced);
       if (force || prev.idleCamera !== s.idleCamera || prev.motion !== s.motion) w.setIdleCamera(s.idleCamera);
+      if (force || prev.liveMotion !== s.liveMotion) w.setLiveMotion(s.liveMotion);
     }
     // Sound can only start inside a click; a saved "on" waits for the first pointerdown.
     if (!force && (prev.sound !== s.sound || prev.chime !== s.chime)) this.sound.set(s.sound, s.chime);
@@ -316,6 +317,8 @@ export class App {
       this.measure();
     };
     w.director.onCut = (phase) => this.cut.classList.toggle('cut--dark', phase === 'out');
+    // Calm: the page's looping animations pause too (they'd keep the compositor drawing every frame).
+    w.onCalm = (calm) => this.root.classList.toggle('app--calm', calm);
     // Any input anywhere (the city, a panel, a button) is activity for the idle
     // camera, and hands the camera back; the tour's own button and key toggle it.
     const stop = (e: Event) => {

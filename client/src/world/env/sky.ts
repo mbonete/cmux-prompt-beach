@@ -18,10 +18,10 @@ import {
   saturate,
   sin,
   smoothstep,
-  time,
   uniform,
   vec3,
 } from 'three/tsl';
+import { worldTime as time } from '../engine/clock';
 import { type Look, sunDirection } from './looks';
 
 // An art-directed sky dome: a zenith-to-horizon gradient, a warm glow and a
