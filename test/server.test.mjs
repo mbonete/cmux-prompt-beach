@@ -186,13 +186,15 @@ describe('static files over HTTP', () => {
 
     const gltf = await request('GET', '/assets/models/plot.gltf');
     assert.equal(gltf.headers['content-type'], 'model/gltf+json');
-    assert.equal(gltf.headers['cache-control'], 'public, max-age=3600');
+    assert.equal(gltf.headers['cache-control'], 'no-cache');
+    // The client adds ?rev= to asset URLs; the same file is served.
+    assert.equal((await request('GET', '/assets/models/plot.gltf?rev=2')).status, 200);
     const bin = await request('GET', '/assets/models/plot.bin');
     assert.equal(bin.headers['content-type'], 'application/octet-stream');
     assert.equal(bin.headers['content-length'], '64');
     const font = await request('GET', '/fonts/anton.woff2');
     assert.equal(font.headers['content-type'], 'font/woff2');
-    assert.equal(font.headers['cache-control'], 'public, max-age=3600');
+    assert.equal(font.headers['cache-control'], 'no-cache');
     const icon = await request('GET', '/favicon.svg');
     assert.equal(icon.status, 200);
     assert.equal(icon.headers['content-type'], 'image/svg+xml');

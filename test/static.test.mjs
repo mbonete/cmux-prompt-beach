@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
-import { CACHE_HOUR, CACHE_IMMUTABLE, CACHE_REVALIDATE, MIME, etagMatches, resolveStatic, staticSegments, staticTarget } from '../server/static.mjs';
+import { CACHE_IMMUTABLE, CACHE_REVALIDATE, MIME, etagMatches, resolveStatic, staticSegments, staticTarget } from '../server/static.mjs';
 
 describe('staticSegments: path spelling', () => {
   const refused = [
@@ -94,9 +94,10 @@ describe('staticTarget: roots, extensions, MIME and cache', () => {
     assert.equal(staticTarget('/build/app-1a2b.js').cache, CACHE_IMMUTABLE);
     assert.match(CACHE_IMMUTABLE, /max-age=31536000/);
     assert.match(CACHE_IMMUTABLE, /immutable/);
-    assert.equal(staticTarget('/assets/env/sky.hdr').cache, CACHE_HOUR);
-    assert.equal(staticTarget('/fonts/anton.woff2').cache, CACHE_HOUR);
-    assert.match(CACHE_HOUR, /max-age=3600/);
+    // Assets and fonts keep their names when rebuilt: revalidated on every load.
+    assert.equal(staticTarget('/assets/env/sky.hdr').cache, CACHE_REVALIDATE);
+    assert.equal(staticTarget('/fonts/anton.woff2').cache, CACHE_REVALIDATE);
+    assert.match(CACHE_REVALIDATE, /no-cache/);
     assert.equal(staticTarget('/favicon.svg').cache, CACHE_REVALIDATE);
   });
 

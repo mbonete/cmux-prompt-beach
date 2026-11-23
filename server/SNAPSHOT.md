@@ -25,7 +25,7 @@ default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; f
 | --- | --- |
 | `GET`/`HEAD /` | `public/index.html` with the token filled in. `Cache-Control: no-store`. `503` if the page has not been built. |
 | `GET`/`HEAD /build/**` | `public/build/`. `Cache-Control: public, max-age=31536000, immutable` (hashed bundles only, please). |
-| `GET`/`HEAD /assets/**`, `/fonts/**` | `public/assets/`, `public/fonts/`. `Cache-Control: public, max-age=3600`. |
+| `GET`/`HEAD /assets/**`, `/fonts/**` | `public/assets/`, `public/fonts/`. `Cache-Control: no-cache` (revalidated by ETag on every load: these files keep their names when rebuilt). |
 | `GET`/`HEAD /<icon>` | An `.svg`, `.png`, `.webp`, `.jpg` or `.jpeg` sitting directly in `public/` (a favicon). `Cache-Control: no-cache`. |
 
 The allowed extensions and their MIME types:

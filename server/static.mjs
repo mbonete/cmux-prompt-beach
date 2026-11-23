@@ -34,7 +34,6 @@ export const MIME = {
 const TOP_LEVEL_EXT = new Set(['.svg', '.png', '.webp', '.jpg', '.jpeg']);
 
 export const CACHE_IMMUTABLE = 'public, max-age=31536000, immutable';
-export const CACHE_HOUR = 'public, max-age=3600';
 export const CACHE_REVALIDATE = 'no-cache';
 
 // Turns a raw request path ("/build/app-1a2b.js?x") into safe path segments, or null.
@@ -76,7 +75,10 @@ export function staticTarget(rawUrl) {
     return { segments, type, cache: CACHE_REVALIDATE };
   }
   if (!STATIC_ROOTS.includes(segments[0])) return null;
-  return { segments, type, cache: segments[0] === 'build' ? CACHE_IMMUTABLE : CACHE_HOUR };
+  // build/ files are named by their content. Assets and fonts keep their names when they're
+  // rebuilt: they're revalidated on every load (a 304 on localhost), or a browser could keep a
+  // model's old half for an hour and pair it with its new half.
+  return { segments, type, cache: segments[0] === 'build' ? CACHE_IMMUTABLE : CACHE_REVALIDATE };
 }
 
 // Resolves a request to a real file inside publicDir, or null for a 404.
