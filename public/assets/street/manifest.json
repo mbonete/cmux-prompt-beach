@@ -503,9 +503,9 @@
         "textures/wood_orm.webp",
         "textures/wood_normal.webp"
       ],
-      "bytes": 87506,
+      "bytes": 89817,
       "textureBytes": 47932,
-      "tris": 1341,
+      "tris": 1377,
       "bounds": {
         "min": [
           -1.78,
@@ -523,8 +523,8 @@
         "wood",
         "paint",
         "glass",
-        "metal",
-        "accent"
+        "accent",
+        "metal"
       ],
       "tintable": [
         "paint"
@@ -654,5 +654,5 @@
     "wood_normal.webp": 14978,
     "wood_orm.webp": 22474
   },
-  "totalBytes": 911603
+  "totalBytes": 913914
 }

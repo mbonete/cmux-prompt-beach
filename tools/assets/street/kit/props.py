@@ -131,9 +131,13 @@ def lifeguard_tower():
     # speed lines stand proud of the wall
     for y in (deck_y + 0.62, deck_y + 0.76):
         mb.prism(offset_outline(out, 0.025), [(y, y + 0.07, "white")], top="white", bottom="white")
-    # door on the back wall, above the ramp
-    mb.box(0.25, 1.05, deck_y, deck_y + 1.55, -1.33, -1.29, "wood")
+    # door on the back wall, above the ramp: a plain painted leaf in a white frame, with a handle
+    # (in "wood", the deck planks' texture, it read as a door made of floorboards)
+    mb.box(0.25, 1.05, deck_y, deck_y + 1.55, -1.33, -1.29, "accent")
+    for x in (0.2, 1.05):
+        mb.box(x, x + 0.05, deck_y, deck_y + 1.55, -1.35, -1.29, "white")
     mb.box(0.2, 1.1, deck_y + 1.55, deck_y + 1.62, -1.35, -1.29, "white")
+    mb.box(0.86, 0.94, deck_y + 0.74, deck_y + 0.79, -1.37, -1.33, "metal")
     # eyebrow roof and a stepped crown
     roof_y = deck_y + 1.86
     mb.slab(offset_outline(out, 0.34), roof_y, roof_y + 0.12, "white")
