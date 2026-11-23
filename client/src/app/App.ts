@@ -72,9 +72,11 @@ export class App {
     this.hud = new Hud(root, this.state, {
       onRail: (id) => this.rail(id),
       onCount: (lane) => {
+        // Opening the panel already slides it in: jump there. Already open: scroll there.
+        const opening = this.state.panel !== 'agents';
         this.state.panel = 'agents';
         this.state.emit();
-        requestAnimationFrame(() => this.panels.el.querySelector(`.group--${lane}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+        requestAnimationFrame(() => this.panels.reveal(lane, !opening && !this.reduced.matches));
       },
       onSound: () => {
         const on = !this.state.settings.sound;

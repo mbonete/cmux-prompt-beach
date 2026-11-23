@@ -1279,6 +1279,11 @@ code,
   color: var(--ink-3);
 }
 
+.group {
+  /* The brief light when a count in the top bar brings it into view. */
+  border-radius: 12px;
+}
+
 .group + .group {
   margin-top: 14px;
 }

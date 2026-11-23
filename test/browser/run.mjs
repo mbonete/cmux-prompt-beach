@@ -480,6 +480,23 @@ async function main() {
     expect(r.pick, `focus moved to ${r.tag}`);
     return `row moved ${r.before} → ${r.after}; ${r.same ? 'same element kept' : 'focus restored'}`;
   });
+  await check('a count in the top bar brings its group into view with room above it', async () => {
+    const at = await page.run(`const sb = window.switchboard; sb.app.state.openPanel('agents'); await new Promise((x) => setTimeout(x, 600));
+      document.querySelector('.panel__body').scrollTop = 0;
+      // A group in the middle of the list (the last can't scroll to the top).
+      const lane = ['working', 'move', 'needs'].find((l) => document.querySelector('.panel__body .group--' + l) && document.querySelector('.tally__item--' + l));
+      const r = document.querySelector('.tally__item--' + lane).getBoundingClientRect(); return { lane, x: r.left + r.width / 2, y: r.top + r.height / 2 };`);
+    await page.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: at.x, y: at.y });
+    await page.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: at.x, y: at.y, button: 'left', buttons: 1, clickCount: 1 });
+    await page.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: at.x, y: at.y, button: 'left', buttons: 0, clickCount: 1 });
+    await sleep(1200);
+    const r = await page.run(`const body = document.querySelector('.panel__body'); const t = body.querySelector('.group--${at.lane} .group__title');
+      const gap = t.getBoundingClientRect().top - body.getBoundingClientRect().top; const atEnd = body.scrollTop >= body.scrollHeight - body.clientHeight - 1;
+      const out = { gap, atEnd, doc: document.scrollingElement.scrollTop }; window.switchboard.app.state.openPanel(null); return out;`);
+    expect(r.doc === 0, 'the page itself scrolled');
+    expect(r.atEnd || (r.gap >= 8 && r.gap <= 24), `the ${at.lane} title sits ${Math.round(r.gap)} px from the top of the list`);
+    return `${at.lane}: title ${Math.round(r.gap)} px below the top of the list`;
+  });
   await check('a reply sent twice quickly goes once', async () => {
     const r = await page.run(`${SETUP} const row = sb.app.state.lane('move').find((x) => x.item.agent) ?? sb.app.state.lane('needs')[0]; sb.app.state.select(row.item.surfaceId, true); await new Promise((x) => setTimeout(x, 800));
       const ta = document.querySelector('.composer__input'); if (!ta) return { composer: false };

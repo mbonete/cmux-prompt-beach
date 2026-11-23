@@ -26,6 +26,8 @@ const TITLES: Record<PanelId, string> = {
 };
 
 const LANES: Lane[] = ['needs', 'working', 'move', 'stale', 'shells'];
+/** Room above a group brought into view from the top bar's counts. */
+const REVEAL_GAP = 14;
 const LANE_GROUP: Record<Lane, string> = { needs: 'Needs you', working: 'Working', move: 'Your move', stale: 'Stale', shells: 'Terminals without an agent' };
 
 export class Panels {
@@ -107,6 +109,26 @@ export class Panels {
   focusFirst() {
     const target = this.tools.querySelector<HTMLInputElement>('input') ?? this.body.querySelector<HTMLElement>('button, select, input');
     target?.focus();
+  }
+
+  /**
+   * Brings a lane's group into view from a click on its count: a little
+   * below the top of the list (scrollIntoView put its title flush against the
+   * edge), then lights the group for a moment so it's clear where you landed.
+   * Only the list scrolls. (The light is an animation, not a class: the list
+   * is patched on every update, which would strip a class.)
+   */
+  reveal(lane: string, smooth: boolean) {
+    const group = this.body.querySelector<HTMLElement>(`.group--${lane}`);
+    if (!group) return;
+    const top = group.getBoundingClientRect().top - this.body.getBoundingClientRect().top + this.body.scrollTop - REVEAL_GAP;
+    this.body.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
+    group.animate([{ backgroundColor: 'rgb(255 255 255 / 0.09)' }, { backgroundColor: 'rgb(255 255 255 / 0)' }], {
+      duration: 1400,
+      delay: smooth ? 250 : 0,
+      easing: 'ease-out',
+      fill: 'backwards',
+    });
   }
 
   private bodyHTML(p: PanelId): string {
