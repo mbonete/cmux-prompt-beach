@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Switchboard: a local web dashboard for the agents running in cmux.
+// Prompt Beach: a local web dashboard for the agents running in cmux.
 //
 // This file is the HTTP side: security checks, the page and its static files, the SSE
 // stream, the current snapshot and the world state (plots, spots, archive). Where the
@@ -14,13 +14,13 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { resolveStatic, sendStatic } from './server/static.mjs';
-import { DEFAULT_WORLD_FILE, createWorld } from './server/world.mjs';
+import { DEFAULT_WORLD_FILE, LEGACY_WORLD_FILE, createWorld } from './server/world.mjs';
 import { UUID_RE, parseLooseJSON } from './server/util.mjs';
 import { createTickGate } from './server/budget.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-// SWITCHBOARD_PUBLIC_DIR serves another build folder (the tests use it for fixtures).
-const PUBLIC_DIR = process.env.SWITCHBOARD_PUBLIC_DIR ? path.resolve(process.env.SWITCHBOARD_PUBLIC_DIR) : path.join(ROOT, 'public');
+// PROMPT_BEACH_PUBLIC_DIR serves another build folder (the tests use it for fixtures).
+const PUBLIC_DIR = process.env.PROMPT_BEACH_PUBLIC_DIR ? path.resolve(process.env.PROMPT_BEACH_PUBLIC_DIR) : path.join(ROOT, 'public');
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.PORT) || 4747;
 const TOKEN = crypto.randomBytes(24).toString('hex');
@@ -29,14 +29,14 @@ const ALLOWED_HOSTS = new Set([`127.0.0.1:${PORT}`, `localhost:${PORT}`]);
 const ALLOWED_ORIGINS = new Set([...ALLOWED_HOSTS].map((h) => `http://${h}`));
 // Demo mode serves made-up sessions (server/sources/demo.mjs) and never touches cmux
 // or the saved world state.
-const DEMO = process.argv.includes('--demo') || process.env.SWITCHBOARD_DEMO === '1';
+const DEMO = process.argv.includes('--demo') || process.env.PROMPT_BEACH_DEMO === '1';
 
 const source = DEMO
-  ? (await import('./server/sources/demo.mjs')).createDemoSource({ swarm: process.argv.includes('--swarm') || process.env.SWITCHBOARD_SWARM === '1' })
+  ? (await import('./server/sources/demo.mjs')).createDemoSource({ swarm: process.argv.includes('--swarm') || process.env.PROMPT_BEACH_SWARM === '1' })
   : (await import('./server/sources/cmux.mjs')).createCmuxSource();
-// SWITCHBOARD_WORLD_FILE keeps the world state somewhere else (handy for trying things out).
-const WORLD_FILE = process.env.SWITCHBOARD_WORLD_FILE ? path.resolve(process.env.SWITCHBOARD_WORLD_FILE) : DEFAULT_WORLD_FILE;
-const world = createWorld(DEMO ? { initial: source.initialWorld?.() } : { file: WORLD_FILE });
+// PROMPT_BEACH_WORLD_FILE keeps the world state somewhere else (handy for trying things out).
+const WORLD_FILE = process.env.PROMPT_BEACH_WORLD_FILE ? path.resolve(process.env.PROMPT_BEACH_WORLD_FILE) : DEFAULT_WORLD_FILE;
+const world = createWorld(DEMO ? { initial: source.initialWorld?.() } : { file: WORLD_FILE, fallbackFile: process.env.PROMPT_BEACH_WORLD_FILE ? null : LEGACY_WORLD_FILE });
 await world.load();
 
 // ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ function broadcast(event, data) {
 
 async function handleAction(body) {
   switch (body.action) {
-    // World actions live here, not in the source: they only change Switchboard's own state.
+    // World actions live here, not in the source: they only change Prompt Beach's own state.
     case 'archive':
       world.archive(body.sessionId);
       reapplyWorld();
@@ -198,10 +198,10 @@ const server = http.createServer(async (req, res) => {
       try {
         html = await readFile(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
       } catch (err) {
-        if (err.code === 'ENOENT') return send(res, 503, 'text/plain; charset=utf-8', 'The Switchboard page has not been built yet (public/index.html is missing).');
+        if (err.code === 'ENOENT') return send(res, 503, 'text/plain; charset=utf-8', 'The Prompt Beach page has not been built yet (public/index.html is missing).');
         throw err;
       }
-      return send(res, 200, 'text/html; charset=utf-8', html.replace('__SWITCHBOARD_TOKEN__', TOKEN));
+      return send(res, 200, 'text/html; charset=utf-8', html.replace('__PROMPT_BEACH_TOKEN__', TOKEN));
     }
 
     if (url.pathname.startsWith('/api/')) {
@@ -222,12 +222,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (url.pathname === '/api/snapshot' && req.method === 'GET') {
-        if (!tokenOk(req.headers['x-switchboard-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
+        if (!tokenOk(req.headers['x-prompt-beach-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
         return sendJSON(res, 200, snapshot ? currentPayload() : { ...world.apply(await source.snapshot()), source: source.name });
       }
 
       if (url.pathname === '/api/conversation' && req.method === 'GET') {
-        if (!tokenOk(req.headers['x-switchboard-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
+        if (!tokenOk(req.headers['x-prompt-beach-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
         const surfaceId = url.searchParams.get('surfaceId') || '';
         if (!UUID_RE.test(surfaceId)) return sendJSON(res, 400, { error: 'Invalid surface' });
         const item = snapshot?.items?.find((i) => String(i.surfaceId).toLowerCase() === surfaceId.toLowerCase());
@@ -243,7 +243,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (url.pathname === '/api/action' && req.method === 'POST') {
-        if (!tokenOk(req.headers['x-switchboard-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
+        if (!tokenOk(req.headers['x-prompt-beach-token'])) return sendJSON(res, 403, { error: 'Forbidden' });
         if (!String(req.headers['content-type'] || '').startsWith('application/json')) return sendJSON(res, 415, { error: 'Send JSON' });
         const body = parseLooseJSON(await readBody(req));
         if (!body || typeof body !== 'object') return sendJSON(res, 400, { error: 'Invalid JSON' });
@@ -260,7 +260,7 @@ const server = http.createServer(async (req, res) => {
 
     return send(res, 404, 'text/plain', 'Not found');
   } catch (err) {
-    if (!res.headersSent) sendJSON(res, err.status || 500, { error: err.expose ? err.message : 'Something went wrong on the Switchboard server.' });
+    if (!res.headersSent) sendJSON(res, err.status || 500, { error: err.expose ? err.message : 'Something went wrong on the Prompt Beach server.' });
     if (!err.expose) console.error(err);
   }
 });
@@ -274,7 +274,7 @@ server.on('error', (err) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Switchboard is running at http://localhost:${PORT}${DEMO ? ' (demo mode: made-up sessions)' : ''}`);
+  console.log(`Prompt Beach is running at http://localhost:${PORT}${DEMO ? ' (demo mode: made-up sessions)' : ''}`);
   source.start({
     changed: (delay = 250) => scheduleRefresh(delay),
     // Tool-call ticks are decoration: under a swarm most are dropped (server/budget.mjs).

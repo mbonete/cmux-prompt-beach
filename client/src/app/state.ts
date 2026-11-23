@@ -51,14 +51,16 @@ export type WorldEvent =
 
 type Listener = () => void;
 
-const KEY = 'switchboard.settings';
+const KEY = 'promptBeach.settings';
+// Keys from before the project was renamed from Switchboard, read when the new ones are missing.
+const OLD_KEY = 'switchboard.settings';
 
 export function loadSettings(): Settings {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY) ?? localStorage.getItem(OLD_KEY);
     const saved = raw ? (JSON.parse(raw) as Partial<Settings>) : {};
     // Carry over the look-dev strip's quality key.
-    const q = localStorage.getItem('switchboard.quality') as QualitySetting | null;
+    const q = (localStorage.getItem('promptBeach.quality') ?? localStorage.getItem('switchboard.quality')) as QualitySetting | null;
     // (A saved time of day from before 2026-11-22 is left out: the city is always at sunset.)
     const { timeOfDay: _gone, ...rest } = saved as Partial<Settings> & { timeOfDay?: unknown };
     return { ...DEFAULTS, ...(q ? { quality: q } : {}), ...rest };

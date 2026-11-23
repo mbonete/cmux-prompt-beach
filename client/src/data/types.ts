@@ -90,7 +90,7 @@ export interface Snapshot {
   source: 'cmux' | 'demo';
   demo?: boolean;
   cmux: { ok: boolean; eventsLive?: boolean; error?: string };
-  /** cmux held back part of its list: it holds `total` items and Switchboard read the first `read`. */
+  /** cmux held back part of its list: it holds `total` items and Prompt Beach read the first `read`. */
   limited?: { total: number | null; read: number } | null;
   items: Item[];
   pulse: { start: string; binMs: number; bins: number[] };

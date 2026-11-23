@@ -301,7 +301,7 @@ export class District {
 
     const t1 = performance.now();
     this.buildMerged([...sources.values()]);
-    if (location.search.includes('perf')) console.log(`[switchboard] district: buildings loaded at ${Math.round(t0)} ms, read in ${Math.round(t1 - t0)} ms, merged in ${Math.round(performance.now() - t1)} ms`);
+    if (location.search.includes('perf')) console.log(`[prompt-beach] district: buildings loaded at ${Math.round(t0)} ms, read in ${Math.round(t1 - t0)} ms, merged in ${Math.round(performance.now() - t1)} ms`);
     this.buildPools(poolSpots);
     await this.placeProps(propPlacements);
     // (Only laptops the city actually shows: the kit's own are among the props left off.)

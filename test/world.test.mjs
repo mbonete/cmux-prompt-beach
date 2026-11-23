@@ -252,6 +252,28 @@ describe('persistence', () => {
     await w2.flush();
   });
 
+  test('reads the file from before the rename when the new one does not exist, then saves to the new one', async () => {
+    const oldFile = path.join(tmp, 'old-cfg', 'world.json');
+    const file = path.join(tmp, 'new-cfg', 'world.json');
+    const w = createWorld({ file: oldFile, log: quiet });
+    await w.load();
+    w.apply(snap(agent(1, 'a'), agent(2, 'b')), T0);
+    await w.flush();
+
+    const w2 = createWorld({ file, fallbackFile: oldFile, log: quiet });
+    await w2.load();
+    const it = byId(w2.apply(snap(agent(1, 'a'), agent(2, 'b')), T0 + DAY));
+    assert.equal(it[2].plot, 1, 'kept its building from the old file');
+    await w2.flush();
+    assert.equal(JSON.parse(await readFile(file, 'utf8')).repos[key('b')].plot, 1, 'saved to the new file');
+
+    // Once the new file exists, the old one is ignored.
+    await writeFile(oldFile, '{not json');
+    const w3 = createWorld({ file, fallbackFile: oldFile, log: { warn: () => assert.fail('read the old file') } });
+    await w3.load();
+    assert.equal(byId(w3.apply(snap(agent(2, 'b')), T0 + DAY))[2].plot, 1);
+  });
+
   test('an unreadable or foreign file means a fresh start, not a crash', async () => {
     const dir = path.join(tmp, 'bad');
     await mkdir(dir, { recursive: true });

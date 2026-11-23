@@ -1,4 +1,4 @@
-// Switchboard's own icon set: 24 × 24 stroke paths, drawn with currentColor.
+// Prompt Beach's own icon set: 24 × 24 stroke paths, drawn with currentColor.
 
 export const ICONS = {
   // Tool calls

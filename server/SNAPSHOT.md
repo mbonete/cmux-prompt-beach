@@ -6,10 +6,10 @@ This is what the world v2 client can rely on from `server.mjs`. Fields marked **
 
 Every request must carry `Host: localhost:<port>` or `127.0.0.1:<port>`; anything else gets `421`. Every `/api/*` request that has an `Origin` header must have this server's origin (`http://localhost:<port>` or `http://127.0.0.1:<port>`), or it gets `403`.
 
-The token is generated at each start and written into `index.html` in place of `__SWITCHBOARD_TOKEN__`. The client sends it:
+The token is generated at each start and written into `index.html` in place of `__PROMPT_BEACH_TOKEN__`. The client sends it:
 
 - as `?token=` on `/api/stream` (because EventSource can't set headers)
-- as `X-Switchboard-Token` on every other API call
+- as `X-Prompt-Beach-Token` on every other API call
 
 A restarted server has a new token, so the stream is then refused with `403` for good and the page has to reload.
 
@@ -223,12 +223,12 @@ One per cmux terminal. Terminals without an agent are `phase: "shell"`; they bel
 - **Dormant repos:** a repo with no sessions shows `active: false` and a `lastSeen` (dim its tag). After 7 days it is dropped and its plot is free again.
 - **Overflow:** when all 32 plots are taken, new repos get `"overflow"` here (waiting) and their agents sit at the beach bar (`item.plot === "hangout"`). When a plot frees, the waiting repo seen first moves into it. There is no overflow building.
 - **Where it is saved:**
-  - Real mode: `~/.config/cmux-switchboard/world.json` (folder 0700, file 0600, written atomically), or `SWITCHBOARD_WORLD_FILE`.
+  - Real mode: `~/.config/prompt-beach/world.json` (folder 0700, file 0600, written atomically), or `PROMPT_BEACH_WORLD_FILE`. If that file doesn't exist yet, the server reads `~/.config/prompt-beach/world.json` (where it was saved before the project was renamed from Prompt Beach) and saves to the new file from then on.
   - Demo: kept in memory and never written.
 
 ## `GET /api/conversation?surfaceId=<uuid>` (new)
 
-Needs `X-Switchboard-Token`. Answers with `Cache-Control: no-store`.
+Needs `X-Prompt-Beach-Token`. Answers with `Cache-Control: no-store`.
 
 ```jsonc
 {
@@ -255,7 +255,7 @@ Needs `X-Switchboard-Token`. Answers with `Cache-Control: no-store`.
 
 ## `POST /api/action`
 
-Needs `X-Switchboard-Token`, `Content-Type: application/json`, a body under 64 KB, and a same-origin `Origin` if one is sent. Success is `{ "ok": true }` (the demo may add a `note`). Failure is an HTTP error with `{ "error": "<message to show>" }`.
+Needs `X-Prompt-Beach-Token`, `Content-Type: application/json`, a body under 64 KB, and a same-origin `Origin` if one is sent. Success is `{ "ok": true }` (the demo may add a `note`). Failure is an HTTP error with `{ "error": "<message to show>" }`.
 
 | `action` | Body | Notes |
 | --- | --- | --- |
@@ -276,7 +276,7 @@ World actions update the snapshot and push it at once.
 | Variable | Effect |
 | --- | --- |
 | `PORT` | Port (default 4747). |
-| `SWITCHBOARD_DEMO=1` or `--demo` | Made-up sessions; nothing talks to cmux or writes the world file. |
-| `SWITCHBOARD_WORLD_FILE` | Where the world state is saved (default `~/.config/cmux-switchboard/world.json`). |
-| `SWITCHBOARD_PUBLIC_DIR` | Serve another build folder (the tests use it). |
+| `PROMPT_BEACH_DEMO=1` or `--demo` | Made-up sessions; nothing talks to cmux or writes the world file. |
+| `PROMPT_BEACH_WORLD_FILE` | Where the world state is saved (default `~/.config/prompt-beach/world.json`). |
+| `PROMPT_BEACH_PUBLIC_DIR` | Serve another build folder (the tests use it). |
 | `CMUX_BIN` | Path to the cmux CLI. |

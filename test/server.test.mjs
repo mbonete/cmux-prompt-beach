@@ -46,7 +46,7 @@ function request(method, rawPath, { headers = {}, body } = {}) {
 const json = (r) => JSON.parse(r.body);
 const api = (method, p, body, extra = {}) =>
   request(method, p, {
-    headers: { 'X-Switchboard-Token': token, ...(body ? { 'Content-Type': 'application/json' } : {}), ...extra },
+    headers: { 'X-Prompt-Beach-Token': token, ...(body ? { 'Content-Type': 'application/json' } : {}), ...extra },
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -91,7 +91,7 @@ before(async () => {
   await mkdir(path.join(pub, 'build'), { recursive: true });
   await mkdir(path.join(pub, 'assets', 'models'), { recursive: true });
   await mkdir(path.join(pub, 'fonts'), { recursive: true });
-  await writeFile(path.join(pub, 'index.html'), '<!doctype html><meta name="sb-token" content="__SWITCHBOARD_TOKEN__"><script type="module" src="/build/app-1a2b3c.js"></script>');
+  await writeFile(path.join(pub, 'index.html'), '<!doctype html><meta name="sb-token" content="__PROMPT_BEACH_TOKEN__"><script type="module" src="/build/app-1a2b3c.js"></script>');
   await writeFile(path.join(pub, 'build', 'app-1a2b3c.js'), 'export const x = 1;\n');
   await writeFile(path.join(pub, 'build', 'app-1a2b3c.js.map'), '{}');
   await writeFile(path.join(pub, 'assets', 'models', 'plot.gltf'), '{"asset":{"version":"2.0"}}');
@@ -105,7 +105,7 @@ before(async () => {
   port = await freePort();
   child = spawn(process.execPath, ['server.mjs', '--demo'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(port), SWITCHBOARD_PUBLIC_DIR: pub, SWITCHBOARD_WORLD_FILE: path.join(tmp, 'state', 'world.json') },
+    env: { ...process.env, PORT: String(port), PROMPT_BEACH_PUBLIC_DIR: pub, PROMPT_BEACH_WORLD_FILE: path.join(tmp, 'state', 'world.json') },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   await new Promise((resolve, reject) => {
@@ -113,7 +113,7 @@ before(async () => {
     const timer = setTimeout(() => reject(new Error(`Server did not start: ${out}`)), 10000);
     child.stdout.on('data', (c) => {
       out += c;
-      if (out.includes('Switchboard is running')) {
+      if (out.includes('Prompt Beach is running')) {
         clearTimeout(timer);
         resolve();
       }
@@ -142,7 +142,7 @@ describe('the page', () => {
     // No other page may frame it (clickjacking a click on Allow).
     assert.equal(r.headers['x-frame-options'], 'DENY');
     assert.match(token, /^[0-9a-f]{48}$/);
-    assert.ok(!r.body.includes('__SWITCHBOARD_TOKEN__'));
+    assert.ok(!r.body.includes('__PROMPT_BEACH_TOKEN__'));
     const head = await request('HEAD', '/');
     assert.equal(head.status, 200);
     assert.equal(head.body, '');
@@ -226,7 +226,7 @@ describe('static files over HTTP', () => {
     for (const p of paths) {
       const r = await request('GET', p);
       assert.equal(r.status, 404, p);
-      assert.ok(!r.body.includes('outside') && !r.body.includes('__SWITCHBOARD'), p);
+      assert.ok(!r.body.includes('outside') && !r.body.includes('__PROMPT_BEACH'), p);
     }
     assert.equal((await request('POST', '/build/app-1a2b3c.js')).status, 404);
   });

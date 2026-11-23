@@ -73,7 +73,7 @@ describe('crew', () => {
   after(() => dir && rm(dir, { recursive: true, force: true }));
 
   test('counts only helper transcripts written in the last 90 seconds', async () => {
-    dir = await mkdtemp(path.join(os.tmpdir(), 'switchboard-crew-'));
+    dir = await mkdtemp(path.join(os.tmpdir(), 'prompt-beach-crew-'));
     const now = Date.now();
     for (let i = 0; i < 12; i++) {
       const f = path.join(dir, `agent-${i}.jsonl`);
@@ -88,7 +88,7 @@ describe('crew', () => {
   });
 
   test('no helpers folder is a crew of none', async () => {
-    assert.equal(await countActiveHelpers(path.join(os.tmpdir(), 'switchboard-no-such-dir')), 0);
+    assert.equal(await countActiveHelpers(path.join(os.tmpdir(), 'prompt-beach-no-such-dir')), 0);
   });
 });
 

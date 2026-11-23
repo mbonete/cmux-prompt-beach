@@ -1,4 +1,4 @@
-import type { SwitchboardClient } from '../data/client';
+import type { PromptBeachClient } from '../data/client';
 import type { Item } from '../data/types';
 import { ASK_ICON, ASK_TEXT } from '../ui/agentView';
 import { AgentCard, cardGap, type Insets } from '../ui/card';
@@ -52,7 +52,7 @@ export class App {
 
   constructor(
     root: HTMLElement,
-    private readonly client: SwitchboardClient,
+    private readonly client: PromptBeachClient,
     private readonly world: World | null,
   ) {
     this.root = root;

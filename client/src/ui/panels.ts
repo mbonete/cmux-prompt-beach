@@ -182,7 +182,7 @@ export class Panels {
     }
     // cmux lists at most 200 current items; when it holds more, say so rather than hide it.
     const lim = this.state.snap?.limited;
-    if (lim) h = `<p class="panel__note">cmux has ${lim.total ? lim.total.toLocaleString('en') : 'more than ' + lim.read} sessions and terminals open; Switchboard can read the first ${lim.read}.</p>${h}`;
+    if (lim) h = `<p class="panel__note">cmux has ${lim.total ? lim.total.toLocaleString('en') : 'more than ' + lim.read} sessions and terminals open; Prompt Beach can read the first ${lim.read}.</p>${h}`;
     return h;
   }
 

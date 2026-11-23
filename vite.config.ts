@@ -5,7 +5,7 @@ import { defineConfig, type Plugin } from 'vite';
 // the optimised 3D assets and fonts; those are never copied or emptied by Vite.
 
 /** Where `vite` dev mode finds a running server (for example `PORT=4790 npm run demo`). */
-const DEV_API = process.env.SWITCHBOARD_DEV_API ?? 'http://127.0.0.1:4790';
+const DEV_API = process.env.PROMPT_BEACH_DEV_API ?? 'http://127.0.0.1:4790';
 const DEV_ORIGINS = new Set(['http://127.0.0.1:5180', 'http://localhost:5180']);
 
 /**
@@ -15,13 +15,13 @@ const DEV_ORIGINS = new Set(['http://127.0.0.1:5180', 'http://localhost:5180']);
  */
 function devToken(): Plugin {
   return {
-    name: 'switchboard-dev-token',
+    name: 'prompt-beach-dev-token',
     apply: 'serve',
     async transformIndexHtml(html) {
       try {
         const page = await (await fetch(`${DEV_API}/`)).text();
-        const token = /name="switchboard-token" content="([^"]+)"/.exec(page)?.[1];
-        return token ? html.replace('__SWITCHBOARD_TOKEN__', token) : html;
+        const token = /name="prompt-beach-token" content="([^"]+)"/.exec(page)?.[1];
+        return token ? html.replace('__PROMPT_BEACH_TOKEN__', token) : html;
       } catch {
         return html;
       }

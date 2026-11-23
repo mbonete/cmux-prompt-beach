@@ -109,14 +109,14 @@ class Page {
   async load(url, { width = 1512, height = 792, quality = null } = {}) {
     await this.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 2, mobile: width < 600 });
     // The quality for this load only (a registered script would run on every later load too).
-    const added = quality ? await this.send('Page.addScriptToEvaluateOnNewDocument', { source: `try { localStorage.setItem('switchboard.quality', ${JSON.stringify(quality)}); } catch {}` }) : null;
+    const added = quality ? await this.send('Page.addScriptToEvaluateOnNewDocument', { source: `try { localStorage.setItem('promptBeach.quality', ${JSON.stringify(quality)}); } catch {}` }) : null;
     this.errors = [];
     await this.send('Page.navigate', { url });
     if (added?.result?.identifier) await this.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: added.result.identifier });
     const until = Date.now() + BOOT_MS;
     while (Date.now() < until) {
       await sleep(1000);
-      const state = await this.run(`return window.switchboard?.world ? 'world' : document.getElementById('fatal')?.hidden === false ? 'fatal' : 'loading';`).catch(() => 'loading');
+      const state = await this.run(`return window.promptBeach?.world ? 'world' : document.getElementById('fatal')?.hidden === false ? 'fatal' : 'loading';`).catch(() => 'loading');
       if (state === 'world') return;
       if (state === 'fatal') throw new Error('the 3D city fell back to the lists');
     }
@@ -148,14 +148,14 @@ function noErrors(page, since = 0) {
 
 // Shared page snippets.
 // (Kept lively: these checks measure motion. Calm mode has its own check.)
-const SETUP = `const sb = window.switchboard; const W = sb.world; const R = W.rig; W.director.enabled = false; W.setLiveMotion(true);`;
+const SETUP = `const sb = window.promptBeach; const W = sb.world; const R = W.rig; W.director.enabled = false; W.setLiveMotion(true);`;
 const AGENT = `[...sb.app.state.rows.values()].find((r) => r.item.spot !== null && typeof r.item.plot === 'number')`;
 
 async function main() {
   const demoPort = await freePort();
   const swarmPort = await freePort();
   const debugPort = await freePort();
-  const profile = mkdtempSync(path.join(os.tmpdir(), 'switchboard-browser-'));
+  const profile = mkdtempSync(path.join(os.tmpdir(), 'prompt-beach-browser-'));
   start(process.execPath, ['server.mjs', '--demo'], { PORT: String(demoPort) });
   start(process.execPath, ['server.mjs', '--demo', '--swarm'], { PORT: String(swarmPort) });
   start(CHROME, ['--headless=new', `--remote-debugging-port=${debugPort}`, `--user-data-dir=${profile}`, '--enable-unsafe-webgpu', '--window-size=1512,792', '--no-first-run', '--no-default-browser-check', '--enable-precise-memory-info', 'about:blank']);
@@ -170,7 +170,7 @@ async function main() {
     await check(`boots on ${quality} with no console errors`, async () => {
       await page.load(demo, { quality });
       await sleep(4000);
-      const q = await page.run(`return window.switchboard.world.status.quality;`);
+      const q = await page.run(`return window.promptBeach.world.status.quality;`);
       noErrors(page);
       return `quality ${q}`;
     });
@@ -193,7 +193,7 @@ async function main() {
     await page.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
     await page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
     await sleep(500);
-    const open = await page.run(`return { selected: window.switchboard.app.state.selected, hidden: document.querySelector('.card').hidden };`);
+    const open = await page.run(`return { selected: window.promptBeach.app.state.selected, hidden: document.querySelector('.card').hidden };`);
     expect(!open.selected && open.hidden, 'the card is still open');
   });
   await check('zooming out with a card open pulls straight back', async () => {
@@ -367,12 +367,12 @@ async function main() {
     await page.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: found.x, y: found.y });
     await sleep(400);
     const key = JSON.stringify(found.key);
-    const hover = await page.run(`const W = window.switchboard.world; return { hand: W.canvas.classList.contains('is-pointing'), hot: W.plotTags.get(${key})?.pin.el.classList.contains('tag--hot') };`);
+    const hover = await page.run(`const W = window.promptBeach.world; return { hand: W.canvas.classList.contains('is-pointing'), hot: W.plotTags.get(${key})?.pin.el.classList.contains('tag--hot') };`);
     expect(hover.hand, 'no hand over the building');
     expect(hover.hot, 'its tag did not light up');
     await click(found.x, found.y);
     await sleep(2200);
-    const after = await page.run(`const W = window.switchboard.world; const R = W.rig; const c = W.district.center(${key}); return { off: Math.hypot(R.desired.target.x - c.x, R.desired.target.z - c.z), distance: R.desired.distance };`);
+    const after = await page.run(`const W = window.promptBeach.world; const R = W.rig; const c = W.district.center(${key}); return { off: Math.hypot(R.desired.target.x - c.x, R.desired.target.z - c.z), distance: R.desired.distance };`);
     expect(after.off < 0.5 && Math.abs(after.distance - 46) < 0.5, `the click did not fly to that building (${after.off.toFixed(1)} m off, at ${after.distance.toFixed(0)} m)`);
     return `plot ${found.key}`;
   });
@@ -389,11 +389,11 @@ async function main() {
     expect(found && found.notLooking === undefined, found ? `the close-up is not on the person's plot ${found.notLooking}` : 'found no point on their building');
     await page.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: found.x, y: found.y });
     await sleep(400);
-    const before = await page.run(`const W = window.switchboard.world; const p = W.rig.camera.position; return { pos: [p.x, p.y, p.z], hand: W.canvas.classList.contains('is-pointing') };`);
+    const before = await page.run(`const W = window.promptBeach.world; const p = W.rig.camera.position; return { pos: [p.x, p.y, p.z], hand: W.canvas.classList.contains('is-pointing') };`);
     expect(!before.hand, 'a hand over the building you are already at (clicking it does not go anywhere)');
     await click(found.x, found.y);
     await sleep(1500);
-    const after = await page.run(`const sb = window.switchboard; const p = sb.world.rig.camera.position; return { pos: [p.x, p.y, p.z], selected: sb.app.state.selected, card: !document.querySelector('.card').hidden };`);
+    const after = await page.run(`const sb = window.promptBeach; const p = sb.world.rig.camera.position; return { pos: [p.x, p.y, p.z], selected: sb.app.state.selected, card: !document.querySelector('.card').hidden };`);
     const moved = Math.hypot(...after.pos.map((v, i) => v - before.pos[i]));
     expect(!after.selected && !after.card, 'the card is still open');
     expect(moved < 0.05, `the camera moved ${moved.toFixed(2)} m`);
@@ -511,7 +511,7 @@ async function main() {
     return `row moved ${r.before} → ${r.after}; ${r.same ? 'same element kept' : 'focus restored'}`;
   });
   await check('a count in the top bar brings its group into view with room above it', async () => {
-    const at = await page.run(`const sb = window.switchboard; sb.app.state.openPanel('agents'); await new Promise((x) => setTimeout(x, 600));
+    const at = await page.run(`const sb = window.promptBeach; sb.app.state.openPanel('agents'); await new Promise((x) => setTimeout(x, 600));
       document.querySelector('.panel__body').scrollTop = 0;
       // A group in the middle of the list (the last can't scroll to the top).
       const lane = ['working', 'move', 'needs'].find((l) => document.querySelector('.panel__body .group--' + l) && document.querySelector('.tally__item--' + l));
@@ -522,7 +522,7 @@ async function main() {
     await sleep(1200);
     const r = await page.run(`const body = document.querySelector('.panel__body'); const t = body.querySelector('.group--${at.lane} .group__title');
       const gap = t.getBoundingClientRect().top - body.getBoundingClientRect().top; const atEnd = body.scrollTop >= body.scrollHeight - body.clientHeight - 1;
-      const out = { gap, atEnd, doc: document.scrollingElement.scrollTop }; window.switchboard.app.state.openPanel(null); return out;`);
+      const out = { gap, atEnd, doc: document.scrollingElement.scrollTop }; window.promptBeach.app.state.openPanel(null); return out;`);
     expect(r.doc === 0, 'the page itself scrolled');
     expect(r.atEnd || (r.gap >= 8 && r.gap <= 24), `the ${at.lane} title sits ${Math.round(r.gap)} px from the top of the list`);
     return `${at.lane}: title ${Math.round(r.gap)} px below the top of the list`;
@@ -573,7 +573,7 @@ async function main() {
     expect(!r.wide.length, `cut off at the edge: ${r.wide.join(', ')}`);
   });
   await check('on a phone the wordmark and toasts don’t sit under the top bar', async () => {
-    const r = await page.run(`const sb = window.switchboard; sb.app.toasts.show({ tone: 'info', icon: 'check', text: 'Test toast' }); await new Promise((x) => setTimeout(x, 400));
+    const r = await page.run(`const sb = window.promptBeach; sb.app.toasts.show({ tone: 'info', icon: 'check', text: 'Test toast' }); await new Promise((x) => setTimeout(x, 400));
       const box = (s) => { const e = document.querySelector(s); if (!e || e.offsetParent === null || getComputedStyle(e).display === 'none') return null; return e.getBoundingClientRect(); };
       const hit = (a, b) => a && b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
       const top = box('.topbar'); return { brand: hit(box('.brand'), top), toast: hit(box('.toast'), top) };`);

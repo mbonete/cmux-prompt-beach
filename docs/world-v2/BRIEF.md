@@ -60,14 +60,14 @@ No OS notifications.
 - **Camera:** cinematic three-quarter view, tilt 25°–65° (start about 40°). Drag to pan, right-drag or two fingers to rotate, wheel or pinch to zoom, F or double-click to focus. Clicking an agent flies to a framed close-up (no tighter than waist-up). After 2 minutes idle, slow drifting shots cut to whoever needs you; any input returns. Off with reduced motion and switchable in Settings.
 - **Agent card:** an anchored card next to the character for the quick read and the main action, plus Open in cmux. **Expand** opens a side panel with the recent conversation, the reply box (idle only), details, Mark read and Archive.
 - **Screen layout:**
-  - top left: the Switchboard wordmark (our own)
+  - top left: the Prompt Beach wordmark (our own)
   - left rail: Map, Projects, Agents, Inbox, Archive, Settings
   - top right: counts, the time-of-day picker (Day / Sunset / Night / Auto) with the clock, sound, help
   - bottom left: minimap
   - bottom right: a controls hint that hides once used
 - **Settings:** quality (Auto / Cinematic / Balanced / Light), Stale after, sound and chime (muted by default), idle camera, reduced motion.
 - **Events:** small toasts at the top centre ("Checkout redesign: finished"); clicking one flies to the agent. No big banners.
-- **Archive** hides a session in Switchboard only and never touches cmux. An archived session comes back automatically when it needs you.
+- **Archive** hides a session in Prompt Beach only and never touches cmux. An archived session comes back automatically when it needs you.
 - **Loading screen:** title screen with the wordmark over a soft-focus city and a progress bar.
 - **Review checkpoints:** (1) look-dev, (2) feature-complete on real sessions, (3) final.
 

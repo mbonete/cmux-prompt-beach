@@ -1,6 +1,6 @@
 # Design
 
-Switchboard's visual world since world v2 (2026-11-21): **a sun-soaked coastal city at golden hour sliding into neon night**, a homage to the open-world crime-game genre that never names the game (see PRODUCT.md, Brand Commitments). The 3D city is the dashboard; a quiet HUD floats over it. Cinematic stylised realism: realistic proportions, PBR materials, sky lighting, soft shadows, haze, bloom and a teal-orange grade. Not toy-like, not flat low-poly, not photoreal.
+Prompt Beach's visual world since world v2 (2026-11-21): **a sun-soaked coastal city at golden hour sliding into neon night**, a homage to the open-world crime-game genre that never names the game (see PRODUCT.md, Brand Commitments). The 3D city is the dashboard; a quiet HUD floats over it. Cinematic stylised realism: realistic proportions, PBR materials, sky lighting, soft shadows, haze, bloom and a teal-orange grade. Not toy-like, not flat low-poly, not photoreal.
 
 The working agreement behind this file, with the contracts between the parts, is `docs/world-v2/BRIEF.md`.
 

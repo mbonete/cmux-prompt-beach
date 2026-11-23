@@ -1,4 +1,4 @@
-import { ApiError, type SwitchboardClient } from '../data/client';
+import { ApiError, type PromptBeachClient } from '../data/client';
 import type { Action, Conversation } from '../data/types';
 import type { Toasts } from '../ui/toasts';
 
@@ -7,7 +7,7 @@ import type { Toasts } from '../ui/toasts';
 
 export class Actions {
   constructor(
-    private readonly client: SwitchboardClient,
+    private readonly client: PromptBeachClient,
     private readonly toasts: Toasts,
   ) {}
 
@@ -18,7 +18,7 @@ export class Actions {
   /** Runs an action; returns true when the server accepted it. */
   async run(action: Action, ok: string | null, btn?: HTMLButtonElement | null): Promise<boolean> {
     if (!this.client.connected) {
-      this.toasts.show({ tone: 'error', icon: 'warning', text: 'Not connected to the Switchboard server.' });
+      this.toasts.show({ tone: 'error', icon: 'warning', text: 'Not connected to the Prompt Beach server.' });
       return false;
     }
     if (btn) {

@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 const run = promisify(execFile);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const OUT = path.join(ROOT, 'assets-src');
-const UA = { 'User-Agent': 'switchboard-asset-fetch' };
+const UA = { 'User-Agent': 'prompt-beach-asset-fetch' };
 const sources = JSON.parse(await readFile(path.join(ROOT, 'tools/assets/sources.json'), 'utf8'));
 const only = process.argv[2];
 

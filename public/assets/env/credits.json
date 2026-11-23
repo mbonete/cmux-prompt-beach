@@ -41,7 +41,7 @@
   },
   {
     "asset": "textures/water/ocean_normal",
-    "author": "Switchboard (generated)",
+    "author": "Prompt Beach (generated)",
     "source": "tools/assets/env/blender/procedural.py",
     "licence": "Original work, same licence as this repository (MIT)",
     "url": null,

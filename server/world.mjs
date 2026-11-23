@@ -1,6 +1,6 @@
 // World state: which plot each repository owns, which spot each agent sits on,
 // and which sessions are archived. Persisted (for the real source) in
-// ~/.config/cmux-switchboard/world.json; the demo keeps it in memory.
+// ~/.config/prompt-beach/world.json; the demo keeps it in memory.
 //
 // See server/SNAPSHOT.md for the fields this adds to a snapshot.
 
@@ -27,7 +27,10 @@ const MAX_REPOS = 1000;
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 
-export const DEFAULT_WORLD_FILE = path.join(os.homedir(), '.config', 'cmux-switchboard', 'world.json');
+export const DEFAULT_WORLD_FILE = path.join(os.homedir(), '.config', 'prompt-beach', 'world.json');
+// Where the world was saved before the project was renamed from Switchboard. Read only
+// when the new file doesn't exist yet; the next save writes the new file.
+export const LEGACY_WORLD_FILE = path.join(os.homedir(), '.config', 'cmux-switchboard', 'world.json');
 
 // Does this item need the person right now? Blocked on a decision, or idle with an
 // unread result or a trailing question. (A working agent with an old unread
@@ -123,7 +126,7 @@ function lowestFree(used, count) {
 
 // file: where to persist (null keeps everything in memory, as the demo does).
 // initial: a starting state (same shape as the file), used by the demo.
-export function createWorld({ file = null, initial = null, log = console } = {}) {
+export function createWorld({ file = null, fallbackFile = null, initial = null, log = console } = {}) {
   let state = sanitizeState(initial) || emptyState();
   const missingSince = new Map(); // agent key -> when it went missing (this run only)
   const savedSeen = new Map(); // repo key -> lastSeen as last written
@@ -133,16 +136,27 @@ export function createWorld({ file = null, initial = null, log = console } = {})
 
   for (const [k, r] of Object.entries(state.repos)) savedSeen.set(k, r.lastSeen);
 
+  async function read(from) {
+    const st = await stat(from);
+    if (st.size > MAX_FILE_BYTES) throw new Error('file is too large');
+    const loaded = sanitizeState(JSON.parse(await readFile(from, 'utf8')));
+    if (!loaded) throw new Error('unknown format');
+    return loaded;
+  }
+
   async function load() {
     if (!file) return;
+    let from = file;
     try {
-      const st = await stat(file);
-      if (st.size > MAX_FILE_BYTES) throw new Error('file is too large');
-      const loaded = sanitizeState(JSON.parse(await readFile(file, 'utf8')));
-      if (!loaded) throw new Error('unknown format');
-      state = loaded;
+      try {
+        state = await read(file);
+      } catch (err) {
+        if (err.code !== 'ENOENT' || !fallbackFile) throw err;
+        from = fallbackFile;
+        state = await read(fallbackFile);
+      }
     } catch (err) {
-      if (err.code !== 'ENOENT') log.warn?.(`Switchboard: starting with a fresh world; could not read ${file} (${err.message}).`);
+      if (err.code !== 'ENOENT') log.warn?.(`Prompt Beach: starting with a fresh world; could not read ${from} (${err.message}).`);
     }
     savedSeen.clear();
     for (const [k, r] of Object.entries(state.repos)) savedSeen.set(k, r.lastSeen);
@@ -167,7 +181,7 @@ export function createWorld({ file = null, initial = null, log = console } = {})
         await writeFileAtomic(file, serialize());
       } while (writeAgain);
     })()
-      .catch((err) => log.warn?.(`Switchboard: could not save ${file} (${err.message}).`))
+      .catch((err) => log.warn?.(`Prompt Beach: could not save ${file} (${err.message}).`))
       .finally(() => {
         writing = null;
       });

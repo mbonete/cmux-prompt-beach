@@ -521,7 +521,7 @@ export function createCmuxSource() {
       tick = hooks.tick || tick;
       live = hooks.live || live;
       if (!process.env.CMUX_SOCKET && !process.env.CMUX_SOCKET_PATH && !process.env.CMUX_PANEL_ID) {
-        console.log('Note: this shell does not look like a cmux terminal. If cmux refuses the connection, start Switchboard from a cmux terminal.');
+        console.log('Note: this shell does not look like a cmux terminal. If cmux refuses the connection, start Prompt Beach from a cmux terminal.');
       }
       startEvents();
     },

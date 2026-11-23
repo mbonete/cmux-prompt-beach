@@ -487,7 +487,7 @@ export class World {
   /** Loads the buildings and props. */
   /** With `?perf`: how long each startup stage took (ms since navigation). */
   private mark(label: string) {
-    if (this.perf) console.log(`[switchboard] ${label}: ${Math.round(performance.now())} ms`);
+    if (this.perf) console.log(`[prompt-beach] ${label}: ${Math.round(performance.now())} ms`);
   }
 
   async loadCity() {

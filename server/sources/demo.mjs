@@ -1,5 +1,5 @@
 // Demo source: made-up projects and agents in every state, slowly living their lives,
-// so Switchboard can be shown or screenshotted without exposing real sessions.
+// so Prompt Beach can be shown or screenshotted without exposing real sessions.
 // Start with `npm run demo`. Nothing here talks to cmux or reads real files; every
 // name, prompt, reply and conversation below is invented.
 

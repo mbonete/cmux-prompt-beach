@@ -8,15 +8,15 @@ web
 
 ## Users
 
-One developer (the author) running many Claude Code sessions at once, one per cmux workspace, on a Mac. They glance at Switchboard between tasks to see which agents need them, then act or jump to the terminal. The repo is public, so other cmux users may run it too, and it doubles as a portfolio piece.
+One developer (the author) running many Claude Code sessions at once, one per cmux workspace, on a Mac. They glance at Prompt Beach between tasks to see which agents need them, then act or jump to the terminal. The repo is public, so other cmux users may run it too, and it doubles as a portfolio piece.
 
 ## Product Purpose
 
-Switchboard is a live local dashboard for the agents running in cmux. It answers "who needs me, who is working, whose move is it, what went stale" at a glance, and lets the user act without hunting through tabs: allow or deny a permission, answer a question, approve a plan, reply to an idle agent, mark read, or jump to the terminal in cmux.
+Prompt Beach is a live local dashboard for the agents running in cmux. It answers "who needs me, who is working, whose move is it, what went stale" at a glance, and lets the user act without hunting through tabs: allow or deny a permission, answer a question, approve a plan, reply to an idle agent, mark read, or jump to the terminal in cmux.
 
 ## Positioning
 
-Agent "who needs me" boards are common (Claude Code's Agent view, cmux's Agents Board template, menu-bar and TUI tools). Switchboard's differences are stale triage, Claude's recaps, separating unread results from open questions, and approvals from a web page. Since world v2 (2026-11-21) it presents the sessions as a cinematic 3D coastal city at golden hour: every git repository takes a plot with its own Deco or MiMo building, every agent is a person working, waving or dozing on that plot, and clicking someone opens an anchored card with their request and its buttons.
+Agent "who needs me" boards are common (Claude Code's Agent view, cmux's Agents Board template, menu-bar and TUI tools). Prompt Beach's differences are stale triage, Claude's recaps, separating unread results from open questions, and approvals from a web page. Since world v2 (2026-11-21) it presents the sessions as a cinematic 3D coastal city at golden hour: every git repository takes a plot with its own Deco or MiMo building, every agent is a person working, waving or dozing on that plot, and clicking someone opens an anchored card with their request and its buttons.
 
 ## Operating Context
 
@@ -28,7 +28,7 @@ Agent "who needs me" boards are common (Claude Code's Agent view, cmux's Agents 
 
 - A project is a git repository (grouped by `git rev-parse --git-common-dir`, so worktrees join their repo). It keeps its plot (16 in the district) for 7 days after its last session and can be moved to a free one; sessions outside any repo share the beach bar, and repos beyond 16 share a co-working building.
 - States: Needs you (open decision, pending question or plan, unread result, or reply ending in a question), Working, Your move, Stale (idle longer than the "Stale after" setting), No agent (terminal without an agent).
-- Actions: Open in cmux, Allow once / Always allow / Deny, answer a question, approve a plan (manual or auto) or keep planning, Reply (only when the agent is idle and its prompt box is empty), Mark read, Archive (hides a session in Switchboard only; it comes back when it needs you).
+- Actions: Open in cmux, Allow once / Always allow / Deny, answer a question, approve a plan (manual or auto) or keep planning, Reply (only when the agent is idle and its prompt box is empty), Mark read, Archive (hides a session in Prompt Beach only; it comes back when it needs you).
 - The server is Node 20+ with no npm dependencies; `server.mjs` serves `public/`. The client is Vite + TypeScript (three.js WebGPU with a WebGL 2 fallback), built into `public/` and committed, so `npm start` still needs no install and runs offline.
 - Targets Chrome, Safari and the cmux browser; 60 fps on a MacBook Air M3 with automatic quality presets; usable down to 700 px wide. Everything also works from the Agents list without the 3D view.
 - Local only: binds 127.0.0.1, Host and Origin checks, per-start token, strict CSP (`script-src 'self'`, `style-src 'self'`, no external fonts or CDNs).
@@ -38,7 +38,7 @@ Agent "who needs me" boards are common (Claude Code's Agent view, cmux's Agents 
 ## Brand Commitments
 
 - The look is a homage to the 2026 open-world crime-game release (sun-soaked Florida-style coast, golden hour into neon night, Art Deco beachfront, minimap), chosen by the user on 2026-11-20 and made in stylised realism for world v2. The game is never named in the UI, README, code, commits or posts.
-- Kept out on purpose (the repo is public): that game's logo and numeral, its characters or lookalikes, its place names and map, its art, screenshots, music and catchphrases, the Pricedown lettering, the painted cover-art panel grid and the wanted-star meter. Switchboard uses its own replacements: a neon-script wordmark (Yellowtail) and Anton for the display voice, original Deco and MiMo buildings generated by its own scripts, and small toasts instead of big banners.
+- Kept out on purpose (the repo is public): that game's logo and numeral, its characters or lookalikes, its place names and map, its art, screenshots, music and catchphrases, the Pricedown lettering, the painted cover-art panel grid and the wanted-star meter. Prompt Beach uses its own replacements: a neon-script wordmark (Yellowtail) and Anton for the display voice, original Deco and MiMo buildings generated by its own scripts, and small toasts instead of big banners.
 - Also kept out: the "video game for AI agents" product that inspired the concept (its name and logo, robot or astronaut crews, hex plots, colonies, planet themes, a "?" bubble as the attention signal, the KayKit and Kenney packs).
 
 ## Evidence on Hand

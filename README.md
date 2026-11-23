@@ -1,16 +1,16 @@
-# Switchboard
+# Prompt Beach
 
 A live local dashboard for the agents running in [cmux](https://cmux.com), drawn as an Art Deco beachfront at sunset. Every git repository gets a building on the strip, and every agent is a person working there: at a desk while it works, waving at you when it needs you, relaxing when it's your move, dozing when it goes stale. Click anyone for their card to answer a permission or a question, approve a plan, reply, or jump to their terminal.
 
-<img src="docs/screenshot.jpg" alt="Switchboard in demo mode at sunset: an Art Deco beachfront with palm trees, project signs over the buildings, pink light beams and badges over the agents that need you, the counts by state at the top right, and the rail of views and the minimap on the left">
+<img src="docs/screenshot.jpg" alt="Prompt Beach in demo mode at sunset: an Art Deco beachfront with palm trees, project signs over the buildings, pink light beams and badges over the agents that need you, the counts by state at the top right, and the rail of views and the minimap on the left">
 
 ## Run it
 
 Start it from a cmux terminal, because cmux only accepts socket connections from its own terminals:
 
 ```bash
-git clone https://github.com/mbonete/cmux-switchboard.git
-cd cmux-switchboard
+git clone https://github.com/mbonete/cmux-prompt-beach.git
+cd cmux-prompt-beach
 npm start                                 # http://localhost:4747
 cmux browser open http://localhost:4747   # optional: open it as a cmux split
 ```
@@ -66,7 +66,7 @@ The card also shows the project folder, git branch, model, context size, permiss
 - `cmux list-status`: the sidebar status per workspace (Running, Waiting, Needs permission).
 - `cmux events --reconnect`: live hook events, used to refresh within a second.
 - `~/.claude/projects/*/<session>.jsonl` (read-only, last 2 MB): last reply, recap, last prompt, model, context tokens, branch, the tool currently running, and pending questions or plans.
-- It writes one file: `~/.config/cmux-switchboard/world.json` (which repo has which building).
+- It writes one file: `~/.config/prompt-beach/world.json` (which repo has which building).
 
 ## Safety
 
@@ -83,7 +83,7 @@ Checked against cmux 0.65.2 and Claude Code 2.1.322 with a throwaway Haiku sessi
 
 ## Support
 
-Switchboard is free and open source. If you enjoy it, you can [buy me a coffee on Ko-fi](https://ko-fi.com/mbonete).
+Prompt Beach is free and open source. If you enjoy it, you can [buy me a coffee on Ko-fi](https://ko-fi.com/mbonete).
 
 ## License
 

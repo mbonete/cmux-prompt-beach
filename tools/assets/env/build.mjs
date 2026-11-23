@@ -197,7 +197,7 @@ async function stepManifest() {
       changes: `Resized to ${Object.keys(t.files).filter((k) => k.startsWith('albedo')).map((k) => k.split('_')[1]).join(' and ')}; ORM packed (metalness 0)${t.orm.occlusion.startsWith('none') ? ', no AO in source (1.0)' : ''}; WebP${t.calibration?.meanLinear !== undefined ? `; albedo calibrated to a neutral mean of ${t.calibration.meanLinear} linear` : ''}.` });
   }
   for (const name of Object.keys(waterK)) {
-    credits.push({ asset: `textures/water/${name}`, author: 'Switchboard (generated)', source: 'tools/assets/env/blender/procedural.py', licence: 'Original work, same licence as this repository (MIT)', url: null, changes: 'Generated procedurally.' });
+    credits.push({ asset: `textures/water/${name}`, author: 'Prompt Beach (generated)', source: 'tools/assets/env/blender/procedural.py', licence: 'Original work, same licence as this repository (MIT)', url: null, changes: 'Generated procedurally.' });
   }
   for (const [id, p] of Object.entries(propK)) {
     const c = cfg.props.find((x) => x.id === id);

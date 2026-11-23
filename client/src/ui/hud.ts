@@ -45,7 +45,7 @@ export class Hud {
     this.el = document.createElement('div');
     this.el.className = 'hud';
     this.el.innerHTML = `
-      <header class="brand"><p class="wordmark wordmark--hud" aria-label="Switchboard">Switchboard</p><p class="brand__status" hidden></p></header>
+      <header class="brand"><p class="wordmark wordmark--hud" aria-label="Prompt Beach">Prompt Beach</p><p class="brand__status" hidden></p></header>
       <nav class="rail" aria-label="Views">${RAIL.map(
         (r) =>
           `<button type="button" class="rail__btn" data-rail="${r.id ?? 'map'}" aria-pressed="false" aria-keyshortcuts="${r.key}" title="${r.label} (${r.key})">${icon(r.icon, 'i')}<span class="rail__label">${r.label}</span>${
@@ -115,7 +115,7 @@ export class Hud {
     this.status.className = `brand__status${tone ? ` brand__status--${tone}` : ''}`;
     if (s.snap?.cmux?.error) this.status.title = s.snap.cmux.error;
 
-    document.title = c.needs ? `(${c.needs}) Switchboard` : 'Switchboard';
+    document.title = c.needs ? `(${c.needs}) Prompt Beach` : 'Prompt Beach';
   }
 
   /** The controls bar is permanent; kept so callers can still report use. */

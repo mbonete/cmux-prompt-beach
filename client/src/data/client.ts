@@ -3,7 +3,7 @@ import type { Action, Conversation, Snapshot, Tick } from './types';
 // The live link to server.mjs: the SSE stream (snapshots and ticks), actions,
 // and the conversation endpoint. The token comes from the page's meta tag.
 
-const TOKEN_PLACEHOLDER = '__SWITCHBOARD_TOKEN__';
+const TOKEN_PLACEHOLDER = '__PROMPT_BEACH_TOKEN__';
 
 export interface Live {
   onSnapshot: (s: Snapshot) => void;
@@ -20,12 +20,12 @@ export class ApiError extends Error {
   }
 }
 
-export class SwitchboardClient {
+export class PromptBeachClient {
   private readonly token: string;
   private source: EventSource | null = null;
 
   constructor() {
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="switchboard-token"]');
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="prompt-beach-token"]');
     const t = meta?.content ?? '';
     this.token = t && t !== TOKEN_PLACEHOLDER ? t : '';
   }
@@ -59,7 +59,7 @@ export class SwitchboardClient {
   async act(action: Action): Promise<{ ok: true; note?: string }> {
     const res = await fetch('/api/action', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Switchboard-Token': this.token },
+      headers: { 'Content-Type': 'application/json', 'X-Prompt-Beach-Token': this.token },
       body: JSON.stringify(action),
     });
     const body = await res.json().catch(() => ({}));
@@ -69,7 +69,7 @@ export class SwitchboardClient {
 
   async conversation(surfaceId: string): Promise<Conversation> {
     const res = await fetch(`/api/conversation?surfaceId=${encodeURIComponent(surfaceId)}`, {
-      headers: { 'X-Switchboard-Token': this.token },
+      headers: { 'X-Prompt-Beach-Token': this.token },
       cache: 'no-store',
     });
     const body = await res.json().catch(() => ({}));
