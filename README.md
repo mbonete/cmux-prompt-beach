@@ -81,6 +81,10 @@ What the token does and doesn't protect against, and how to check that the prebu
 
 Checked against cmux 0.65.2 and Claude Code 2.1.322 with a throwaway Haiku session: allowing a Bash permission, replying, and answering an AskUserQuestion prompt all worked from the dashboard. Approving a plan uses the same Feed mechanism but has not been tried. `npm test` runs the unit tests (server, sources, layout); `npm run test:browser` drives the city in headless Chrome.
 
+## Support
+
+Switchboard is free and open source. If you enjoy it, you can [buy me a coffee on Ko-fi](https://ko-fi.com/mbonete).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
