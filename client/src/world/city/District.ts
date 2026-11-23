@@ -274,8 +274,11 @@ export class District {
           this.palmSpots.push({ position: at, height: e.palm_height ?? 8 });
         } else if (o.name === 'tag_anchor') tag = new Vector3().setFromMatrixPosition(m);
         else if (o.name === 'beam_anchor') beam = new Vector3().setFromMatrixPosition(m);
-        else if (o.name.startsWith('prop:')) {
-          const id = (o.userData as { prop_id?: string }).prop_id ?? o.name.slice(5).replace(/\.\d+$/, '');
+        else if (typeof (o.userData as { prop_id?: unknown }).prop_id === 'string') {
+          // By its prop_id: the loader strips ':' and '.' from node names, so "prop:…" never matched
+          // and no prop was ever placed.
+          const id = (o.userData as { prop_id: string }).prop_id;
+          if (!PROPS_SHOWN.has(id)) return;
           if (!propPlacements.has(id)) propPlacements.set(id, []);
           propPlacements.get(id)!.push({ m, key: s.key });
         }
@@ -301,6 +304,7 @@ export class District {
     if (location.search.includes('perf')) console.log(`[switchboard] district: buildings loaded at ${Math.round(t0)} ms, read in ${Math.round(t1 - t0)} ms, merged in ${Math.round(performance.now() - t1)} ms`);
     this.buildPools(poolSpots);
     await this.placeProps(propPlacements);
+    // (Only laptops the city actually shows: the kit's own are among the props left off.)
     await this.placeDeskItems((propPlacements.get('classic_laptop') ?? []).map(({ m }) => new Vector3().setFromMatrixPosition(m)));
   }
 
@@ -652,24 +656,31 @@ export class District {
         const file = files.find((f) => f.endsWith('.gltf')) ?? `props/${id}/${id}.gltf`;
         try {
           const gltf = await loadGLTF(`/assets/env/${file}`);
-          const model = new InstancedModel(meshOnly(gltf.scene, true), mats.length);
-          for (const { m } of mats) model.add(m);
-          for (const mesh of model.meshes) {
-            const mat = mesh.material as unknown as { name?: string; emissive?: Color };
-            if (mat.name !== 'screen') continue;
-            mat.emissive = new Color(0x8fb8ff);
-            const attr = perInstanceEmission(mesh, this.screensLevel);
-            attr.array.fill(0);
-            attr.needsUpdate = true;
-            this.screens.push({ attr, owner: mats.map((x) => x.key) });
-          }
-          model.addTo(this.group);
+          // A file can hold several variants (a plant: several clumps); each placement gets one.
+          const variants = propVariants(gltf.scene);
+          variants.forEach((template, v) => {
+            const mine = mats.filter((_, i) => i % variants.length === v);
+            if (!mine.length) return;
+            const model = new InstancedModel(template, mine.length);
+            for (const { m } of mine) model.add(m);
+            for (const mesh of model.meshes) {
+              const mat = mesh.material as unknown as { name?: string; emissive?: Color };
+              if (mat.name !== 'screen') continue;
+              mat.emissive = new Color(0x8fb8ff);
+              const attr = perInstanceEmission(mesh, this.screensLevel);
+              attr.array.fill(0);
+              attr.needsUpdate = true;
+              this.screens.push({ attr, owner: mine.map((x) => x.key) });
+            }
+            model.addTo(this.group);
+          });
         } catch (err) {
           console.warn(`Prop ${id} failed to load`, err);
         }
       }),
     );
   }
+
 
   /** Window and neon glow for one plot (0 = shuttered, 1 = lived in). */
   private setLit(key: PlotKey, value: number) {
@@ -828,6 +839,33 @@ function lightFloors(root: Object3D): Map<string, number> {
 const fadeDir = new Vector3();
 const fadeAt = new Vector3();
 const fadeLocal = new Vector3();
+/**
+ * The building props that are shown: the potted plants, each in its light
+ * version (about 1.2k triangles). The kit also places laptops, lamps, air-con
+ * units, chairs and carts (365 in all, 3-5 million triangles, more than the
+ * whole city); they stay off.
+ */
+const PROPS_SHOWN = new Set(['anthurium_botany_01', 'calathea_orbifolia_01']);
+
+/**
+ * One template per variant of a prop: the nodes that hold lod0/lod1 children
+ * (a plant file lays several clumps side by side), each with only its light
+ * version (lod1) where it has one. A prop without such nodes is one template.
+ */
+function propVariants(scene: Object3D): Object3D[] {
+  const groups: Object3D[] = [];
+  scene.traverse((o) => {
+    if (o.children.some((c) => /^lod[01]$/.test(c.name))) groups.push(o);
+  });
+  if (!groups.length) return [meshOnly(scene, true)];
+  return groups.map((g) => {
+    const copy = g.clone(true);
+    copy.position.set(0, 0, 0);
+    const light = copy.children.some((c) => c.name === 'lod1');
+    for (const c of [...copy.children]) if (c.name === (light ? 'lod0' : 'lod1')) c.removeFromParent();
+    return copy;
+  });
+}
 const UP = new Vector3(0, 1, 0);
 /** Every lounger in the kit is the same: 0.36 m from its middle line (where its spot is) to either edge. */
 const LOUNGER_HALF_WIDTH = 0.36;

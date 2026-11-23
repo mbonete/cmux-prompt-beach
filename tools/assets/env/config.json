@@ -340,6 +340,7 @@
       },
       "texture": 512,
       "lod0MaxTris": 4000,
+      "lod1": true,
       "variants": {
         "a": [
           "anthurium_botany_01_a"
@@ -388,7 +389,8 @@
         ]
       },
       "notes": "Five ground-planted clumps (no pot), up to 0.42 m tall. Alpha-masked, double-sided leaves.",
-      "lod0MaxTris": 4000
+      "lod0MaxTris": 4000,
+      "lod1": true
     },
     {
       "id": "vintage_day_bed",
