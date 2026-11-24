@@ -56,6 +56,8 @@ export class Person {
   private mood: Mood | null = null;
   private pending: Mood | null = null;
   private busy = false;
+  /** The one-off playing is a change of pose (calm waits for it; a yawn can freeze halfway). */
+  private posture = false;
   private faceCamera = false;
   private yaw = 0;
   private baseYaw = 0;
@@ -102,7 +104,7 @@ export class Person {
 
   /** Mid sit-down, stand-up or a one-off clip (the city keeps drawing until it ends). */
   get transitioning() {
-    return this.busy;
+    return this.busy && this.posture;
   }
 
   private get seatedSpot() {
@@ -290,12 +292,14 @@ export class Person {
     return null;
   }
 
-  private playOnce(name: string, then: () => void) {
+  /** `posture`: a change of pose (standing up, sitting down, the fist pump); a variation (a yawn) isn't. */
+  private playOnce(name: string, then: () => void, posture = true) {
     if (!this.play(name, true)) {
       then();
       return;
     }
     this.busy = true;
+    this.posture = posture;
     this.onDone = then;
   }
 
@@ -404,7 +408,7 @@ export class Person {
     if (!this.busy && this.clock > this.variationAt && !this.reducedMotion) {
       const v = this.variation();
       this.variationAt = this.clock + 9 + Math.random() * 12;
-      if (v && this.clips.has(v)) this.playOnce(v, () => this.continueMood());
+      if (v && this.clips.has(v)) this.playOnce(v, () => this.continueMood(), false);
     }
   }
 

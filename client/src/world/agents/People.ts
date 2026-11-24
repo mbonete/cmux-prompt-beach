@@ -119,10 +119,10 @@ export class People {
         const badge = this.overlay.add(el, new Vector3(), { lift: 4, maxDistance: 320, kind: 'badge' });
         e = { person, plot: item.plot, spot: item.spot, badge, ask: null, lane, title: '', named: false, crew: 0, pop: null };
         this.entries.set(item.surfaceId, e);
-        person.setMood(moodFor(lane, ask, null), true);
+        person.setMood(moodFor(lane, null), true);
       } else {
         const justFinished = e.lane === 'working' && ask === 'result';
-        e.person.setMood(moodFor(lane, ask, justFinished ? 'celebrate' : null));
+        e.person.setMood(moodFor(lane, justFinished ? 'celebrate' : null));
       }
       if (e.lane !== lane) {
         e.badge.el.classList.remove(`agent--${e.lane}`);
@@ -300,10 +300,10 @@ export class People {
   }
 }
 
-function moodFor(lane: Lane, ask: Ask | null, override: Mood | null): Mood {
+function moodFor(lane: Lane, override: Mood | null): Mood {
   if (override) return override;
   if (lane === 'working') return 'work';
-  if (lane === 'needs') return ask === 'result' ? 'relax' : 'ask';
+  if (lane === 'needs') return 'ask';
   if (lane === 'stale') return 'doze';
   return 'relax';
 }

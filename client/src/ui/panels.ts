@@ -186,10 +186,14 @@ export class Panels {
     return h;
   }
 
+  /** Who needs you (blocked), then finished replies you haven't read. */
   private inboxHTML(): string {
-    const rows = this.state.lane('needs');
-    if (!rows.length) return '<div class="empty empty--calm"><p class="empty__title">Nobody needs you right now.</p><p>Requests, questions and finished jobs land here as they happen.</p></div>';
-    return `<ul class="rows rows--inbox">${rows.map((r) => this.rowHTML(r, true)).join('')}</ul>`;
+    const needs = this.state.lane('needs');
+    const unread = this.state.lane('move').filter((r) => r.ask === 'result');
+    if (!needs.length && !unread.length) return '<div class="empty empty--calm"><p class="empty__title">Nobody needs you right now.</p><p>Requests, questions and finished jobs land here as they happen.</p></div>';
+    const group = (lane: Lane, title: string, rows: Row[]) =>
+      rows.length ? `<section class="group group--${lane}"><h3 class="group__title"><span>${title}</span><span class="group__count">${rows.length}</span></h3><ul class="rows rows--inbox">${rows.map((r) => this.rowHTML(r, true)).join('')}</ul></section>` : '';
+    return group('needs', 'Needs you', needs) + group('move', 'Unread', unread);
   }
 
   private archiveHTML(): string {
@@ -399,7 +403,7 @@ function helpHTML(): string {
   const states: [Lane, string][] = [
     ['needs', 'Waves at you: standing up where there is room, from their seat where there isn\'t. A light beam rises from their plot.'],
     ['working', 'At their desk. A small icon pops up for each tool call.'],
-    ['move', 'Relaxing: it finished and you have read it.'],
+    ['move', 'Relaxing: it finished. A check badge until you read its reply.'],
     ['stale', 'Dozing: nothing for a while (see Settings).'],
   ];
   const badges: [string, string][] = [

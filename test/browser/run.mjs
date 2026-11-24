@@ -484,8 +484,9 @@ async function main() {
       return { calmSecond, afterInput, wasCalm, afterFlight, why: why.slice(-3) };`);
     expect(r.calmSecond, `never went calm: ${r.why.join(' | ')}`);
     expect(r.calmSecond.paused, 'calm, but the page animations kept running');
-    expect(r.afterInput > 30, `input brought back only ${r.afterInput} frames a second`);
-    expect(!r.wasCalm || r.afterFlight > 30, `a camera flight while calm drew only ${r.afterFlight} frames a second`);
+    // Awake again means drawing again (calm is 0-1 frames a second); the rate itself depends on the machine.
+    expect(r.afterInput > 10, `input brought back only ${r.afterInput} frames a second`);
+    expect(!r.wasCalm || r.afterFlight > 10, `a camera flight while calm drew only ${r.afterFlight} frames a second`);
     return `calm: ${r.calmSecond.f} frames in a second; input: ${r.afterInput}/s; flight: ${r.afterFlight}/s`;
   });
 

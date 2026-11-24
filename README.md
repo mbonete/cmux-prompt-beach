@@ -42,9 +42,9 @@ Everything is also in the agent list (Agents, Inbox, Projects, Archive), which w
 
 | State | Meaning |
 | --- | --- |
-| Needs you | A permission, question or plan prompt is open; or the agent finished with a question; or there is an unread cmux notification. Longest wait first. |
+| Needs you | An agent that can't go on until you act: a permission, question or plan prompt, or a prompt only the terminal can answer. Longest wait first. |
 | Working | The agent is mid-turn. Shows what it is doing now and how long the turn has run. |
-| Your move | Finished and idle. Shows Claude's recap (the `※ recap` line) or the start of its last reply. |
+| Your move | Finished and idle. Replies you haven't read come first, with a check badge (they're also in the Inbox). Shows Claude's recap (the `※ recap` line) or the start of its last reply. |
 | Stale | No activity for longer than the "Stale after" setting (2 days by default). |
 | No agent | Terminals without an agent. |
 

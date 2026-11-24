@@ -14,17 +14,20 @@ export function laneOf(item: Item, now: number, staleMs: number): Lane {
   if (item.phase === 'blocked') return 'needs';
   if (item.phase === 'working') return 'working';
   if (now - ts(item.lastActivityAt) > staleMs) return 'stale';
-  if (item.unread > 0 || item.question) return 'needs';
+  // Finished, even with a reply you haven't read (or one ending in a question): it isn't stuck on
+  // you, so it's Your move (unread first, with the check badge). Needs you is for agents that
+  // can't go on without you: a permission, a question or plan prompt, a terminal prompt.
   return 'move';
 }
 
 export function askOf(item: Item, lane: Lane): Ask | null {
-  if (lane !== 'needs') return null;
-  if (item.phase === 'blocked' && item.blocked) {
-    const k = item.blocked.kind;
+  if (lane === 'needs') {
+    const k = item.blocked?.kind;
     return k === 'permission' || k === 'question' || k === 'plan' ? k : 'terminal';
   }
-  return item.question ? 'question' : 'result';
+  // A finished reply you haven't read: the check badge, until you read it.
+  if (lane === 'move' && item.unread > 0) return 'result';
+  return null;
 }
 
 export const SORTS: Record<Lane, (a: Item, b: Item) => number> = {
@@ -32,7 +35,7 @@ export const SORTS: Record<Lane, (a: Item, b: Item) => number> = {
     Number(b.phase === 'blocked') - Number(a.phase === 'blocked') ||
     ts(a.blocked?.since || a.lastActivityAt) - ts(b.blocked?.since || b.lastActivityAt),
   working: (a, b) => a.order - b.order,
-  move: (a, b) => ts(b.lastActivityAt) - ts(a.lastActivityAt),
+  move: (a, b) => Number(b.unread > 0) - Number(a.unread > 0) || ts(b.lastActivityAt) - ts(a.lastActivityAt),
   stale: (a, b) => ts(b.lastActivityAt) - ts(a.lastActivityAt),
   shells: (a, b) => a.order - b.order,
 };
