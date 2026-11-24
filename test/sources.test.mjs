@@ -5,7 +5,7 @@ import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { createRepoKindCache, detectRepoKind } from '../server/repo-kind.mjs';
 import { CONVERSATION_LIMITS, extractConversation, humanPromptOf } from '../server/sources/claude-transcripts.mjs';
-import { hookTick, pairTool, repoKeyOf } from '../server/sources/cmux.mjs';
+import { hookTick, pairTool, repoKeyOf, statusNeedsHuman } from '../server/sources/cmux.mjs';
 import { tickTool, toolCategory } from '../server/tools.mjs';
 
 describe('tool categories', () => {
@@ -41,6 +41,23 @@ describe('tool categories', () => {
     assert.deepEqual(hookTick(hook('PermissionRequest', { tool_name: 'Bash' })), { surfaceId: 'S1', hook: 'PermissionRequest' });
     assert.deepEqual(hookTick(hook('PreToolUse', {})), { surfaceId: 'S1', hook: 'PreToolUse' });
     assert.equal(hookTick({ name: 'agent.hook.Stop', payload: {} }), null, 'no surface, no tick');
+  });
+});
+
+describe('terminal status attention', () => {
+  test('an idle Codex session ready for another prompt does not need the user', () => {
+    assert.equal(statusNeedsHuman('idle', 'Codex needs input'), false);
+  });
+
+  test('the same status during an active turn is a real terminal prompt', () => {
+    assert.equal(statusNeedsHuman('working', 'Codex needs input'), true);
+    assert.equal(statusNeedsHuman('working', 'Needs permission'), true);
+    assert.equal(statusNeedsHuman('unknown', 'Approval required'), true);
+  });
+
+  test('ordinary status text never blocks an agent', () => {
+    assert.equal(statusNeedsHuman('working', 'Running tests'), false);
+    assert.equal(statusNeedsHuman('idle', null), false);
   });
 });
 

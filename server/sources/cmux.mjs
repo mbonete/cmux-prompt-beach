@@ -144,6 +144,15 @@ function pickAgent(agents = []) {
   return { live: byRecent.find((a) => a.state !== 'ended') || null, ended: byRecent.find((a) => a.state === 'ended') || null };
 }
 
+// `cmux list-status` labels an idle Codex session "Codex needs input" after a
+// completed turn: it is ready for another prompt, not blocked inside the turn.
+// A real terminal prompt (permission, approval, etc.) happens while the agent's
+// lifecycle is still active, so the decorative status is only a blocking signal
+// for a non-idle agent. Feed and transcript decisions are handled separately.
+export function statusNeedsHuman(agentState, statusLabel) {
+  return agentState !== 'idle' && /permission|needs input|approval/i.test(statusLabel || '');
+}
+
 function isOpenDecision(item, now) {
   if (!/permission|question|plan/i.test(item.kind || '')) return false;
   if (item.resolved_at) return false;
@@ -297,7 +306,7 @@ async function buildSnapshot() {
       } else if (tx?.pendingPlan) {
         phase = 'blocked';
         blocked = { kind: 'plan', requestId: null, since: tx.lastAssistantAt, plan: tx.pendingPlan };
-      } else if (/permission|needs input|approval/i.test(agentStatus?.value || '')) {
+      } else if (statusNeedsHuman(agent.state, agentStatus?.value)) {
         phase = 'blocked';
         blocked = { kind: 'terminal', requestId: null, since: agent.last_activity_at, label: agentStatus.value, tool: tx?.currentTool || null };
       } else if (agent.state === 'working' || agentStatus?.work === 'running') {
